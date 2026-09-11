@@ -39,8 +39,15 @@ export type StatsResponse = {
   total: number;
 };
 
+/** The list of available commands plus a short explanation of how salawat counting works. */
+export type HelpResponse = {
+  type: 'help';
+  /** The group's shared submission goal, mentioned in the "how it works" blurb. */
+  goal: number;
+};
+
 /** Uniform response shape the Presenter switches on to pick a message format. */
-export type DispatchResponse = SalawatResponse | MeResponse | StatsResponse;
+export type DispatchResponse = SalawatResponse | MeResponse | StatsResponse | HelpResponse;
 
 /**
  * Public contract for the Dispatcher module.

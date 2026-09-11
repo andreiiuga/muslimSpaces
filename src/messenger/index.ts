@@ -8,6 +8,7 @@ import type {
   Messenger,
   IncomingMessage,
   IncomingMessageHandler,
+  GroupJoinHandler,
   OutgoingMessage,
   MessageSender,
 } from './types.js';
@@ -23,6 +24,7 @@ const AUTH_DIR = `${DATA_DIR}/auth`;
 class BaileysMessenger implements Messenger {
   private socket: WASocket | null = null;
   private handlers: IncomingMessageHandler[] = [];
+  private joinHandlers: GroupJoinHandler[] = [];
   private restrictedToGroupId: string | null = null;
  
   async connect(restrictedToGroupId: string | null): Promise<void> {
@@ -66,16 +68,25 @@ class BaileysMessenger implements Messenger {
         }
       }
     );
+    this.socket.ev.on('group-participants.update', (update) => {
+      if (update.action !== 'add') return;
+      if (this.restrictedToGroupId && update.id !== this.restrictedToGroupId) return;
+      this.handleGroupJoin(update.id, update.participants);
+    });
   }
- 
+
   disconnect(): void {
     this.socket?.end(undefined);
   }
- 
+
   addMessageHandler(handler: IncomingMessageHandler): void {
     this.handlers.push(handler);
   }
- 
+
+  addGroupJoinHandler(handler: GroupJoinHandler): void {
+    this.joinHandlers.push(handler);
+  }
+
   async sendMessage(message: OutgoingMessage): Promise<void> {
     if (!this.socket) throw new Error('Messenger not connected');
     if (!this.restrictedToGroupId) throw new Error('Group Id not set');
@@ -93,6 +104,13 @@ class BaileysMessenger implements Messenger {
       for (const handler of this.handlers) {
         await handler(normalized);
       }
+    }
+  }
+
+  /** Called internally on Baileys' 'group-participants.update' event, filtered to joins already. */
+  private async handleGroupJoin(groupId: string, participantIds: string[]): Promise<void> {
+    for (const handler of this.joinHandlers) {
+      await handler(groupId, participantIds);
     }
   }
 

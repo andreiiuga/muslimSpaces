@@ -33,6 +33,8 @@ class Dispatcher implements DispatcherInterface {
         return this.handleMe(sender);
       case 'stats':
         return this.handleStats();
+      case 'help':
+        return this.handleHelp();
     }
   }
 
@@ -86,6 +88,10 @@ class Dispatcher implements DispatcherInterface {
       distribution: buildDistribution(submissions),
       total: submissions.reduce((sum, s) => sum + s.count, 0),
     };
+  }
+
+  private handleHelp(): DispatchResponse {
+    return { type: 'help', goal: GOAL };
   }
 }
 

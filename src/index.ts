@@ -28,6 +28,13 @@ async function start() {
       chatId: target
     })
   })
+
+  // Greet new members automatically with the /help message when they join the group.
+  messenger.addGroupJoinHandler(async (groupId) => {
+    const response = await dispatcher.processCommand({ type: 'help' }, { id: groupId, name: null, phoneNumber: null });
+    const reply = await presenter.processResponse(response);
+    messenger.sendMessage({ text: reply, chatId: groupId });
+  })
 }
 
 

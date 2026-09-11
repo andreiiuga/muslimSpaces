@@ -12,16 +12,17 @@ const QUICK_REGEX = /(\d{1,6})\s*(x\s*)?(salawat|solawat|salavat)?/i;
 // about (a number, a slash command, or stats/me/submission wording, in
 // either English or Arabic) — skip the API call entirely.
 const QUICK_SKIP_REGEX =
-  /\d|\/(stats|me)\b|\bstat(s|istics)?\b|\bsubmissions?\b|\bmine\b|salawat|solawat|salavat|صلوات|صلاة|صل(?:ي|و)?\s|اللهم\s*صل|إحصائيات|احصائيات|حسابي|مشاركاتي/i;
+  /\d|\/(stats|me|help)\b|\bstat(s|istics)?\b|\bsubmissions?\b|\bmine\b|\bhelp\b|\bcommands?\b|salawat|solawat|salavat|صلوات|صلاة|صل(?:ي|و)?\s|اللهم\s*صل|إحصائيات|احصائيات|حسابي|مشاركاتي|مساعدة|أوامر|اوامر/i;
 
-const INTENT_SYSTEM_PROMPT = `You classify WhatsApp group messages for a salawat (Islamic prayer) counting bot. Messages may be in English or Arabic. Every message is exactly one of four things:
+const INTENT_SYSTEM_PROMPT = `You classify WhatsApp group messages for a salawat (Islamic prayer) counting bot. Messages may be in English or Arabic. Every message is exactly one of five things:
 
 1. "salawat" - the sender is reporting a count of salawat they just sent/recited (e.g. "did 50 today", "+30", "sent 100 salawat, alhamdulillah", "صليت ٥٠ صلوات", "اللهم صل على محمد ٣٠ مرة"). Extract the integer count (Arabic-Indic digits count too, e.g. ٥٠ = 50).
 2. "stats" - the sender is asking to see the group's overall statistics, such as an all-time distribution/graph/breakdown of totals by day of week. Triggered by the literal command "/stats" or natural phrasing like "show stats", "what's our progress", "graph of all salawat", "الإحصائيات", "الإحصائيات الكلية".
 3. "me" - the sender is asking to be sent (privately) a list/history of their own submissions. Triggered by the literal command "/me" or natural phrasing like "show my submissions", "what have I submitted", "send me my total", "مشاركاتي", "حسابي".
-4. "none" - anything else: greetings, unrelated chat, a number that isn't a salawat count (a date, a time, a phone number), or any other message that doesn't clearly match one of the above.
+4. "help" - the sender is asking what the bot can do, what commands exist, or how the salawat counting works. Triggered by the literal command "/help" or natural phrasing like "what can you do", "how does this work", "what are the commands", "مساعدة", "ما هي الأوامر", "كيف يعمل هذا البوت".
+5. "none" - anything else: greetings, unrelated chat, a number that isn't a salawat count (a date, a time, a phone number), or any other message that doesn't clearly match one of the above.
 
-Reply with ONLY a JSON object, no other text: {"intent": "salawat" | "stats" | "me" | "none", "count": <integer or null>}
+Reply with ONLY a JSON object, no other text: {"intent": "salawat" | "stats" | "me" | "help" | "none", "count": <integer or null>}
 Rules:
 - "count" is only meaningful when intent is "salawat"; it must be null for every other intent.
 - If a message is ambiguous between two intents, or doesn't clearly match any, return "none".`;
@@ -40,6 +41,7 @@ class Interpreter implements InterpreterInterface {
     const normalized = text.toLowerCase();
     if (normalized === '/stats') return { type: 'stats' };
     if (normalized === '/me') return { type: 'me' };
+    if (normalized === '/help') return { type: 'help' };
 
     const simpleMatch = text.match(/^\+?(\d{1,6})$/);
     if (simpleMatch?.[1]) return { type: 'salawat', count: parseInt(simpleMatch[1], 10) };
@@ -60,13 +62,14 @@ class Interpreter implements InterpreterInterface {
 
       if (parsed.intent === 'stats') return { type: 'stats' };
       if (parsed.intent === 'me') return { type: 'me' };
+      if (parsed.intent === 'help') return { type: 'help' };
       if (parsed.intent === 'salawat' && Number.isInteger(parsed.count) && parsed.count > 0) {
         return { type: 'salawat', count: parsed.count };
       }
       return null;
     } catch (err) {
       console.error('processMessage error:', err instanceof Error ? err.message : err);
-      // Fallback to the quick regex if the API call fails; /stats and /me
+      // Fallback to the quick regex if the API call fails; /stats, /me and /help
       // are already handled above, so only salawat counts can be recovered.
       const fallback = text.match(QUICK_REGEX);
       if (fallback?.[1]) return { type: 'salawat', count: parseInt(fallback[1], 10) };

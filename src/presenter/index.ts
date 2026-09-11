@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import type { MeResponse, SalawatResponse, StatsResponse, DispatchResponse } from '../dispatcher/types.js';
+import type { HelpResponse, MeResponse, SalawatResponse, StatsResponse, DispatchResponse } from '../dispatcher/types.js';
 import type { PresenterInterface } from './types.js';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -57,6 +57,8 @@ class Presenter implements PresenterInterface {
         return this.presentMe(response);
       case 'stats':
         return this.presentStats(response);
+      case 'help':
+        return this.presentHelp(response);
     }
   }
 
@@ -158,6 +160,32 @@ Rules:
       console.error('presentStats error:', err instanceof Error ? err.message : err);
       return fallback();
     }
+  }
+
+  // Hardcoded rather than AI-generated: a command listing must stay accurate,
+  // not paraphrased, and only needs English + Arabic here (unlike the
+  // multilingual salawat acknowledgements).
+  private presentHelp({ goal }: HelpResponse): string {
+    const goalStr = goal.toLocaleString('en-US');
+    return [
+      '📖 *Available commands*',
+      '',
+      '🇬🇧 English',
+      '• Send a number (e.g. "50" or "+50") to log that many salawat.',
+      '• /stats — all-time salawat totals, broken down by day of week.',
+      '• /me — privately see your own submission history.',
+      '• /help — show this message.',
+      '',
+      `We're counting together toward a shared goal of ${goalStr} salawat — every submission adds to the group total, no need to track your own.`,
+      '',
+      '🇸🇦 العربية',
+      '• أرسل رقمًا (مثل "50" أو "+50") لتسجيل عدد الصلوات التي صليتها.',
+      '• /stats — إجمالي الصلوات منذ البداية، موزعًا حسب أيام الأسبوع.',
+      '• /me — لعرض سجل مشاركاتك الخاص بشكل خاص.',
+      '• /help — لعرض هذه الرسالة.',
+      '',
+      `نجمع الصلوات معًا نحو هدف مشترك قدره ${goalStr} صلاة - كل مشاركة تُضاف إلى المجموع العام، فلا حاجة لحساب صلواتك بنفسك.`,
+    ].join('\n');
   }
 }
 

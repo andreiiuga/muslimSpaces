@@ -36,6 +36,9 @@ export interface OutgoingMessage {
  
 /** Handler signature the Messenger invokes for every normalized incoming message. */
 export type IncomingMessageHandler = (message: IncomingMessage) => void | Promise<void>;
+
+/** Handler signature invoked when one or more members join the (restricted) group. */
+export type GroupJoinHandler = (groupId: string, participantIds: string[]) => void | Promise<void>;
  
 /**
  * Public contract for the Messenger module.
@@ -54,7 +57,10 @@ export interface Messenger {
    * but the signature allows multiple for testing/logging.
    */
   addMessageHandler(handler: IncomingMessageHandler): void;
- 
+
+  /** Register a callback invoked whenever one or more members join the group. */
+  addGroupJoinHandler(handler: GroupJoinHandler): void;
+
   /** Send a formatted message out to WhatsApp. */
   sendMessage(message: OutgoingMessage): Promise<void>;
 }

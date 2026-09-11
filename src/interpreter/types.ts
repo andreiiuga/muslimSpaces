@@ -11,7 +11,10 @@ export type StatsCommand = { type: 'stats' };
 /** Request for a private message listing the sender's own submissions. */
 export type MeCommand = { type: 'me' };
 
-export type Command = SalawatCommand | StatsCommand | MeCommand;
+/** Request for the list of available commands and a short explanation of how salawat counting works. */
+export type HelpCommand = { type: 'help' };
+
+export type Command = SalawatCommand | StatsCommand | MeCommand | HelpCommand;
 
 export interface InterpreterInterface {
   /** Extract a salawat count from a message, if present. */
