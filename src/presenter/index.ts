@@ -25,7 +25,7 @@ function formatMultilingual(byLangCode: MultilingualText): string {
 
 // Example of the exact structure Claude must follow for /stats. Not real data -
 // the model fills in a fresh caption/closer but must leave the bar lines untouched.
-const STATS_TEMPLATE = `📈 This week's salawat
+const STATS_TEMPLATE = `📈 All-time salawat by day
 Mon ████████░░ 8
 Tue ██████████ 10
 Wed ░░░░░░░░░░ 0
@@ -121,23 +121,23 @@ Rules:
       .join('\n');
   }
 
-  private async presentStats({ isCurrentWeek, distribution, total }: StatsResponse): Promise<string> {
+  private async presentStats({ distribution, total }: StatsResponse): Promise<string> {
     const max = Math.max(...distribution.map((d) => d.count), 1);
     const barLines = distribution.map((d) => `${d.day} ${renderBar(d.count, max)} ${d.count}`);
-    const weekLabel = isCurrentWeek ? "This week's salawat so far" : "Last week's salawat";
-    const fallback = () => [weekLabel, ...barLines, '─'.repeat(16), `Total: ${total}`, 'Keep it up! 🌙'].join('\n');
+    const label = 'All-time salawat by day';
+    const fallback = () => [label, ...barLines, '─'.repeat(16), `Total: ${total}`, 'Keep it up! 🌙'].join('\n');
 
     try {
       const res = await anthropic.messages.create({
         model: MODEL,
         max_tokens: 200,
-        system: `You compose a short, narrow, vertically-oriented ascii bar-chart WhatsApp message reporting weekly salawat (Islamic prayer) submission counts. It must fit on small phone screens without any line wrapping.
+        system: `You compose a short, narrow, vertically-oriented ascii bar-chart WhatsApp message reporting salawat (Islamic prayer) submission counts, summed across every submission ever recorded and broken down by day of week. It must fit on small phone screens without any line wrapping.
 Follow this EXACT structure (example only, not real data):
 ${STATS_TEMPLATE}
 
 Rules:
 - Output ONLY the final message text - no commentary, no markdown code fences.
-- Line 1: a short, varied caption based on the week label given (max ~24 characters). Vary the wording every time, never reuse the example caption verbatim.
+- Line 1: a short, varied caption based on the label given (max ~24 characters). Vary the wording every time, never reuse the example caption verbatim.
 - Next: the day bar lines EXACTLY AS GIVEN below, one per line, completely unchanged (same characters, spacing, and values - do not recompute or restyle them).
 - Next: a divider line of exactly 16 "─" characters.
 - Next: "Total: <total>" using the exact total given.
@@ -146,7 +146,7 @@ Rules:
         messages: [
           {
             role: 'user',
-            content: `Week label: ${weekLabel}\nBar lines:\n${barLines.join('\n')}\nTotal: ${total}\nWrite the message.`,
+            content: `Label: ${label}\nBar lines:\n${barLines.join('\n')}\nTotal: ${total}\nWrite the message.`,
           },
         ],
       });

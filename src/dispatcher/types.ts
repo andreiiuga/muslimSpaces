@@ -8,10 +8,9 @@ export type DispatchedUser = {
   phoneNumber: string;
 };
 
-/** One day's aggregated count within a weekly distribution. */
+/** One weekday's aggregated count, summed across every submission ever recorded. */
 export type DayCount = {
   day: 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri' | 'Sat' | 'Sun';
-  date: Date;
   count: number;
 };
 
@@ -33,13 +32,9 @@ export type MeResponse = {
   total: number;
 };
 
-/** The group's weekly submission distribution. */
+/** The group's all-time submission distribution, broken down by day of week. */
 export type StatsResponse = {
   type: 'stats';
-  weekStart: Date;
-  weekEnd: Date;
-  /** False if the past (completed) week had no submissions and we fell back to the current, in-progress week. */
-  isCurrentWeek: boolean;
   distribution: DayCount[];
   total: number;
 };

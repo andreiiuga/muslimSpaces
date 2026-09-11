@@ -5,7 +5,7 @@
 /** A submission of a salawat count, extracted from free-form text. */
 export type SalawatCommand = { type: 'salawat'; count: number };
 
-/** Request for the group's weekly distribution stats (ascii graph). */
+/** Request for the group's all-time, day-of-week distribution stats (ascii graph). */
 export type StatsCommand = { type: 'stats' };
 
 /** Request for a private message listing the sender's own submissions. */

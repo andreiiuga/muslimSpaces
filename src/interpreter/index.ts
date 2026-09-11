@@ -17,7 +17,7 @@ const QUICK_SKIP_REGEX =
 const INTENT_SYSTEM_PROMPT = `You classify WhatsApp group messages for a salawat (Islamic prayer) counting bot. Messages may be in English or Arabic. Every message is exactly one of four things:
 
 1. "salawat" - the sender is reporting a count of salawat they just sent/recited (e.g. "did 50 today", "+30", "sent 100 salawat, alhamdulillah", "صليت ٥٠ صلوات", "اللهم صل على محمد ٣٠ مرة"). Extract the integer count (Arabic-Indic digits count too, e.g. ٥٠ = 50).
-2. "stats" - the sender is asking to see the group's overall statistics, such as a weekly distribution/graph/breakdown of totals. Triggered by the literal command "/stats" or natural phrasing like "show stats", "what's our weekly progress", "graph of this week", "الإحصائيات", "احصائيات الأسبوع".
+2. "stats" - the sender is asking to see the group's overall statistics, such as an all-time distribution/graph/breakdown of totals by day of week. Triggered by the literal command "/stats" or natural phrasing like "show stats", "what's our progress", "graph of all salawat", "الإحصائيات", "الإحصائيات الكلية".
 3. "me" - the sender is asking to be sent (privately) a list/history of their own submissions. Triggered by the literal command "/me" or natural phrasing like "show my submissions", "what have I submitted", "send me my total", "مشاركاتي", "حسابي".
 4. "none" - anything else: greetings, unrelated chat, a number that isn't a salawat count (a date, a time, a phone number), or any other message that doesn't clearly match one of the above.
 
