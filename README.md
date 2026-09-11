@@ -11,6 +11,18 @@ inside group chats). Use a spare/secondary number for the bot, not your main
 personal number, and avoid replying to every single message in a very busy
 group, to keep the account looking like normal usage.
 
+## Commands
+
+- Send a bare number (`50`, `+50`) or a natural sentence ("did 50 today,
+  alhamdulillah", "صليت ٥٠ صلوات") to log that many salawat. Works in English
+  and Arabic.
+- `/stats` — all-time salawat totals, broken down by day of week (ASCII bar
+  chart). Also triggered by natural phrasing like "show me the stats".
+- `/me` — privately sends you your own submission history.
+- `/help` — lists the commands above and briefly explains how the counting
+  works, in English and Arabic. Also runs automatically whenever a new
+  member joins the group.
+
 ## 1. Run it locally first (to test + log in)
 
 ```bash
@@ -33,6 +45,7 @@ Try sending things like:
 - `+50`
 - `50 salawat`
 - `did 100 today, alhamdulillah`
+- `/stats`, `/me`, `/help`
 
 ## 2. Deploy to Railway
 
@@ -75,11 +88,28 @@ every time you redeploy.
 From then on, every valid salawat submission in the group gets tallied and
 answered with an AI-generated update automatically.
 
+## Testing
+
+Unit tests use [Vitest](https://vitest.dev) and mock the Anthropic SDK,
+Prisma client, and Baileys socket, so they run fully offline — no API keys,
+database, or WhatsApp connection needed.
+
+```bash
+npm test          # run once
+npm run test:watch # watch mode
+```
+
+Every push and pull request to `main` and `staging` runs typecheck + tests
+via GitHub Actions (`.github/workflows/ci.yml`).
+
 ## Notes
 
 - The bot only needs to be added to the group once — no ongoing manual work.
-- `data/count.json` (or `/data/count.json` on Railway) holds the running
-  total; back it up periodically if the campaign matters a lot to you.
+- Submissions and users are stored in Postgres (see
+  [Database Setup](#database-setup--salawat-bot) below); back it up
+  periodically if the campaign matters a lot to you.
+- The WhatsApp login session lives under `DATA_DIR` (default `data/`, or
+  `/data` on Railway) — that's what needs a persistent Volume, not the count.
 - If WhatsApp logs the session out (rare, but possible), you'll need to
   rescan a fresh QR code from the logs.
 
@@ -89,22 +119,21 @@ answered with an AI-generated update automatically.
 
 ```mermaid
 flowchart TB
-    WA["WhatsApp"] -->|incoming message| MSG["Messenger"]
+    WA["WhatsApp"] -->|incoming message / group join| MSG["Messenger"]
     MSG -->|reply| WA
 
     MSG -->|raw message| INT["Interpreter"]
     REN -->|formatted result| MSG
 
-    INT -->|command| ORC["Orchestrator"]
+    INT -->|classify intent| CLAUDE["Claude API"]
+    INT -->|command| DISP["Dispatcher"]
 
-    ORC -->|query/update| DBJS["DB.js"]
-    DBJS -->|data| ORC
+    DISP -->|query/update| DBJS["DB.js"]
+    DBJS -->|data| DISP
     DBJS <--> DB[("DB")]
 
-    ORC -->|request| API["Web API"]
-    API -->|response| ORC
-
-    ORC -->|raw result| REN["Presenter"]
+    DISP -->|raw result| REN["Presenter"]
+    REN -->|format/caption| CLAUDE
 ```
 
 ---
@@ -117,67 +146,71 @@ The external channel. End users send and receive messages here. No logic lives i
 
 ### Messenger
 
-Owns the WhatsApp integration.
+Owns the WhatsApp integration (Baileys).
 
-- Listens for incoming WhatsApp messages
+- Listens for incoming WhatsApp messages, plus `group-participants.update`
+  events (used to auto-greet new members with `/help`)
 - Sends outgoing WhatsApp messages (replies, notifications)
 - Passes raw incoming text to the **Interpreter**
 - Receives the formatted result directly from the **Presenter** and sends it back to the user over WhatsApp
   Entry point on the way in (to the Interpreter) and exit point on the way out (from the Presenter).
 
-### Interpreter _(formerly "Claude.js")_
+### Interpreter
 
 Owns the NLU layer.
 
 - Takes a raw, freeform user message from the **Messenger**
-- Uses Claude to interpret intent and extract a structured command
-- Passes that structured command to the **Orchestrator**
-  A one-way step in the pipeline — it hands off to the Orchestrator and isn't involved in returning the result.
+- Fast-paths obvious cases locally (literal `/stats`, `/me`, `/help`, a bare
+  number) to avoid an API call
+- Otherwise uses Claude to classify intent (`salawat` / `stats` / `me` /
+  `help` / `none`) and extract a structured command
+- Passes that structured command to the **Dispatcher**
+  A one-way step in the pipeline — it hands off to the Dispatcher and isn't involved in returning the result.
 
-### Orchestrator _(formerly "Commander")_
+### Dispatcher
 
 Owns command execution — the business logic core of the bot.
 
 - Receives a structured command from the **Interpreter**
 - Executes the appropriate logic for that command
-- Reads/writes persistent data via **DB.js**
-- Calls out to the **Web API** when external data or actions are needed
+- Reads/writes persistent data via **DB.js** (no external API calls happen here)
 - Passes the raw result to the **Presenter**
   This is where you'd add new commands/features as the bot grows — it's the natural extension point.
 
 ### Presenter
 
-Owns presentation — turning raw data from the Orchestrator into a human-friendly, nicely formatted message (ASCII art, tables, emojis, whatever fits the channel).
+Owns presentation — turning raw data from the Dispatcher into a human-friendly, nicely formatted message (ASCII bar charts, multilingual text, emojis).
 
-- Receives the raw result from the **Orchestrator**
-- Formats/beautifies it into a display-ready message
+- Receives the raw result from the **Dispatcher**
+- For `salawat`/`stats` responses, asks Claude to write a short caption
+  around fixed, non-negotiable data (the bar chart lines, the total), and
+  falls back to a hardcoded template if Claude's output is malformed
+- `/help` is fully hardcoded (English + Arabic only) rather than
+  AI-generated, since a command listing needs to stay exactly accurate
 - Sends the formatted result directly to the **Messenger**
-  Keeps formatting concerns out of the Orchestrator entirely — business logic doesn't need to know or care how its output will look on WhatsApp.
+  Keeps formatting concerns out of the Dispatcher entirely — business logic doesn't need to know or care how its output will look on WhatsApp.
 
 ### DB.js
 
 Owns all database access.
 
-- Wraps Postgres/Prisma queries used by the Orchestrator
+- Wraps Postgres/Prisma queries used by the Dispatcher
 - Single choke point for reads/writes, so query logic isn't scattered across the app
 
 ### DB
 
-PostgreSQL — local via Docker in development, Railway-hosted in production. Schema and setup details live in `db-setup.md`.
-
-### Web API
-
-Any external HTTP API the Orchestrator needs to call to fulfill a command (e.g. fetching prayer times, external data lookups, etc. — fill in as concretely defined).
+PostgreSQL — local via Docker in development, Railway-hosted in production. Schema and setup details are in the [Database Setup](#database-setup--salawat-bot) section below.
 
 ---
 
 ## Message flow (happy path)
 
-1. User sends a message on **WhatsApp**
+1. User sends a message (or joins the group) on **WhatsApp**
 2. **Messenger** receives it, forwards the raw text to the **Interpreter**
-3. **Interpreter** interprets it into a structured command, sends it to the **Orchestrator**
-4. **Orchestrator** executes the command — reading/writing via **DB.js** and/or calling the **Web API** as needed
-5. **Orchestrator** passes the raw result to the **Presenter**
+   (a join event skips straight to a synthetic `/help` command)
+3. **Interpreter** interprets it into a structured command, sends it to the **Dispatcher**
+4. **Dispatcher** executes the command — reading/writing via **DB.js** as needed
+5. **Dispatcher** passes the raw result to the **Presenter**
 6. **Presenter** formats it into a human-friendly message and sends it to **Messenger**
 7. **Messenger** sends the reply back over **WhatsApp**
 
