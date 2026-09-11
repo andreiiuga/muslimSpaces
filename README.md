@@ -19,6 +19,8 @@ group, to keep the account looking like normal usage.
 - `/stats` — all-time salawat totals, broken down by day of week (ASCII bar
   chart). Also triggered by natural phrasing like "show me the stats".
 - `/me` — privately sends you your own submission history.
+- `/awlia` — lists everyone who has submitted at least once, in random order
+  (not ranked by count).
 - `/help` — lists the commands above and briefly explains how the counting
   works, in English and Arabic. Also runs automatically whenever a new
   member joins the group.
@@ -45,7 +47,7 @@ Try sending things like:
 - `+50`
 - `50 salawat`
 - `did 100 today, alhamdulillah`
-- `/stats`, `/me`, `/help`
+- `/stats`, `/me`, `/awlia`, `/help`
 
 ## 2. Deploy to Railway
 
@@ -160,10 +162,10 @@ Owns the WhatsApp integration (Baileys).
 Owns the NLU layer.
 
 - Takes a raw, freeform user message from the **Messenger**
-- Fast-paths obvious cases locally (literal `/stats`, `/me`, `/help`, a bare
-  number) to avoid an API call
+- Fast-paths obvious cases locally (literal `/stats`, `/me`, `/help`,
+  `/awlia`, a bare number) to avoid an API call
 - Otherwise uses Claude to classify intent (`salawat` / `stats` / `me` /
-  `help` / `none`) and extract a structured command
+  `help` / `awlia` / `none`) and extract a structured command
 - Passes that structured command to the **Dispatcher**
   A one-way step in the pipeline — it hands off to the Dispatcher and isn't involved in returning the result.
 
@@ -185,8 +187,9 @@ Owns presentation — turning raw data from the Dispatcher into a human-friendly
 - For `salawat`/`stats` responses, asks Claude to write a short caption
   around fixed, non-negotiable data (the bar chart lines, the total), and
   falls back to a hardcoded template if Claude's output is malformed
-- `/help` is fully hardcoded (English + Arabic only) rather than
-  AI-generated, since a command listing needs to stay exactly accurate
+- `/help` and `/awlia` are fully hardcoded (English + Arabic only) rather
+  than AI-generated, since a command listing or a name roster needs to stay
+  exactly accurate (and, for `/awlia`, keep its random order un-touched)
 - Sends the formatted result directly to the **Messenger**
   Keeps formatting concerns out of the Dispatcher entirely — business logic doesn't need to know or care how its output will look on WhatsApp.
 

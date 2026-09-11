@@ -34,6 +34,11 @@ describe('fast paths (no API call)', () => {
     expect(mockCreate).not.toHaveBeenCalled();
   });
 
+  it('detects /awlia literally', async () => {
+    await expect(interpreter.processMessage('/awlia')).resolves.toEqual({ type: 'awlia' });
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
   it('is case-insensitive for slash commands', async () => {
     await expect(interpreter.processMessage('/STATS')).resolves.toEqual({ type: 'stats' });
   });
@@ -69,6 +74,13 @@ describe('Claude-classified intents', () => {
   it('classifies natural-language help requests', async () => {
     respondWith({ intent: 'help', count: null });
     await expect(interpreter.processMessage('what commands can I use here?')).resolves.toEqual({ type: 'help' });
+  });
+
+  it('classifies natural-language awlia requests', async () => {
+    respondWith({ intent: 'awlia', count: null });
+    await expect(interpreter.processMessage('who are all the participants so far?')).resolves.toEqual({
+      type: 'awlia',
+    });
   });
 
   it('classifies natural-language salawat submissions with a count', async () => {

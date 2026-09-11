@@ -46,8 +46,14 @@ export type HelpResponse = {
   goal: number;
 };
 
+/** A randomized (not ranked) roster of everyone who has submitted at least once. */
+export type AwliaResponse = {
+  type: 'awlia';
+  users: { name: string | null; phoneNumber: string }[];
+};
+
 /** Uniform response shape the Presenter switches on to pick a message format. */
-export type DispatchResponse = SalawatResponse | MeResponse | StatsResponse | HelpResponse;
+export type DispatchResponse = SalawatResponse | MeResponse | StatsResponse | HelpResponse | AwliaResponse;
 
 /**
  * Public contract for the Dispatcher module.

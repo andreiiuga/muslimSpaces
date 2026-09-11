@@ -14,7 +14,10 @@ export type MeCommand = { type: 'me' };
 /** Request for the list of available commands and a short explanation of how salawat counting works. */
 export type HelpCommand = { type: 'help' };
 
-export type Command = SalawatCommand | StatsCommand | MeCommand | HelpCommand;
+/** Request for a randomized (not ranked) list of everyone who has submitted at least once. */
+export type AwliaCommand = { type: 'awlia' };
+
+export type Command = SalawatCommand | StatsCommand | MeCommand | HelpCommand | AwliaCommand;
 
 export interface InterpreterInterface {
   /** Extract a salawat count from a message, if present. */

@@ -6,6 +6,7 @@ const { mockPrisma } = vi.hoisted(() => ({
     user: {
       findUnique: vi.fn(),
       create: vi.fn(),
+      findMany: vi.fn(),
     },
     submission: {
       create: vi.fn(),
@@ -145,5 +146,55 @@ describe('/help', () => {
     expect(response.type).toBe('help');
     expect(mockPrisma.user.findUnique).not.toHaveBeenCalled();
     expect(mockPrisma.submission.findMany).not.toHaveBeenCalled();
+  });
+});
+
+describe('/awlia', () => {
+  it('returns everyone who has submitted at least once', async () => {
+    const users = [
+      { name: 'Amina', phoneNumber: '111' },
+      { name: null, phoneNumber: '222' },
+      { name: 'Yusuf', phoneNumber: '333' },
+    ];
+    mockPrisma.user.findMany.mockResolvedValue(users);
+
+    const response = await dispatcher.processCommand({ type: 'awlia' }, sender);
+    if (response.type !== 'awlia') throw new Error('expected an awlia response');
+
+    expect(mockPrisma.user.findMany).toHaveBeenCalledWith({
+      where: { submissions: { some: {} } },
+      select: { name: true, phoneNumber: true },
+    });
+    expect(response.users).toHaveLength(users.length);
+    expect(response.users).toEqual(expect.arrayContaining(users));
+  });
+
+  it('returns an empty list when nobody has submitted yet', async () => {
+    mockPrisma.user.findMany.mockResolvedValue([]);
+
+    const response = await dispatcher.processCommand({ type: 'awlia' }, sender);
+    if (response.type !== 'awlia') throw new Error('expected an awlia response');
+
+    expect(response.users).toEqual([]);
+  });
+
+  it('shuffles the roster instead of returning it in DB order', async () => {
+    const users = [
+      { name: 'A', phoneNumber: '1' },
+      { name: 'B', phoneNumber: '2' },
+      { name: 'C', phoneNumber: '3' },
+    ];
+    mockPrisma.user.findMany.mockResolvedValue(users);
+    const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0);
+
+    try {
+      const response = await dispatcher.processCommand({ type: 'awlia' }, sender);
+      if (response.type !== 'awlia') throw new Error('expected an awlia response');
+
+      // With Math.random pinned to 0, Fisher-Yates on [A,B,C] deterministically yields [B,C,A].
+      expect(response.users).toEqual([users[1], users[2], users[0]]);
+    } finally {
+      randomSpy.mockRestore();
+    }
   });
 });

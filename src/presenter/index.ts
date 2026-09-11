@@ -1,5 +1,12 @@
 import Anthropic from '@anthropic-ai/sdk';
-import type { HelpResponse, MeResponse, SalawatResponse, StatsResponse, DispatchResponse } from '../dispatcher/types.js';
+import type {
+  AwliaResponse,
+  HelpResponse,
+  MeResponse,
+  SalawatResponse,
+  StatsResponse,
+  DispatchResponse,
+} from '../dispatcher/types.js';
 import type { PresenterInterface } from './types.js';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -59,6 +66,8 @@ class Presenter implements PresenterInterface {
         return this.presentStats(response);
       case 'help':
         return this.presentHelp(response);
+      case 'awlia':
+        return this.presentAwlia(response);
     }
   }
 
@@ -174,6 +183,7 @@ Rules:
       '• Send a number (e.g. "50" or "+50") to log that many salawat.',
       '• /stats — all-time salawat totals, broken down by day of week.',
       '• /me — privately see your own submission history.',
+      '• /awlia — see everyone who has taken part, in random order.',
       '• /help — show this message.',
       '',
       `We're counting together toward a shared goal of ${goalStr} salawat — every submission adds to the group total, no need to track your own.`,
@@ -182,9 +192,27 @@ Rules:
       '• أرسل رقمًا (مثل "50" أو "+50") لتسجيل عدد الصلوات التي صليتها.',
       '• /stats — إجمالي الصلوات منذ البداية، موزعًا حسب أيام الأسبوع.',
       '• /me — لعرض سجل مشاركاتك الخاص بشكل خاص.',
+      '• /awlia — لعرض كل من شارك، بترتيب عشوائي.',
       '• /help — لعرض هذه الرسالة.',
       '',
       `نجمع الصلوات معًا نحو هدف مشترك قدره ${goalStr} صلاة - كل مشاركة تُضاف إلى المجموع العام، فلا حاجة لحساب صلواتك بنفسك.`,
+    ].join('\n');
+  }
+
+  // Hardcoded like presentHelp: a roster of names must stay accurate, and the
+  // "random order" contract would be undermined by an LLM re-ordering it.
+  private presentAwlia({ users }: AwliaResponse): string {
+    if (users.length === 0) {
+      return ['🌙 No one has submitted any salawat yet.', '🌙 لم يشارك أحد بعد بالصلوات.'].join('\n');
+    }
+
+    const lines = users.map((u, i) => `${i + 1}. ${u.name ?? u.phoneNumber}`);
+
+    return [
+      '🌙 *Awlia so far* (random order, not ranked)',
+      '🌙 *الأولياء حتى الآن* (بترتيب عشوائي، غير مرتب)',
+      '',
+      ...lines,
     ].join('\n');
   }
 }

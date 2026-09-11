@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { DayCount, HelpResponse, MeResponse, SalawatResponse, StatsResponse } from '../dispatcher/types.js';
+import type { AwliaResponse, DayCount, HelpResponse, MeResponse, SalawatResponse, StatsResponse } from '../dispatcher/types.js';
 
 const { mockCreate } = vi.hoisted(() => ({ mockCreate: vi.fn() }));
 
@@ -188,7 +188,37 @@ describe('/help', () => {
     expect(text).toContain('🇸🇦 العربية');
     expect(text).toContain('/stats');
     expect(text).toContain('/me');
+    expect(text).toContain('/awlia');
     expect(text).toContain('/help');
     expect(text).toContain('100,000');
+  });
+});
+
+describe('/awlia', () => {
+  it('lists every user in the given order, falling back to phone number when no name is set', async () => {
+    const response: AwliaResponse = {
+      type: 'awlia',
+      users: [
+        { name: 'Amina', phoneNumber: '111' },
+        { name: null, phoneNumber: '222' },
+      ],
+    };
+
+    const text = await presenter.processResponse(response);
+
+    expect(mockCreate).not.toHaveBeenCalled();
+    expect(text).toContain('1. Amina');
+    expect(text).toContain('2. 222');
+    expect(text).toContain('random order');
+  });
+
+  it('shows a bilingual empty-state message when no one has submitted yet', async () => {
+    const response: AwliaResponse = { type: 'awlia', users: [] };
+
+    const text = await presenter.processResponse(response);
+
+    expect(mockCreate).not.toHaveBeenCalled();
+    expect(text).toContain('No one has submitted');
+    expect(text).toContain('لم يشارك أحد بعد');
   });
 });

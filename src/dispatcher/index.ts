@@ -11,6 +11,16 @@ function resolvePhoneNumber(sender: MessageSender): string {
   return sender.phoneNumber ?? sender.id.split('@')[0] ?? sender.id;
 }
 
+/** Fisher-Yates shuffle - returns a new array, doesn't mutate the input. */
+function shuffle<T>(items: T[]): T[] {
+  const result = [...items];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j] as T, result[i] as T];
+  }
+  return result;
+}
+
 /** Buckets every submission ever recorded by day of week (Mon-Sun), summed across all history. */
 function buildDistribution(submissions: { count: number; submittedAt: Date }[]): DayCount[] {
   const days: DayCount[] = DAY_ORDER.map((day) => ({ day, count: 0 }));
@@ -35,6 +45,8 @@ class Dispatcher implements DispatcherInterface {
         return this.handleStats();
       case 'help':
         return this.handleHelp();
+      case 'awlia':
+        return this.handleAwlia();
     }
   }
 
@@ -92,6 +104,15 @@ class Dispatcher implements DispatcherInterface {
 
   private handleHelp(): DispatchResponse {
     return { type: 'help', goal: GOAL };
+  }
+
+  private async handleAwlia(): Promise<DispatchResponse> {
+    const users = await prisma.user.findMany({
+      where: { submissions: { some: {} } },
+      select: { name: true, phoneNumber: true },
+    });
+
+    return { type: 'awlia', users: shuffle(users) };
   }
 }
 
