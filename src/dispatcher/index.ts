@@ -5,10 +5,17 @@ import type { DayCount, DispatcherInterface, DispatchResponse } from './types.js
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const; // index = Date#getDay()
 const DAY_ORDER = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const; // Monday-first display order
-const GOAL = parseInt(process.env.SALAWAT_GOAL || '100000', 10);
+const DEFAULT_GOAL = parseInt(process.env.SALAWAT_GOAL || '100000', 10);
+const SETTINGS_ID = 1; // singleton settings row
 
 function resolvePhoneNumber(sender: MessageSender): string {
   return sender.phoneNumber ?? sender.id.split('@')[0] ?? sender.id;
+}
+
+/** Reads the shared goal from the DB, falling back to SALAWAT_GOAL until /update-goal is ever used. */
+async function getGoal(): Promise<number> {
+  const setting = await prisma.setting.findUnique({ where: { id: SETTINGS_ID } });
+  return setting?.goal ?? DEFAULT_GOAL;
 }
 
 /** Fisher-Yates shuffle - returns a new array, doesn't mutate the input. */
@@ -47,6 +54,8 @@ class Dispatcher implements DispatcherInterface {
         return this.handleHelp();
       case 'awlia':
         return this.handleAwlia();
+      case 'update-goal':
+        return this.handleUpdateGoal(command.goal);
     }
   }
 
@@ -70,7 +79,7 @@ class Dispatcher implements DispatcherInterface {
       user: { id: user.id, name: user.name, phoneNumber: user.phoneNumber },
       count,
       total: _sum.count ?? count,
-      goal: GOAL,
+      goal: await getGoal(),
     };
   }
 
@@ -102,8 +111,8 @@ class Dispatcher implements DispatcherInterface {
     };
   }
 
-  private handleHelp(): DispatchResponse {
-    return { type: 'help', goal: GOAL };
+  private async handleHelp(): Promise<DispatchResponse> {
+    return { type: 'help', goal: await getGoal() };
   }
 
   private async handleAwlia(): Promise<DispatchResponse> {
@@ -113,6 +122,16 @@ class Dispatcher implements DispatcherInterface {
     });
 
     return { type: 'awlia', users: shuffle(users) };
+  }
+
+  private async handleUpdateGoal(goal: number): Promise<DispatchResponse> {
+    await prisma.setting.upsert({
+      where: { id: SETTINGS_ID },
+      update: { goal },
+      create: { id: SETTINGS_ID, goal },
+    });
+
+    return { type: 'update-goal', goal };
   }
 }
 

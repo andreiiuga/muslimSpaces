@@ -52,8 +52,20 @@ export type AwliaResponse = {
   users: { name: string | null; phoneNumber: string }[];
 };
 
+/** Confirms the group's shared submission goal was updated. Hidden - not listed in /help. */
+export type UpdateGoalResponse = {
+  type: 'update-goal';
+  goal: number;
+};
+
 /** Uniform response shape the Presenter switches on to pick a message format. */
-export type DispatchResponse = SalawatResponse | MeResponse | StatsResponse | HelpResponse | AwliaResponse;
+export type DispatchResponse =
+  | SalawatResponse
+  | MeResponse
+  | StatsResponse
+  | HelpResponse
+  | AwliaResponse
+  | UpdateGoalResponse;
 
 /**
  * Public contract for the Dispatcher module.

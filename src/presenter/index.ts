@@ -6,6 +6,7 @@ import type {
   SalawatResponse,
   StatsResponse,
   DispatchResponse,
+  UpdateGoalResponse,
 } from '../dispatcher/types.js';
 import type { PresenterInterface } from './types.js';
 
@@ -68,6 +69,8 @@ class Presenter implements PresenterInterface {
         return this.presentHelp(response);
       case 'awlia':
         return this.presentAwlia(response);
+      case 'update-goal':
+        return this.presentUpdateGoal(response);
     }
   }
 
@@ -214,6 +217,10 @@ Rules:
       '',
       ...lines,
     ].join('\n');
+  }
+
+  private presentUpdateGoal({ goal }: UpdateGoalResponse): string {
+    return `✅ Goal updated to ${goal.toLocaleString('en-US')} salawat.`;
   }
 }
 

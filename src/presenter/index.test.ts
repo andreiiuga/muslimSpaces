@@ -1,5 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { AwliaResponse, DayCount, HelpResponse, MeResponse, SalawatResponse, StatsResponse } from '../dispatcher/types.js';
+import type {
+  AwliaResponse,
+  DayCount,
+  HelpResponse,
+  MeResponse,
+  SalawatResponse,
+  StatsResponse,
+  UpdateGoalResponse,
+} from '../dispatcher/types.js';
 
 const { mockCreate } = vi.hoisted(() => ({ mockCreate: vi.fn() }));
 
@@ -220,5 +228,16 @@ describe('/awlia', () => {
     expect(mockCreate).not.toHaveBeenCalled();
     expect(text).toContain('No one has submitted');
     expect(text).toContain('لم يشارك أحد بعد');
+  });
+});
+
+describe('/update-goal (hidden command)', () => {
+  it('confirms the new goal without calling the API', async () => {
+    const response: UpdateGoalResponse = { type: 'update-goal', goal: 250000 };
+
+    const text = await presenter.processResponse(response);
+
+    expect(mockCreate).not.toHaveBeenCalled();
+    expect(text).toContain('250,000');
   });
 });

@@ -13,6 +13,10 @@ const { mockPrisma } = vi.hoisted(() => ({
       aggregate: vi.fn(),
       findMany: vi.fn(),
     },
+    setting: {
+      findUnique: vi.fn(),
+      upsert: vi.fn(),
+    },
   },
 }));
 
@@ -196,5 +200,38 @@ describe('/awlia', () => {
     } finally {
       randomSpy.mockRestore();
     }
+  });
+});
+
+describe('/update-goal (hidden command)', () => {
+  it('persists the new goal and confirms it', async () => {
+    const response = await dispatcher.processCommand({ type: 'update-goal', goal: 250000 }, sender);
+
+    expect(mockPrisma.setting.upsert).toHaveBeenCalledWith({
+      where: { id: 1 },
+      update: { goal: 250000 },
+      create: { id: 1, goal: 250000 },
+    });
+    expect(response).toEqual({ type: 'update-goal', goal: 250000 });
+  });
+});
+
+describe('shared goal lookup', () => {
+  it('falls back to the default goal when no setting row exists yet', async () => {
+    mockPrisma.setting.findUnique.mockResolvedValue(null);
+
+    const response = await dispatcher.processCommand({ type: 'help' }, sender);
+    if (response.type !== 'help') throw new Error('expected a help response');
+
+    expect(response.goal).toBe(100000);
+  });
+
+  it('uses the persisted goal once one has been set via /update-goal', async () => {
+    mockPrisma.setting.findUnique.mockResolvedValue({ id: 1, goal: 250000 });
+
+    const response = await dispatcher.processCommand({ type: 'help' }, sender);
+    if (response.type !== 'help') throw new Error('expected a help response');
+
+    expect(response.goal).toBe(250000);
   });
 });

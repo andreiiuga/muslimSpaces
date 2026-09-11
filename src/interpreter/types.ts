@@ -17,7 +17,13 @@ export type HelpCommand = { type: 'help' };
 /** Request for a randomized (not ranked) list of everyone who has submitted at least once. */
 export type AwliaCommand = { type: 'awlia' };
 
-export type Command = SalawatCommand | StatsCommand | MeCommand | HelpCommand | AwliaCommand;
+/**
+ * Sets the group's shared submission goal. Deliberately undocumented: not
+ * listed in /help, not in the natural-language classifier, fast-path only.
+ */
+export type UpdateGoalCommand = { type: 'update-goal'; goal: number };
+
+export type Command = SalawatCommand | StatsCommand | MeCommand | HelpCommand | AwliaCommand | UpdateGoalCommand;
 
 export interface InterpreterInterface {
   /** Extract a salawat count from a message, if present. */

@@ -45,6 +45,14 @@ class Interpreter implements InterpreterInterface {
     if (normalized === '/help') return { type: 'help' };
     if (normalized === '/awlia') return { type: 'awlia' };
 
+    // Hidden command: intentionally not in QUICK_SKIP_REGEX or the classifier
+    // prompt below, so it's undiscoverable via /help or natural language.
+    const updateGoalMatch = normalized.match(/^\/update-goal\s+(\d{1,9})$/);
+    if (updateGoalMatch?.[1]) {
+      const goal = parseInt(updateGoalMatch[1], 10);
+      if (goal > 0) return { type: 'update-goal', goal };
+    }
+
     const simpleMatch = text.match(/^\+?(\d{1,6})$/);
     if (simpleMatch?.[1]) return { type: 'salawat', count: parseInt(simpleMatch[1], 10) };
 

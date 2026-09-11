@@ -39,6 +39,34 @@ describe('fast paths (no API call)', () => {
     expect(mockCreate).not.toHaveBeenCalled();
   });
 
+  it('detects /update-goal literally, without calling the API', async () => {
+    await expect(interpreter.processMessage('/update-goal 200000')).resolves.toEqual({
+      type: 'update-goal',
+      goal: 200000,
+    });
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it('is case-insensitive for /update-goal', async () => {
+    await expect(interpreter.processMessage('/UPDATE-GOAL 500')).resolves.toEqual({
+      type: 'update-goal',
+      goal: 500,
+    });
+  });
+
+  it('does not match the hidden command with a non-positive value, falling through to normal classification', async () => {
+    respondWith({ intent: 'none', count: null });
+    await expect(interpreter.processMessage('/update-goal 0')).resolves.toBeNull();
+  });
+
+  it('does not treat "/update-goal" as a natural-language hint for the classifier', async () => {
+    // A malformed /update-goal (no number) contains no digit and no other
+    // recognized keyword, so it should be skipped locally, never reaching Claude -
+    // proof the hidden command isn't wired into the classifier's vocabulary.
+    await expect(interpreter.processMessage('/update-goal please')).resolves.toBeNull();
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
   it('is case-insensitive for slash commands', async () => {
     await expect(interpreter.processMessage('/STATS')).resolves.toEqual({ type: 'stats' });
   });

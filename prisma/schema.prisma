@@ -21,3 +21,9 @@ model Submission {
   author      User     @relation(fields: [authorId], references: [id])
   authorId    Int
 }
+
+// Singleton row (id always 1) holding group-wide, runtime-configurable settings.
+model Setting {
+  id   Int @id @default(1)
+  goal Int @default(100000)
+}

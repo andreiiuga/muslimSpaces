@@ -115,6 +115,18 @@ via GitHub Actions (`.github/workflows/ci.yml`).
 - If WhatsApp logs the session out (rare, but possible), you'll need to
   rescan a fresh QR code from the logs.
 
+## Admin-only commands
+
+Deliberately undocumented in `/help` and unknown to the natural-language
+classifier — these only work as an exact, literal command, so anyone who
+doesn't already know the syntax has no way to discover them from the bot
+itself. There's no sender restriction on these today (anyone in the group
+who knows the syntax can use them).
+
+- `/update-goal <number>` — changes the group's shared salawat goal (persisted
+  in Postgres, overriding `SALAWAT_GOAL` from then on). Example:
+  `/update-goal 200000`.
+
 # salawat-bot — Architecture
 
 ## Diagram
