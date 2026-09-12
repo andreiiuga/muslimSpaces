@@ -16,16 +16,19 @@ const QUICK_SKIP_REGEX =
 
 const INTENT_SYSTEM_PROMPT = `You classify WhatsApp group messages for a salawat (Islamic prayer) counting bot. Messages may be in English or Arabic. Every message is exactly one of six things:
 
-1. "salawat" - the sender is reporting a count of salawat they just sent/recited (e.g. "did 50 today", "+30", "sent 100 salawat, alhamdulillah", "صليت ٥٠ صلوات", "اللهم صل على محمد ٣٠ مرة"). Extract the integer count (Arabic-Indic digits count too, e.g. ٥٠ = 50).
+1. "salawat" - the sender (or their group, speaking as "we") is REPORTING a specific salawat count as something just completed or being submitted right now - not describing a habit, rule, plan, or general fact. Look for a completion marker tied directly to the number: past tense ("did", "sent", "recited", "صليت", "قمنا", "أنجزنا"), or an immediacy word ("just", "today", "الآن", "اليوم"). Examples: "did 50 today", "+30", "sent 100 salawat, alhamdulillah", "صليت ٥٠ صلوات", "اللهم صل على محمد ٣٠ مرة", "قمنا اليوم بـ ٥٠٠٠ صلاة كمجموعة". Extract the integer count exactly as stated (Arabic-Indic digits count too, e.g. ٥٠ = 50) - never multiply or estimate a total from a group size and a per-person rate.
+
+   Do NOT classify as "salawat" - use "none" instead - when the message merely DESCRIBES a routine, rule, plan, or general fact involving numbers, even if it mentions salawat and a count. Signs of this: habitual/generic verb forms ("each person recites 500 daily", "كل واحد يذكر ٥٠٠ صلاة يومياً"), describing the group itself ("we are a group of ten people..."), suggestions or future plans ("let's each aim for 100 a day"), or general reminders/information with no claim that a submission happened just now. Example that is "none", not "salawat": "الحمدلله نحن مجموعة من عشرة أشخاص كل واحد يذكر 500 صلاة على النبي يومياً" (Alhamdulillah, we are a group of ten people, each one recites 500 salawat on the Prophet daily) - this explains the group's practice, it does not report today's submission.
 2. "stats" - the sender is asking to see the group's overall statistics, such as an all-time distribution/graph/breakdown of totals by day of week. Triggered by the literal command "/stats" or natural phrasing like "show stats", "what's our progress", "graph of all salawat", "الإحصائيات", "الإحصائيات الكلية".
 3. "me" - the sender is asking to be sent (privately) a list/history of their own submissions. Triggered by the literal command "/me" or natural phrasing like "show my submissions", "what have I submitted", "send me my total", "مشاركاتي", "حسابي".
 4. "help" - the sender is asking what the bot can do, what commands exist, or how the salawat counting works. Triggered by the literal command "/help" or natural phrasing like "what can you do", "how does this work", "what are the commands", "مساعدة", "ما هي الأوامر", "كيف يعمل هذا البوت".
 5. "awlia" - the sender wants to see the full list of everyone who has submitted salawat so far, in random order (explicitly NOT ranked or sorted by count). Triggered by the literal command "/awlia" or natural phrasing like "who has participated", "list everyone who submitted", "show me the awlia", "من شارك؟", "قائمة الأولياء".
-6. "none" - anything else: greetings, unrelated chat, a number that isn't a salawat count (a date, a time, a phone number), or any other message that doesn't clearly match one of the above.
+6. "none" - anything else: greetings, unrelated chat, a number that isn't a salawat count (a date, a time, a phone number), a message describing a routine/rule/plan (see above), or any other message that doesn't clearly match one of the above.
 
 Reply with ONLY a JSON object, no other text: {"intent": "salawat" | "stats" | "me" | "help" | "awlia" | "none", "count": <integer or null>}
 Rules:
 - "count" is only meaningful when intent is "salawat"; it must be null for every other intent.
+- A message can both describe context (e.g. group size, routine) AND report a real completion (e.g. "today we did X") - if it contains a genuine completion/immediacy marker for a specific number, classify it as "salawat" with that number, even alongside descriptive text.
 - If a message is ambiguous between two intents, or doesn't clearly match any, return "none".`;
 
 class Interpreter implements InterpreterInterface {

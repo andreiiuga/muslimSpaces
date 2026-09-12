@@ -149,3 +149,35 @@ describe('Claude-classified intents', () => {
     await expect(interpreter.processMessage('mashaAllah keep up the salawat')).resolves.toBeNull();
   });
 });
+
+describe('salawat vs. a routine/rule description (regression)', () => {
+  // Real report: "Alhamdulillah, we are a group of ten people, each one
+  // recites 500 salawat on the Prophet daily" was previously misread as a
+  // live submission of 500. It's describing an ongoing group habit, not
+  // reporting that a submission just happened - the classifier should say
+  // "none", and processMessage should trust that verdict.
+  it('does not treat a description of the group\'s daily habit as a submission', async () => {
+    respondWith({ intent: 'none', count: null });
+    const text = 'الحمدلله\nنحنُ مجموعةٌ من  عشرة أشخاص \nكلُّ واحدٍ يذكُرُ 500 صلاة على النّبي يومياً';
+
+    await expect(interpreter.processMessage(text)).resolves.toBeNull();
+  });
+
+  it('still recognizes a genuine group completion report ("today we did X") as salawat', async () => {
+    respondWith({ intent: 'salawat', count: 5000 });
+    await expect(interpreter.processMessage('قمنا اليوم بـ 5000 صلاة كمجموعة، الحمدلله')).resolves.toEqual({
+      type: 'salawat',
+      count: 5000,
+    });
+  });
+
+  it('still recognizes an explicit personal completion buried in descriptive text', async () => {
+    respondWith({ intent: 'salawat', count: 500 });
+    await expect(
+      interpreter.processMessage('نحن مجموعة من عشرة، وأنا شخصياً صليت اليوم 500 صلاة'),
+    ).resolves.toEqual({
+      type: 'salawat',
+      count: 500,
+    });
+  });
+});
