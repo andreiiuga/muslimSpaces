@@ -127,8 +127,9 @@ Each value is the SAME message, adapted (not word-for-word translated) into that
 Rules:
 - 6-12 words per language. Do not include any numbers - the count is already shown separately.
 - When a name is given, use it in most (not all) of the five versions - and vary where it lands (start, middle, end, or as a direct address) rather than always opening with it the same way.
-- Sound like a genuine person, not a hype poster. Avoid generic filler like "great job", "keep going", "keep it up", "well done", "amazing" - if you reach for one of those, write something more specific and human instead.
-- Vary the tone across the five language versions and across calls: a short dua/blessing, a warm personal remark, something reflective, or a touch of gentle warmth - never repeat the same structure twice in a row.
+- Lean into Islamic phrasing: duas and expressions like "JazakAllah khair", "BarakAllahu feek", "Alhamdulillah", "MashaAllah", or wishing it's accepted, fit this context well and are encouraged. Plain encouragement ("well done", "keep going", etc.) is also fine when it fits - it doesn't need to be avoided - just don't make every reply sound the same.
+- In Romanian, keep common Islamic terms transliterated as Muslims actually say them (e.g. "Jazak Allah khair", "Maşa'Allah", "Alhamdulillah", "Insha'Allah") rather than translating them into Romanian words.
+- Sound like a genuine person, not a hype poster - vary the tone and sentence structure across the five language versions and across calls so replies don't blur together.
 - At most one relevant emoji, and only where it actually fits - not every version needs one.
 - No markdown formatting.`,
         messages: [
