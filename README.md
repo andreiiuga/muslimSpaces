@@ -30,7 +30,7 @@ flowchart TB
   mobile --> shared
   shared -- "typed REST" --> backend
   backend --> db
-  backend -. "POI photos (planned)" .-> bucket
+  backend -- "POI/blog images" --> bucket
   web -. "map tiles (planned)" .-> tiles
   mobile -. "map tiles (planned)" .-> tiles
 ```
@@ -48,7 +48,8 @@ Prisma, MapLibre+OpenFreeMap over Mapbox, bucket over volume).
 
 ```
 apps/
-  backend/   NestJS + Fastify API — auth, POI/category CRUD, geospatial queries
+  backend/   NestJS + Fastify API — auth, POI/category CRUD, geospatial
+             queries, hours/openNow, images, favorites, reviews, blog, media
   web/       Next.js — SSR POI list, login, authenticated account page
   mobile/    Expo — shares types with the backend, same POI list
 packages/
@@ -58,18 +59,29 @@ packages/
 
 ## Status
 
-**Built and verified against a live backend + PostGIS database:**
-- Auth: signup/login/me (argon2, JWT)
-- Categories, cities, and POI CRUD with a moderation workflow
+**Built and verified against a live backend + PostGIS + MinIO (S3-compatible) stack:**
+- Auth: signup/login/me, preferred-locale update (argon2, JWT)
+- Categories as many-to-many tags with a designated primary (a POI can be
+  Mosque + Jamiah at once), cities, POI CRUD with a moderation workflow
   (pending → approved/rejected, public endpoints only ever return approved)
-- Geospatial queries: radius search, nearest, bounding-box (map viewport)
+- Geospatial queries: radius search, nearest, bounding-box (map viewport),
+  all filterable by category and `openNow`
+- Structured opening hours (`poi_hours`) powering the `openNow` filter
+- POI images (logo/cover/gallery) and a generic media upload endpoint —
+  `sharp` resize to WebP thumbnail+display variants, stored in an
+  S3-compatible bucket
+- Favorites (save/list a user's POIs)
+- Reviews: open to everyone, rate-limited (10/hour/user) instead of
+  pre-moderated, with a denormalized rating average/count on each POI
+- A minimal blog (markdown content per locale, draft/published, cover image)
 - Web: SSR POI list, login flow, authenticated account page
 - Mobile: POI list screen sharing types with the backend
 
 **Decided but not yet implemented:**
 - Map screens (MapLibre GL + OpenFreeMap vector tiles)
-- POI photo upload (Railway object storage bucket, image resizing via
-  `sharp` — see `CLAUDE.md` practices section once that lands)
+- Web/mobile UI for the newer features (categories-as-tags display,
+  reviews, favorites, blog, hours, image upload) — the backend API and
+  shared client exist; the UI hasn't caught up yet
 
 ## Getting started
 
@@ -85,7 +97,16 @@ docker run --name muslimspaces-postgres \
   -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=muslimspaces \
   -p 5433:5432 -d postgis/postgis:16-3.4
 
-cp apps/backend/.env.example apps/backend/.env   # points at the container above
+# local S3-compatible bucket for the media/photo pipeline (use quay.io,
+# not Docker Hub's deprecated minio/minio — see CLAUDE.md)
+docker run --name muslimspaces-minio \
+  -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=minioadmin \
+  -p 9000:9000 -p 9001:9001 -d quay.io/minio/minio server /data --console-address ":9001"
+docker run --rm --network host --entrypoint sh quay.io/minio/mc -c \
+  "mc alias set local http://localhost:9000 minioadmin minioadmin && \
+   mc mb local/muslimspaces-media && mc anonymous set download local/muslimspaces-media"
+
+cp apps/backend/.env.example apps/backend/.env   # points at both containers above
 cp apps/web/.env.local.example apps/web/.env.local
 cp apps/mobile/.env.example apps/mobile/.env
 

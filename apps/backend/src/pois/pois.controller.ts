@@ -23,7 +23,6 @@ import { RolesGuard } from "../auth/guards/roles.guard";
 import { Roles } from "../auth/decorators/roles.decorator";
 import { CurrentUser, RequestUser } from "../auth/decorators/current-user.decorator";
 import { PoisService } from "./pois.service";
-import { toPoiDto } from "./poi.mapper";
 
 @Controller("pois")
 export class PoisController {
@@ -32,73 +31,64 @@ export class PoisController {
   // Public feed — approved POIs only. Static paths below must stay declared
   // before the dynamic ":id" route so they aren't swallowed by it.
   @Get()
-  async list(@Query(new ZodValidationPipe(listPoisQuerySchema)) query: ListPoisQuery) {
-    const pois = await this.poisService.listApproved(query);
-    return pois.map(toPoiDto);
+  list(@Query(new ZodValidationPipe(listPoisQuerySchema)) query: ListPoisQuery) {
+    return this.poisService.listApproved(query);
   }
 
   @Get("nearby")
-  async nearby(@Query(new ZodValidationPipe(radiusQuerySchema)) query: RadiusQuery) {
-    const pois = await this.poisService.radiusSearch(query);
-    return pois.map(toPoiDto);
+  nearby(@Query(new ZodValidationPipe(radiusQuerySchema)) query: RadiusQuery) {
+    return this.poisService.radiusSearch(query);
   }
 
   @Get("nearest")
-  async nearest(@Query(new ZodValidationPipe(nearestQuerySchema)) query: NearestQuery) {
-    const pois = await this.poisService.nearestSearch(query);
-    return pois.map(toPoiDto);
+  nearest(@Query(new ZodValidationPipe(nearestQuerySchema)) query: NearestQuery) {
+    return this.poisService.nearestSearch(query);
   }
 
   @Get("bbox")
-  async bbox(@Query(new ZodValidationPipe(bboxQuerySchema)) query: BboxQuery) {
-    const pois = await this.poisService.bboxSearch(query);
-    return pois.map(toPoiDto);
+  bbox(@Query(new ZodValidationPipe(bboxQuerySchema)) query: BboxQuery) {
+    return this.poisService.bboxSearch(query);
   }
 
   // Moderation queue — never exposed on the public list/detail endpoints.
   @Get("pending")
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles("moderator", "admin")
-  async pending() {
-    const pois = await this.poisService.listPending();
-    return pois.map(toPoiDto);
+  pending() {
+    return this.poisService.listPending();
   }
 
   @Get(":id")
-  async detail(@Param("id") id: string) {
-    const poi = await this.poisService.findApprovedByIdOrThrow(id);
-    return toPoiDto(poi);
+  detail(@Param("id") id: string) {
+    return this.poisService.getApproved(id);
   }
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  async create(
+  create(
     @Body(new ZodValidationPipe(createPoiSchema)) body: CreatePoiPayload,
     @CurrentUser() user: RequestUser,
   ) {
-    const poi = await this.poisService.create(body, user.userId);
-    return toPoiDto(poi);
+    return this.poisService.create(body, user.userId);
   }
 
   @Patch(":id")
   @UseGuards(JwtAuthGuard)
-  async update(
+  update(
     @Param("id") id: string,
     @Body(new ZodValidationPipe(updatePoiSchema)) body: UpdatePoiPayload,
     @CurrentUser() user: RequestUser,
   ) {
-    const poi = await this.poisService.update(id, body, user);
-    return toPoiDto(poi);
+    return this.poisService.update(id, body, user);
   }
 
   @Patch(":id/moderate")
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles("moderator", "admin")
-  async moderate(
+  moderate(
     @Param("id") id: string,
     @Body(new ZodValidationPipe(moderatePoiSchema)) body: ModeratePoiPayload,
   ) {
-    const poi = await this.poisService.moderate(id, body);
-    return toPoiDto(poi);
+    return this.poisService.moderate(id, body);
   }
 }

@@ -34,10 +34,20 @@ export class AuthService {
   async me(userId: string): Promise<AuthUser> {
     const user = await this.usersService.findById(userId);
     if (!user) throw new NotFoundException("User not found");
+    return this.toAuthUser(user);
+  }
+
+  async updatePreferredLocale(userId: string, preferredLocale: string): Promise<AuthUser> {
+    const user = await this.usersService.updatePreferredLocale(userId, preferredLocale);
+    return this.toAuthUser(user);
+  }
+
+  private toAuthUser(user: UserEntity): AuthUser {
     return {
       id: user.id,
       email: user.email,
       role: user.role,
+      preferredLocale: user.preferredLocale,
       createdAt: user.createdAt.toISOString(),
     };
   }
@@ -51,12 +61,7 @@ export class AuthService {
 
     return {
       accessToken,
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        createdAt: user.createdAt.toISOString(),
-      },
+      user: this.toAuthUser(user),
     };
   }
 }

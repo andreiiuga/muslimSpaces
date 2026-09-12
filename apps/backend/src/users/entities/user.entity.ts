@@ -26,6 +26,9 @@ export class UserEntity {
   @Column({ type: "enum", enum: UserRole, default: UserRole.USER })
   role: UserRole;
 
+  @Column({ name: "preferred_locale", default: "ro" })
+  preferredLocale: string;
+
   @CreateDateColumn({ name: "created_at" })
   createdAt: Date;
 

@@ -4,15 +4,27 @@ import {
   authUserSchema,
   type LoginPayload,
   type SignupPayload,
+  type UpdatePreferredLocalePayload,
 } from "./schemas/auth";
 import { categorySchema, type CreateCategoryPayload } from "./schemas/category";
 import {
   poiSchema,
   type CreatePoiPayload,
+  type ListPoisQuery,
   type ModeratePoiPayload,
   type UpdatePoiPayload,
 } from "./schemas/poi";
-import type { PaginationQuery } from "./schemas/common";
+import { poiHourSchema, type SetPoiHoursPayload } from "./schemas/poi-hours";
+import { poiImageSchema, type AttachPoiImagePayload } from "./schemas/poi-image";
+import { mediaUploadResponseSchema } from "./schemas/media";
+import { reviewSchema, type SetReviewStatusPayload, type SubmitReviewPayload } from "./schemas/review";
+import { favoriteSchema } from "./schemas/favorite";
+import {
+  blogPostSchema,
+  type CreateBlogPostPayload,
+  type SetBlogPostStatusPayload,
+  type UpdateBlogPostPayload,
+} from "./schemas/blog";
 import type { BboxQuery, NearestQuery, RadiusQuery } from "./schemas/geo";
 
 export class ApiError extends Error {
@@ -71,6 +83,34 @@ export function createApiClient({ baseUrl, getToken }: ApiClientOptions) {
     return schema.parse(body);
   }
 
+  /** Multipart upload — separate from `request` since it must NOT set a JSON Content-Type. */
+  async function uploadFile<TSchema extends z.ZodTypeAny>(
+    path: string,
+    schema: TSchema,
+    file: Blob,
+    filename: string,
+  ): Promise<z.infer<TSchema>> {
+    const token = await getToken?.();
+    const form = new FormData();
+    form.append("file", file, filename);
+
+    const res = await fetch(`${baseUrl}${path}`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      body: form,
+    });
+
+    const body = await res.json().catch(() => undefined);
+    if (!res.ok) {
+      throw new ApiError(
+        (body as { message?: string } | undefined)?.message ?? res.statusText,
+        res.status,
+        body,
+      );
+    }
+    return schema.parse(body);
+  }
+
   return {
     auth: {
       signup: (payload: SignupPayload) =>
@@ -84,6 +124,11 @@ export function createApiClient({ baseUrl, getToken }: ApiClientOptions) {
           body: JSON.stringify(payload),
         }),
       me: () => request("/auth/me", authUserSchema),
+      updatePreferredLocale: (payload: UpdatePreferredLocalePayload) =>
+        request("/auth/me/locale", authUserSchema, {
+          method: "PATCH",
+          body: JSON.stringify(payload),
+        }),
     },
     categories: {
       list: () => request("/categories", z.array(categorySchema)),
@@ -94,7 +139,7 @@ export function createApiClient({ baseUrl, getToken }: ApiClientOptions) {
         }),
     },
     pois: {
-      list: (query?: Partial<PaginationQuery> & { categoryId?: string; cityId?: string }) =>
+      list: (query?: Partial<ListPoisQuery>) =>
         request(`/pois${toQueryString(query)}`, z.array(poiSchema)),
       get: (id: string) => request(`/pois/${id}`, poiSchema),
       create: (payload: CreatePoiPayload) =>
@@ -118,6 +163,75 @@ export function createApiClient({ baseUrl, getToken }: ApiClientOptions) {
         request(`/pois/nearest${toQueryString(query)}`, z.array(poiSchema)),
       bbox: (query: BboxQuery) =>
         request(`/pois/bbox${toQueryString(query)}`, z.array(poiSchema)),
+
+      hours: {
+        list: (poiId: string) => request(`/pois/${poiId}/hours`, z.array(poiHourSchema)),
+        set: (poiId: string, payload: SetPoiHoursPayload) =>
+          request(`/pois/${poiId}/hours`, z.array(poiHourSchema), {
+            method: "PUT",
+            body: JSON.stringify(payload),
+          }),
+      },
+      images: {
+        list: (poiId: string) => request(`/pois/${poiId}/images`, z.array(poiImageSchema)),
+        attach: (poiId: string, payload: AttachPoiImagePayload) =>
+          request(`/pois/${poiId}/images`, poiImageSchema, {
+            method: "POST",
+            body: JSON.stringify(payload),
+          }),
+        remove: (poiId: string, imageId: string) =>
+          request(`/pois/${poiId}/images/${imageId}`, z.void(), { method: "DELETE" }),
+      },
+      favorite: {
+        add: (poiId: string) =>
+          request(`/pois/${poiId}/favorite`, favoriteSchema, { method: "POST" }),
+        remove: (poiId: string) =>
+          request(`/pois/${poiId}/favorite`, z.void(), { method: "DELETE" }),
+      },
+      reviews: {
+        list: (poiId: string) => request(`/pois/${poiId}/reviews`, z.array(reviewSchema)),
+        submit: (poiId: string, payload: SubmitReviewPayload) =>
+          request(`/pois/${poiId}/reviews`, reviewSchema, {
+            method: "POST",
+            body: JSON.stringify(payload),
+          }),
+      },
+    },
+    favorites: {
+      mine: () => request("/favorites/mine", z.array(poiSchema)),
+    },
+    reviews: {
+      mine: () => request("/reviews/mine", z.array(reviewSchema)),
+      setStatus: (reviewId: string, payload: SetReviewStatusPayload) =>
+        request(`/reviews/${reviewId}`, reviewSchema, {
+          method: "PATCH",
+          body: JSON.stringify(payload),
+        }),
+      remove: (reviewId: string) =>
+        request(`/reviews/${reviewId}`, z.void(), { method: "DELETE" }),
+    },
+    media: {
+      upload: (file: Blob, filename: string) =>
+        uploadFile("/media", mediaUploadResponseSchema, file, filename),
+    },
+    blog: {
+      list: () => request("/blog", z.array(blogPostSchema)),
+      get: (slug: string) => request(`/blog/${slug}`, blogPostSchema),
+      create: (payload: CreateBlogPostPayload) =>
+        request("/blog", blogPostSchema, {
+          method: "POST",
+          body: JSON.stringify(payload),
+        }),
+      update: (id: string, payload: UpdateBlogPostPayload) =>
+        request(`/blog/${id}`, blogPostSchema, {
+          method: "PATCH",
+          body: JSON.stringify(payload),
+        }),
+      setStatus: (id: string, payload: SetBlogPostStatusPayload) =>
+        request(`/blog/${id}/status`, blogPostSchema, {
+          method: "PATCH",
+          body: JSON.stringify(payload),
+        }),
     },
   };
 }

@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { UserEntity } from "./entities/user.entity";
@@ -20,6 +20,13 @@ export class UsersService {
 
   async create(email: string, passwordHash: string): Promise<UserEntity> {
     const user = this.usersRepository.create({ email, passwordHash });
+    return this.usersRepository.save(user);
+  }
+
+  async updatePreferredLocale(id: string, preferredLocale: string): Promise<UserEntity> {
+    const user = await this.usersRepository.findOne({ where: { id } });
+    if (!user) throw new NotFoundException("User not found");
+    user.preferredLocale = preferredLocale;
     return this.usersRepository.save(user);
   }
 }

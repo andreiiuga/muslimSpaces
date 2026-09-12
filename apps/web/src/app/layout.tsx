@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
   title: "MuslimSpaces",
@@ -7,7 +6,9 @@ export const metadata: Metadata = {
     "Find mosques, halal restaurants, Islamic learning centers, and services for Muslims in Romania.",
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
       <body>{children}</body>

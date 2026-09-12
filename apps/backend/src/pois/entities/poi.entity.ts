@@ -10,7 +10,6 @@ import {
 } from "typeorm";
 import { LocalizedText } from "../../common/localized-text";
 import { GeoPoint } from "../../common/geo-point";
-import { CategoryEntity } from "../../categories/entities/category.entity";
 import { CityEntity } from "../../cities/entities/city.entity";
 import { UserEntity } from "../../users/entities/user.entity";
 
@@ -31,12 +30,9 @@ export class PoiEntity {
   @Column({ type: "jsonb", nullable: true })
   description: LocalizedText | null;
 
-  @Column({ name: "category_id" })
-  categoryId: string;
-
-  @ManyToOne(() => CategoryEntity, { onDelete: "RESTRICT" })
-  @JoinColumn({ name: "category_id" })
-  category: CategoryEntity;
+  // Categories live in poi_categories (many-to-many + is_primary flag) —
+  // see PoiCategoryAssignmentEntity. Not modeled as a relation property
+  // here; PoisService queries the join table directly.
 
   @Column({ type: "uuid", name: "city_id", nullable: true })
   cityId: string | null;
@@ -64,8 +60,14 @@ export class PoiEntity {
   @Column({ type: "varchar", nullable: true })
   website: string | null;
 
-  @Column({ type: "varchar", name: "opening_hours", nullable: true })
-  openingHours: string | null;
+  // Denormalized from `reviews`, recomputed in the same transaction as any
+  // review write (create/edit/hide/delete) — see ReviewsService. Avoids an
+  // aggregate join on every list/map read.
+  @Column({ name: "rating_avg", type: "numeric", precision: 3, scale: 2, nullable: true })
+  ratingAvg: string | null;
+
+  @Column({ name: "rating_count", type: "int", default: 0 })
+  ratingCount: number;
 
   @Index()
   @Column({ type: "enum", enum: PoiStatus, default: PoiStatus.PENDING })

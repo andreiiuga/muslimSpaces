@@ -6,6 +6,7 @@ export const radiusQuerySchema = z.object({
   lng: z.coerce.number().min(-180).max(180),
   radiusMeters: z.coerce.number().positive().max(50_000),
   categoryId: z.string().uuid().optional(),
+  openNow: z.coerce.boolean().optional(),
   limit: z.coerce.number().int().positive().max(100).default(20),
 });
 export type RadiusQuery = z.infer<typeof radiusQuerySchema>;
@@ -15,6 +16,7 @@ export const nearestQuerySchema = z.object({
   lat: z.coerce.number().min(-90).max(90),
   lng: z.coerce.number().min(-180).max(180),
   categoryId: z.string().uuid().optional(),
+  openNow: z.coerce.boolean().optional(),
   limit: z.coerce.number().int().positive().max(20).default(1),
 });
 export type NearestQuery = z.infer<typeof nearestQuerySchema>;
@@ -27,6 +29,7 @@ export const bboxQuerySchema = z
     maxLat: z.coerce.number().min(-90).max(90),
     maxLng: z.coerce.number().min(-180).max(180),
     categoryId: z.string().uuid().optional(),
+    openNow: z.coerce.boolean().optional(),
     limit: z.coerce.number().int().positive().max(500).default(100),
   })
   .refine((v) => v.minLat <= v.maxLat && v.minLng <= v.maxLng, {

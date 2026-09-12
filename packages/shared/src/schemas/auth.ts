@@ -17,6 +17,7 @@ export const authUserSchema = z.object({
   id: z.string().uuid(),
   email: z.string().email(),
   role: roleSchema,
+  preferredLocale: z.string().min(2).max(10),
   createdAt: z.string().datetime(),
 });
 export type AuthUser = z.infer<typeof authUserSchema>;
@@ -26,3 +27,8 @@ export const authResponseSchema = z.object({
   user: authUserSchema,
 });
 export type AuthResponse = z.infer<typeof authResponseSchema>;
+
+export const updatePreferredLocaleSchema = z.object({
+  preferredLocale: z.string().min(2).max(10),
+});
+export type UpdatePreferredLocalePayload = z.infer<typeof updatePreferredLocaleSchema>;
