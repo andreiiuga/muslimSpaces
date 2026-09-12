@@ -30,8 +30,10 @@ async function start() {
   })
 
   // Greet each new member with a personal welcome (name + current progress),
-  // then the /help message, right after they join the group.
+  // then send the /help message once for the whole batch of joiners.
   messenger.addGroupJoinHandler(async (groupId, participantIds) => {
+    if (participantIds.length === 0) return;
+
     for (const participantId of participantIds) {
       const sender = { id: participantId, name: null, phoneNumber: participantId.split('@')[0] ?? participantId };
 
@@ -40,11 +42,12 @@ async function start() {
       await messenger.sendMessage({ text: welcomeText, chatId: groupId });
 
       await sleep(SEND_DELAY_MS);
-
-      const helpResponse = await dispatcher.processCommand({ type: 'help' }, sender);
-      const helpText = await presenter.processResponse(helpResponse);
-      await messenger.sendMessage({ text: helpText, chatId: groupId });
     }
+
+    // handleHelp() ignores the sender entirely, so any placeholder works here.
+    const helpResponse = await dispatcher.processCommand({ type: 'help' }, { id: groupId, name: null, phoneNumber: null });
+    const helpText = await presenter.processResponse(helpResponse);
+    await messenger.sendMessage({ text: helpText, chatId: groupId });
   })
 }
 

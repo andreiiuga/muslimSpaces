@@ -24,10 +24,11 @@ group, to keep the account looking like normal usage.
 - `/help` — lists the commands above and briefly explains how the counting
   works, in English and Arabic.
 
-Whenever a new member joins the group, the bot automatically sends them a
-welcome message (using their name if it already knows it from a prior
-submission, otherwise a generic greeting, plus the current total and goal),
-immediately followed by the `/help` message.
+Whenever one or more new members join the group, the bot automatically sends
+each of them a personal welcome message (using their name if it already knows
+it from a prior submission, otherwise a generic greeting, plus the current
+total and goal), followed by a single `/help` message for the whole batch of
+joiners.
 
 ## 1. Run it locally first (to test + log in)
 
