@@ -44,8 +44,14 @@ dependency, check it's free/self-hostable within Railway before adding it.
 - **Maps**: MapLibre GL (fully open-source), not Mapbox — Mapbox needs an
   account + has usage billing, which conflicts with the no-paid-services
   constraint. Web uses `maplibre-gl`; Expo uses
-  `@maplibre/maplibre-react-native`. Tile source: pick a free/self-hostable
-  provider when map screens are built (not yet decided).
+  `@maplibre/maplibre-react-native`.
+- **Map tiles**: [OpenFreeMap](https://openfreemap.org) — free, whole-planet
+  vector tiles, no API key, explicitly built for production use (not a
+  rate-limited courtesy server like `tile.openstreetmap.org`, which its own
+  usage policy prohibits building an app on). Chosen over a self-hosted
+  PMTiles archive on Railway for simplicity: zero tile infra to generate,
+  update, or store ourselves. It's a third-party dependency, but a free one
+  with no account/billing, so it doesn't violate the no-paid-services rule.
 
 ## Known scaling caveat — flag if touched
 
