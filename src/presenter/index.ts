@@ -7,6 +7,7 @@ import type {
   StatsResponse,
   DispatchResponse,
   UpdateGoalResponse,
+  WelcomeResponse,
 } from '../dispatcher/types.js';
 import type { PresenterInterface } from './types.js';
 
@@ -71,6 +72,8 @@ class Presenter implements PresenterInterface {
         return this.presentAwlia(response);
       case 'update-goal':
         return this.presentUpdateGoal(response);
+      case 'welcome':
+        return this.presentWelcome(response);
     }
   }
 
@@ -221,6 +224,23 @@ Rules:
 
   private presentUpdateGoal({ goal }: UpdateGoalResponse): string {
     return `✅ Goal updated to ${goal.toLocaleString('en-US')} salawat.`;
+  }
+
+  // Hardcoded like presentHelp/presentAwlia: carries exact totals, so it
+  // shouldn't risk an LLM rounding or paraphrasing the numbers.
+  private presentWelcome({ name, total, goal }: WelcomeResponse): string {
+    const totalStr = total.toLocaleString('en-US');
+    const goalStr = goal.toLocaleString('en-US');
+    const greetingEn = name ? `Welcome, ${name}! 🌙` : 'Welcome! 🌙';
+    const greetingAr = name ? `أهلاً بك، ${name}! 🌙` : 'أهلاً بك! 🌙';
+
+    return [
+      greetingEn,
+      `We've reached ${totalStr} out of our shared goal of ${goalStr} salawat so far — glad to have you counting with us.`,
+      '',
+      greetingAr,
+      `لقد وصلنا إلى ${totalStr} من هدفنا المشترك البالغ ${goalStr} صلاة حتى الآن - يسعدنا انضمامك إلينا في العد.`,
+    ].join('\n');
   }
 }
 

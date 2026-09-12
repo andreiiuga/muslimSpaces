@@ -18,6 +18,12 @@ async function getGoal(): Promise<number> {
   return setting?.goal ?? DEFAULT_GOAL;
 }
 
+/** Group-wide running total, summed across every submission ever recorded. */
+async function getTotal(): Promise<number> {
+  const { _sum } = await prisma.submission.aggregate({ _sum: { count: true } });
+  return _sum.count ?? 0;
+}
+
 /** Fisher-Yates shuffle - returns a new array, doesn't mutate the input. */
 function shuffle<T>(items: T[]): T[] {
   const result = [...items];
@@ -132,6 +138,22 @@ class Dispatcher implements DispatcherInterface {
     });
 
     return { type: 'update-goal', goal };
+  }
+
+  async handleGroupJoin(sender: MessageSender): Promise<DispatchResponse> {
+    // Look up only - never create a User here. A bare join carries no pushName
+    // (Baileys' group-participants.update gives JIDs, not display names), so
+    // this can only recover a name from someone who has interacted before;
+    // otherwise the Presenter falls back to a generic greeting.
+    const phoneNumber = resolvePhoneNumber(sender);
+    const existing = await prisma.user.findUnique({ where: { phoneNumber } });
+
+    return {
+      type: 'welcome',
+      name: existing?.name ?? sender.name,
+      total: await getTotal(),
+      goal: await getGoal(),
+    };
   }
 }
 

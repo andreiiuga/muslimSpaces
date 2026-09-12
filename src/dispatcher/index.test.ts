@@ -235,3 +235,39 @@ describe('shared goal lookup', () => {
     expect(response.goal).toBe(250000);
   });
 });
+
+describe('group join (welcome)', () => {
+  const joiner: MessageSender = { id: '444555666@s.whatsapp.net', name: null, phoneNumber: '444555666' };
+
+  it("uses the joiner's name from an existing user record, without creating one", async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({ id: 9, name: 'Bilal', phoneNumber: '444555666' });
+    mockPrisma.submission.aggregate.mockResolvedValue({ _sum: { count: 42 } });
+    mockPrisma.setting.findUnique.mockResolvedValue({ id: 1, goal: 250000 });
+
+    const response = await dispatcher.handleGroupJoin(joiner);
+
+    expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({ where: { phoneNumber: '444555666' } });
+    expect(mockPrisma.user.create).not.toHaveBeenCalled();
+    expect(response).toEqual({ type: 'welcome', name: 'Bilal', total: 42, goal: 250000 });
+  });
+
+  it('falls back to a generic (null) name when no user record exists yet', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue(null);
+    mockPrisma.submission.aggregate.mockResolvedValue({ _sum: { count: 0 } });
+    mockPrisma.setting.findUnique.mockResolvedValue(null);
+
+    const response = await dispatcher.handleGroupJoin(joiner);
+
+    expect(response).toEqual({ type: 'welcome', name: null, total: 0, goal: 100000 });
+  });
+
+  it('reports 0 as the total when no submissions have ever been recorded', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue(null);
+    mockPrisma.submission.aggregate.mockResolvedValue({ _sum: { count: null } });
+
+    const response = await dispatcher.handleGroupJoin(joiner);
+    if (response.type !== 'welcome') throw new Error('expected a welcome response');
+
+    expect(response.total).toBe(0);
+  });
+});

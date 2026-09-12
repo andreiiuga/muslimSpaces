@@ -5,9 +5,9 @@ import dispatcher from './dispatcher/index.js';
 import presenter from './presenter/index.js';
 
 const GROUP_ID = process.env.GROUP_ID || null; // e.g. "1234567890-1234567890@g.us"
-const GOAL = parseInt(process.env.SALAWAT_GOAL || '100000', 10);
 const SEND_DELAY_MS = parseInt(process.env.SEND_DELAY_MS || '1500', 10);
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function start() {
   await messenger.connect(GROUP_ID);
@@ -29,11 +29,22 @@ async function start() {
     })
   })
 
-  // Greet new members automatically with the /help message when they join the group.
-  messenger.addGroupJoinHandler(async (groupId) => {
-    const response = await dispatcher.processCommand({ type: 'help' }, { id: groupId, name: null, phoneNumber: null });
-    const reply = await presenter.processResponse(response);
-    messenger.sendMessage({ text: reply, chatId: groupId });
+  // Greet each new member with a personal welcome (name + current progress),
+  // then the /help message, right after they join the group.
+  messenger.addGroupJoinHandler(async (groupId, participantIds) => {
+    for (const participantId of participantIds) {
+      const sender = { id: participantId, name: null, phoneNumber: participantId.split('@')[0] ?? participantId };
+
+      const welcomeResponse = await dispatcher.handleGroupJoin(sender);
+      const welcomeText = await presenter.processResponse(welcomeResponse);
+      await messenger.sendMessage({ text: welcomeText, chatId: groupId });
+
+      await sleep(SEND_DELAY_MS);
+
+      const helpResponse = await dispatcher.processCommand({ type: 'help' }, sender);
+      const helpText = await presenter.processResponse(helpResponse);
+      await messenger.sendMessage({ text: helpText, chatId: groupId });
+    }
   })
 }
 

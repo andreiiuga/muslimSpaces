@@ -7,6 +7,7 @@ import type {
   SalawatResponse,
   StatsResponse,
   UpdateGoalResponse,
+  WelcomeResponse,
 } from '../dispatcher/types.js';
 
 const { mockCreate } = vi.hoisted(() => ({ mockCreate: vi.fn() }));
@@ -239,5 +240,29 @@ describe('/update-goal (hidden command)', () => {
 
     expect(mockCreate).not.toHaveBeenCalled();
     expect(text).toContain('250,000');
+  });
+});
+
+describe('welcome (group join)', () => {
+  it('personalizes the greeting when a name is known', async () => {
+    const response: WelcomeResponse = { type: 'welcome', name: 'Bilal', total: 42, goal: 100000 };
+
+    const text = await presenter.processResponse(response);
+
+    expect(mockCreate).not.toHaveBeenCalled();
+    expect(text).toContain('Welcome, Bilal!');
+    expect(text).toContain('أهلاً بك، Bilal!');
+    expect(text).toContain('42');
+    expect(text).toContain('100,000');
+  });
+
+  it('falls back to a generic greeting when no name is known', async () => {
+    const response: WelcomeResponse = { type: 'welcome', name: null, total: 0, goal: 100000 };
+
+    const text = await presenter.processResponse(response);
+
+    expect(text).toContain('Welcome! 🌙');
+    expect(text).toContain('أهلاً بك! 🌙');
+    expect(text).not.toContain('null');
   });
 });

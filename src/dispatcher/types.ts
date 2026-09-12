@@ -58,6 +58,16 @@ export type UpdateGoalResponse = {
   goal: number;
 };
 
+/** Greets a member who just joined the group. Not triggered by a Command - fired directly off a join event. */
+export type WelcomeResponse = {
+  type: 'welcome';
+  /** The joiner's display name, if we already have one on file; null greets them generically. */
+  name: string | null;
+  /** Group-wide running total at the moment they joined. */
+  total: number;
+  goal: number;
+};
+
 /** Uniform response shape the Presenter switches on to pick a message format. */
 export type DispatchResponse =
   | SalawatResponse
@@ -65,7 +75,8 @@ export type DispatchResponse =
   | StatsResponse
   | HelpResponse
   | AwliaResponse
-  | UpdateGoalResponse;
+  | UpdateGoalResponse
+  | WelcomeResponse;
 
 /**
  * Public contract for the Dispatcher module.
@@ -73,4 +84,7 @@ export type DispatchResponse =
 export interface DispatcherInterface {
   /** Execute an interpreted command on behalf of a sender, producing a uniform response for the Presenter. */
   processCommand(command: Command, sender: MessageSender): Promise<DispatchResponse>;
+
+  /** Build a welcome response for someone who just joined the group (not driven by a Command). */
+  handleGroupJoin(sender: MessageSender): Promise<DispatchResponse>;
 }

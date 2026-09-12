@@ -22,8 +22,12 @@ group, to keep the account looking like normal usage.
 - `/awlia` — lists everyone who has submitted at least once, in random order
   (not ranked by count).
 - `/help` — lists the commands above and briefly explains how the counting
-  works, in English and Arabic. Also runs automatically whenever a new
-  member joins the group.
+  works, in English and Arabic.
+
+Whenever a new member joins the group, the bot automatically sends them a
+welcome message (using their name if it already knows it from a prior
+submission, otherwise a generic greeting, plus the current total and goal),
+immediately followed by the `/help` message.
 
 ## 1. Run it locally first (to test + log in)
 
@@ -163,7 +167,7 @@ The external channel. End users send and receive messages here. No logic lives i
 Owns the WhatsApp integration (Baileys).
 
 - Listens for incoming WhatsApp messages, plus `group-participants.update`
-  events (used to auto-greet new members with `/help`)
+  events (used to auto-greet new members with a welcome + `/help` message)
 - Sends outgoing WhatsApp messages (replies, notifications)
 - Passes raw incoming text to the **Interpreter**
 - Receives the formatted result directly from the **Presenter** and sends it back to the user over WhatsApp
@@ -222,7 +226,8 @@ PostgreSQL — local via Docker in development, Railway-hosted in production. Sc
 
 1. User sends a message (or joins the group) on **WhatsApp**
 2. **Messenger** receives it, forwards the raw text to the **Interpreter**
-   (a join event skips straight to a synthetic `/help` command)
+   (a join event bypasses the Interpreter entirely and goes straight to the
+   Dispatcher for a welcome message, then a synthetic `/help` command)
 3. **Interpreter** interprets it into a structured command, sends it to the **Dispatcher**
 4. **Dispatcher** executes the command — reading/writing via **DB.js** as needed
 5. **Dispatcher** passes the raw result to the **Presenter**
