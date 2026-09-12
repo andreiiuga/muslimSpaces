@@ -32,6 +32,34 @@ function formatMultilingual(byLangCode: MultilingualText): string {
   return LANGUAGES.map(({ code, flag }) => `${flag} ${byLangCode[code]}`).join('\n');
 }
 
+// A few varied fallback acknowledgements (used only if the AI call fails or
+// returns something malformed) so even the fallback path doesn't always say
+// the exact same thing. Written without the name; presentSalawat prepends a
+// simple vocative ("Name, ...") when one is available.
+const SALAWAT_FALLBACKS: MultilingualText[] = [
+  {
+    en: 'JazakAllah khair, keep going! 🌙',
+    ar: 'جزاك الله خيرًا، واصل الجهد! 🌙',
+    ro: 'Jazak Allah khair, continuă! 🌙',
+    ur: 'جزاک اللہ خیر، جاری رکھیں! 🌙',
+    bn: 'জাযাকাল্লাহু খইর, চালিয়ে যান! 🌙',
+  },
+  {
+    en: 'That one just landed, alhamdulillah 🌙',
+    ar: 'وصلت هذه، الحمد لله 🌙',
+    ro: 'Asta tocmai s-a adăugat, alhamdulillah 🌙',
+    ur: 'یہ ابھی شامل ہوگئی، الحمدللہ 🌙',
+    bn: 'এইটা যোগ হয়ে গেল, আলহামদুলিল্লাহ 🌙',
+  },
+  {
+    en: 'May it be accepted, ameen 🤲',
+    ar: 'تقبل الله منك، آمين 🤲',
+    ro: 'Fie primită, amin 🤲',
+    ur: 'اللہ قبول فرمائے، آمین 🤲',
+    bn: 'আল্লাহ কবুল করুন, আমিন 🤲',
+  },
+];
+
 // Example of the exact structure Claude must follow for /stats. Not real data -
 // the model fills in a fresh caption/closer but must leave the bar lines untouched.
 const STATS_TEMPLATE = `📈 All-time salawat by day
@@ -79,23 +107,36 @@ class Presenter implements PresenterInterface {
 
   private async presentSalawat({ user, count, total, goal }: SalawatResponse): Promise<string> {
     const header = `${total}/${goal}`;
+    const name = user.name;
+
+    const fallback = () => {
+      const base = SALAWAT_FALLBACKS[Math.floor(Math.random() * SALAWAT_FALLBACKS.length)]!;
+      const withName = name
+        ? (Object.fromEntries(LANGUAGES.map(({ code }) => [code, `${name}, ${base[code]}`])) as MultilingualText)
+        : base;
+      return `${header}\n\n${formatMultilingual(withName)}`;
+    };
 
     try {
       const res = await anthropic.messages.create({
         model: MODEL,
-        max_tokens: 200,
-        system: `You write extremely short WhatsApp replies acknowledging someone's salawat (Islamic prayer) submission in a group counting campaign.
+        max_tokens: 250,
+        system: `You write short WhatsApp replies acknowledging someone's salawat (Islamic prayer) submission in a group counting campaign. You'll be given their name (or told it's unknown).
 Reply with ONLY a JSON object, no other text: {"en": "...", "ar": "...", "ro": "...", "ur": "...", "bn": "..."}
-Each value is the SAME short message translated into that language (en=English, ar=Arabic, ro=Romanian, ur=Urdu, bn=Bengali).
+Each value is the SAME message, adapted (not word-for-word translated) into that language (en=English, ar=Arabic, ro=Romanian, ur=Urdu, bn=Bengali) - it should read like something a real person would actually text a friend, not a translated slogan.
 Rules:
-- Around 5 words per language - do not include any numbers, the count is already shown separately.
-- Warm, encouraging, and varied - never reuse the same phrasing or structure twice.
-- At most one relevant emoji per version.
+- 6-12 words per language. Do not include any numbers - the count is already shown separately.
+- When a name is given, use it in most (not all) of the five versions - and vary where it lands (start, middle, end, or as a direct address) rather than always opening with it the same way.
+- Sound like a genuine person, not a hype poster. Avoid generic filler like "great job", "keep going", "keep it up", "well done", "amazing" - if you reach for one of those, write something more specific and human instead.
+- Vary the tone across the five language versions and across calls: a short dua/blessing, a warm personal remark, something reflective, or a touch of gentle warmth - never repeat the same structure twice in a row.
+- At most one relevant emoji, and only where it actually fits - not every version needs one.
 - No markdown formatting.`,
         messages: [
           {
             role: 'user',
-            content: `${user.name ?? 'Someone'} just submitted ${count} salawat. Write the short acknowledgement.`,
+            content: name
+              ? `${name} just submitted ${count} salawat. Write the short acknowledgement, using their name naturally.`
+              : `Someone (name unknown) just submitted ${count} salawat. Write the short acknowledgement without inventing a name.`,
           },
         ],
       });
@@ -110,13 +151,7 @@ Rules:
       throw new Error('Incomplete translation response');
     } catch (err) {
       console.error('presentSalawat error:', err instanceof Error ? err.message : err);
-      return `${header}\n\n${formatMultilingual({
-        en: 'JazakAllah khair, keep going! 🌙',
-        ar: 'جزاك الله خيرًا، واصل الجهد! 🌙',
-        ro: 'Jazak Allah khair, continuă! 🌙',
-        ur: 'جزاک اللہ خیر، جاری رکھیں! 🌙',
-        bn: 'জাযাকাল্লাহু খইর, চালিয়ে যান! 🌙',
-      })}`;
+      return fallback();
     }
   }
 

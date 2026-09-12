@@ -62,21 +62,43 @@ describe('salawat acknowledgement', () => {
     expect(text).toContain('🇧🇩 সাবাশ');
   });
 
-  it('falls back to the hardcoded message when a language is missing', async () => {
+  it('falls back to a hardcoded message, prefixed with the name, when a language is missing', async () => {
     respondWithJson({ en: 'Great job!', ar: 'أحسنت' });
+    const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0);
 
-    const text = await presenter.processResponse(response);
-
-    expect(text).toContain('JazakAllah khair, keep going! 🌙');
+    try {
+      const text = await presenter.processResponse(response);
+      expect(text).toContain('Amina, JazakAllah khair, keep going! 🌙');
+    } finally {
+      randomSpy.mockRestore();
+    }
   });
 
-  it('falls back to the hardcoded message when the API call throws', async () => {
+  it('falls back to a hardcoded message, prefixed with the name, when the API call throws', async () => {
     mockCreate.mockRejectedValue(new Error('network error'));
+    const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0);
 
-    const text = await presenter.processResponse(response);
+    try {
+      const text = await presenter.processResponse(response);
+      expect(text).toContain('150/100000');
+      expect(text).toContain('Amina, JazakAllah khair, keep going! 🌙');
+    } finally {
+      randomSpy.mockRestore();
+    }
+  });
 
-    expect(text).toContain('150/100000');
-    expect(text).toContain('JazakAllah khair, keep going! 🌙');
+  it('omits the name prefix from the fallback when the submitter has no known name', async () => {
+    mockCreate.mockRejectedValue(new Error('network error'));
+    const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0);
+    const noName: SalawatResponse = { ...response, user: { ...response.user, name: null } };
+
+    try {
+      const text = await presenter.processResponse(noName);
+      expect(text).toContain('JazakAllah khair, keep going! 🌙');
+      expect(text).not.toContain(', JazakAllah');
+    } finally {
+      randomSpy.mockRestore();
+    }
   });
 });
 
