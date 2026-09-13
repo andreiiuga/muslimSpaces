@@ -25,12 +25,13 @@ export function Button({
   disabled,
   loading,
   fullWidth,
+  type = "button",
 }: ButtonProps) {
   const variantStyle = VARIANT_STYLES[variant];
 
   return (
     <button
-      type="button"
+      type={type}
       onClick={onPress}
       disabled={disabled || loading}
       style={{

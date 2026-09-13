@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Button, Card, Input, Text, colors, spacing } from "@muslimspaces/ui";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -35,37 +36,25 @@ export default function LoginPage() {
   }
 
   return (
-    <main>
-      <h1>Log in</h1>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="email">Email</label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+    <main style={{ maxWidth: 420, margin: "0 auto", padding: spacing.xl }}>
+      <Card>
+        <Text size="xl" weight="bold">Log in</Text>
+        <form onSubmit={handleSubmit} style={{ marginTop: spacing.lg }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: spacing.md }}>
+            <Input label="Email" kind="email" value={email} onChangeText={setEmail} />
+            <Input label="Password" kind="password" value={password} onChangeText={setPassword} />
+            {error && <Text size="sm" color={colors.danger}>{error}</Text>}
+            <Button type="submit" loading={submitting} fullWidth>
+              {submitting ? "Logging in…" : "Log in"}
+            </Button>
+          </div>
+        </form>
+        <div style={{ marginTop: spacing.lg }}>
+          <Text size="sm" color={colors.textMuted}>
+            Need an account? <Link href="/signup" style={{ color: colors.primary }}>Sign up</Link>
+          </Text>
         </div>
-        <div>
-          <label htmlFor="password">Password</label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit" disabled={submitting}>
-          {submitting ? "Logging in..." : "Log in"}
-        </button>
-      </form>
-      {error && <p role="alert">{error}</p>}
-      <p>
-        Need an account? <Link href="/signup">Sign up</Link>
-      </p>
+      </Card>
     </main>
   );
 }

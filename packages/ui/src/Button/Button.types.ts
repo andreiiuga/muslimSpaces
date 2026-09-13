@@ -11,4 +11,6 @@ export interface ButtonProps {
   disabled?: boolean;
   loading?: boolean;
   fullWidth?: boolean;
+  /** Web only — lets a Button submit its enclosing <form>. Native has no equivalent concept. */
+  type?: "button" | "submit";
 }

@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Button, Card, Input, Text, colors, spacing } from "@muslimspaces/ui";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -35,38 +36,25 @@ export default function SignupPage() {
   }
 
   return (
-    <main>
-      <h1>Sign up</h1>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="email">Email</label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+    <main style={{ maxWidth: 420, margin: "0 auto", padding: spacing.xl }}>
+      <Card>
+        <Text size="xl" weight="bold">Sign up</Text>
+        <form onSubmit={handleSubmit} style={{ marginTop: spacing.lg }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: spacing.md }}>
+            <Input label="Email" kind="email" value={email} onChangeText={setEmail} />
+            <Input label="Password (min. 8 characters)" kind="password" value={password} onChangeText={setPassword} />
+            {error && <Text size="sm" color={colors.danger}>{error}</Text>}
+            <Button type="submit" loading={submitting} fullWidth>
+              {submitting ? "Signing up…" : "Sign up"}
+            </Button>
+          </div>
+        </form>
+        <div style={{ marginTop: spacing.lg }}>
+          <Text size="sm" color={colors.textMuted}>
+            Already have an account? <Link href="/login" style={{ color: colors.primary }}>Log in</Link>
+          </Text>
         </div>
-        <div>
-          <label htmlFor="password">Password</label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            minLength={8}
-            required
-          />
-        </div>
-        <button type="submit" disabled={submitting}>
-          {submitting ? "Signing up..." : "Sign up"}
-        </button>
-      </form>
-      {error && <p role="alert">{error}</p>}
-      <p>
-        Already have an account? <Link href="/login">Log in</Link>
-      </p>
+      </Card>
     </main>
   );
 }
