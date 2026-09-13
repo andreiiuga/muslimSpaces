@@ -21,6 +21,15 @@ export class BlogController {
     return this.blogService.listPublished();
   }
 
+  // Two path segments — can never collide with ":slug" (always exactly
+  // one segment), regardless of what slug an author picks.
+  @Get("admin/list")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles("moderator", "admin")
+  listAll() {
+    return this.blogService.listAll();
+  }
+
   @Get(":slug")
   get(@Param("slug") slug: string) {
     return this.blogService.getPublishedBySlug(slug);

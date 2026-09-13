@@ -63,6 +63,15 @@ export class PoisController {
     return this.poisService.getApproved(id);
   }
 
+  // Two path segments — can never collide with ":id" (always exactly one
+  // segment), regardless of the id's value.
+  @Get(":id/admin")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles("moderator", "admin")
+  detailForAdmin(@Param("id") id: string) {
+    return this.poisService.getAny(id);
+  }
+
   @Post()
   @UseGuards(JwtAuthGuard)
   create(

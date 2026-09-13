@@ -26,6 +26,12 @@ export class BlogService {
     return rows.map((r) => this.toDto(r));
   }
 
+  /** Admin management view — every post regardless of status. */
+  async listAll(): Promise<BlogPost[]> {
+    const rows = await this.blogPostsRepository.find({ order: { createdAt: "DESC" } });
+    return rows.map((r) => this.toDto(r));
+  }
+
   async getPublishedBySlug(slug: string): Promise<BlogPost> {
     const row = await this.blogPostsRepository.findOne({
       where: { slug, status: BlogPostStatus.PUBLISHED },

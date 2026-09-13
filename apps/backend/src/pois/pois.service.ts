@@ -85,6 +85,13 @@ export class PoisService {
     return this.toDto(poi);
   }
 
+  /** Admin editing needs a POI regardless of status (e.g. a pending one). */
+  async getAny(id: string): Promise<Poi> {
+    const poi = await this.poisRepository.findOne({ where: { id } });
+    if (!poi) throw new NotFoundException("POI not found");
+    return this.toDto(poi);
+  }
+
   async create(payload: CreatePoiPayload, submitter: RequestUser): Promise<Poi> {
     // Moderators/admins don't need to self-approve their own submissions.
     const isModerator = submitter.role === "moderator" || submitter.role === "admin";

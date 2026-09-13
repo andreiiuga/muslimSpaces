@@ -157,6 +157,8 @@ export function createApiClient({ baseUrl, getToken }: ApiClientOptions) {
       list: (query?: Partial<ListPoisQuery>) =>
         request(`/pois${toQueryString(query)}`, z.array(poiSchema)),
       get: (id: string) => request(`/pois/${id}`, poiSchema),
+      // Admin editing — any status, not just approved. Moderator/admin only.
+      getForAdmin: (id: string) => request(`/pois/${id}/admin`, poiSchema),
       create: (payload: CreatePoiPayload) =>
         request("/pois", poiSchema, {
           method: "POST",
@@ -173,6 +175,8 @@ export function createApiClient({ baseUrl, getToken }: ApiClientOptions) {
           body: JSON.stringify(payload),
         }),
       remove: (id: string) => request(`/pois/${id}`, z.void(), { method: "DELETE" }),
+      // Admin moderation queue — moderator/admin only.
+      pending: () => request("/pois/pending", z.array(poiSchema)),
       nearby: (query: RadiusQuery) =>
         request(`/pois/nearby${toQueryString(query)}`, z.array(poiSchema)),
       nearest: (query: NearestQuery) =>
@@ -235,6 +239,8 @@ export function createApiClient({ baseUrl, getToken }: ApiClientOptions) {
     },
     blog: {
       list: () => request("/blog", z.array(blogPostSchema)),
+      // Admin management view — every post regardless of status.
+      listAll: () => request("/blog/admin/list", z.array(blogPostSchema)),
       get: (slug: string) => request(`/blog/${slug}`, blogPostSchema),
       create: (payload: CreateBlogPostPayload) =>
         request("/blog", blogPostSchema, {
