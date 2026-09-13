@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-export default function LoginPage() {
+export default function SignupPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,7 +16,7 @@ export default function LoginPage() {
     setError(null);
     setSubmitting(true);
 
-    const res = await fetch("/api/login", {
+    const res = await fetch("/api/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -26,7 +26,7 @@ export default function LoginPage() {
 
     if (!res.ok) {
       const body = await res.json().catch(() => undefined);
-      setError(body?.message ?? "Login failed");
+      setError(body?.message ?? "Signup failed");
       return;
     }
 
@@ -36,7 +36,7 @@ export default function LoginPage() {
 
   return (
     <main>
-      <h1>Log in</h1>
+      <h1>Sign up</h1>
       <form onSubmit={handleSubmit}>
         <div>
           <label htmlFor="email">Email</label>
@@ -55,16 +55,17 @@ export default function LoginPage() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            minLength={8}
             required
           />
         </div>
         <button type="submit" disabled={submitting}>
-          {submitting ? "Logging in..." : "Log in"}
+          {submitting ? "Signing up..." : "Sign up"}
         </button>
       </form>
       {error && <p role="alert">{error}</p>}
       <p>
-        Need an account? <Link href="/signup">Sign up</Link>
+        Already have an account? <Link href="/login">Log in</Link>
       </p>
     </main>
   );
