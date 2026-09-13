@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { createApiClient, type Poi } from "@muslimspaces/shared";
+import { Card, Rating, Text as UiText } from "@muslimspaces/ui";
 
 // EXPO_PUBLIC_* vars are inlined into the JS bundle at build time (Expo's
 // equivalent of Next's NEXT_PUBLIC_*). On a physical device/simulator,
@@ -43,9 +44,13 @@ export default function App() {
           data={pois}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
+            // @muslimspaces/ui smoke test — this whole screen is rebuilt in Phase 4
             <View style={styles.item}>
-              <Text style={styles.itemTitle}>{item.name.en}</Text>
-              <Text>{item.address}</Text>
+              <Card>
+                <UiText weight="semibold">{item.name.en}</UiText>
+                <UiText size="sm" color="#78716C">{item.address}</UiText>
+                <Rating value={item.ratingAvg ?? 0} />
+              </Card>
             </View>
           )}
           ListEmptyComponent={<Text>No approved POIs yet.</Text>}

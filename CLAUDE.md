@@ -20,6 +20,13 @@ dependency, check it's free/self-hostable within Railway before adding it.
   make POI listing/detail pages client-only SPA routes.
 - **apps/mobile**: Expo (React Native). Talks to the backend's public Railway
   URL — it is not deployed to Railway itself.
+- **packages/ui**: custom lightweight design system shared by web + mobile —
+  not a third-party UI kit. Design tokens (`tokens.ts`) are plain data with
+  no platform split; components are `Name/Name.tsx` (web) +
+  `Name/Name.native.tsx` (native) pairs, resolved automatically by each
+  bundler (webpack/Turbopack only ever matches the plain `.tsx`; Metro
+  prefers `.native.tsx` when present). See "packages/ui architecture" below
+  — the peer-dependency pattern there is load-bearing, not incidental.
 - **API layer**: typed REST + zod, not tRPC. Reasoning: tRPC is strongest
   when client and server are the same TS project; here one NestJS backend
   serves two very different clients (Next SSR + Expo), so a decoupled,
@@ -218,12 +225,61 @@ and break the build.
   `PoisService`/`FavoritesService` still catch FK violations themselves
   first (for a more specific message) — the filter is the fallback for
   everything else.
-- Next.js 15 + React 19: pin exact versions (no `^` range) for
-  `react`/`react-dom`/`@types/react`/`@types/react-dom` in `apps/web`. A
-  floating range can drift to a React 19 patch whose types conflict with
-  Next's generated `LayoutProps`/`PageProps` helpers (a real, documented
-  Next↔React-19-types incompatibility, not a monorepo/pnpm hoisting issue).
+- Pin exact versions (no `^` range) for `react`/`react-dom`/`@types/react`/
+  `@types/react-dom` in `apps/web`. A floating range can drift to a patch
+  whose types conflict with Next's generated `LayoutProps`/`PageProps`
+  helpers (this bit us once with React 19 — a real, documented
+  Next↔React-types incompatibility, not a monorepo/pnpm hoisting issue).
   Relatedly, type layout/page `children` props as the ambient
   `React.ReactNode` (no explicit `import type { ReactNode } from "react"`)
   — matches Next's own default template and avoids the same class of
   mismatch.
+
+### `packages/ui` architecture — read before touching any component here
+
+**`apps/web` and `apps/mobile` are deliberately pinned to the exact same
+`react` (18.3.1), `react-native` (0.76.9), `lucide-react`/`lucide-react-native`
+(0.468.0) versions.** This is load-bearing, not a coincidence — do not bump
+one app's React version without bumping the other the same way. Reason:
+
+- `packages/ui` ships raw `.tsx`/`.native.tsx` source, consumed directly by
+  each app's own bundler (`transpilePackages: ["@muslimspaces/ui"]` in
+  `apps/web/next.config.mjs`; Metro transforms workspace-package source by
+  default, no config needed). It declares `react`, `react-native`,
+  `lucide-react`, `lucide-react-native` as **peerDependencies only** —
+  never real `dependencies` — so it never ships its own copy that could
+  end up loaded alongside each app's own copy (two React instances in one
+  app = broken hooks / crashes).
+- pnpm's default `auto-install-peers` defeats this anyway: it
+  unconditionally links a resolved peer into the *declaring* package's own
+  `node_modules`, ignoring which real consumer needs what. In practice this
+  once produced a `react-native` build linked against React 19 sitting
+  inside `packages/ui/node_modules`, while `apps/mobile` itself correctly
+  used React 18 — a real dual-instance bug, not theoretical. Fixed two ways
+  together: root `.npmrc` sets `auto-install-peers=false`, **and** every
+  app in the workspace uses identical versions for these packages, so even
+  `packages/ui`'s own (dev-only, for local editor/type support) matching
+  devDependencies resolve to the exact same pnpm store entry as each app's
+  copy — one physical instance, not an ambiguous choice between two.
+- TypeScript's module resolution for a file resolves relative to that
+  file's own **real, symlink-resolved path** (unlike webpack/Metro, which
+  resolve relative to the symlink's apparent path). This means a bare
+  `import "react"` inside `packages/ui/src/*.tsx` needs `react` reachable
+  from `packages/ui`'s own directory for typecheck/build-time type-checking
+  to succeed — hence the matching devDependencies there, safe only because
+  of the version-alignment rule above.
+- `apps/mobile/tsconfig.json` sets `"moduleSuffixes": [".native", ""]` —
+  without it, plain `tsc` (used by `pnpm typecheck`) resolves `./Button`
+  the same way webpack would (always the plain `.tsx`), silently
+  type-checking the *web* variant of every shared component instead of the
+  one Metro actually bundles.
+- `apps/mobile/metro.config.js` sets `watchFolders`/`resolver.nodeModulesPaths`
+  to include the monorepo root — Metro's default watch scope is just the
+  app's own directory, so without this it can't see `packages/ui` or
+  `packages/shared` at all.
+- Any `packages/ui` component using a hook (`useState`/`useEffect`/etc.) or
+  wiring a DOM event handler (`onClick`/`onChange`) needs `"use client"` at
+  the top of its **web** `.tsx` file specifically (not `.native.tsx`, which
+  has no such concept). Next's RSC compiler flags this at build time if
+  it's missing, since `apps/web/src/app/page.tsx` and friends are Server
+  Components by default.

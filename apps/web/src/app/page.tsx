@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Card, Rating, Text } from "@muslimspaces/ui";
 import { getApiClient } from "../lib/api-client";
 
 // SSR for now, not ISR: ISR's initial prerender happens at `next build` time,
@@ -23,10 +24,17 @@ export default async function HomePage() {
       {pois.length === 0 ? (
         <p>No approved POIs yet.</p>
       ) : (
-        <ul>
+        <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: 12 }}>
           {pois.map((poi) => (
             <li key={poi.id}>
-              <strong>{poi.name.en}</strong> ({poi.name.ro}) — {poi.address}
+              {/* @muslimspaces/ui smoke test — this whole page is redesigned in Phase 1 */}
+              <Card>
+                <Text weight="semibold">
+                  {poi.name.en} ({poi.name.ro})
+                </Text>
+                <Text size="sm" color="#78716C">{poi.address}</Text>
+                <Rating value={poi.ratingAvg ?? 0} />
+              </Card>
             </li>
           ))}
         </ul>
