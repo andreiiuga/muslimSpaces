@@ -2,6 +2,10 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
+    // "node" (expo's default) predates package.json "exports" subpaths and
+    // can't resolve "@muslimspaces/ui/map" — "bundler" also matches what
+    // Metro itself does at runtime.
+    "moduleResolution": "bundler",
     // Mirrors Metro's runtime resolution order (.native.tsx before .tsx)
     // for plain `tsc` — without this, `pnpm typecheck` would silently
     // check the web variant of every shared component instead.

@@ -6,7 +6,7 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./map": "./src/MapView/index.ts"
+    "./map": "./map.ts"
   },
   "scripts": {
     "lint": "eslint src"
@@ -16,12 +16,16 @@
     "maplibre-gl": "^4.7.1"
   },
   "peerDependencies": {
+    "@maplibre/maplibre-react-native": "*",
     "lucide-react": "*",
     "lucide-react-native": "*",
     "react": "*",
     "react-native": "*"
   },
   "peerDependenciesMeta": {
+    "@maplibre/maplibre-react-native": {
+      "optional": true
+    },
     "lucide-react": {
       "optional": true
     },
@@ -33,6 +37,7 @@
     }
   },
   "devDependencies": {
+    "@maplibre/maplibre-react-native": "10.4.2",
     "@types/react": "~18.3.12",
     "lucide-react": "^0.468.0",
     "lucide-react-native": "^0.468.0",

@@ -3,14 +3,21 @@
     "name": "MuslimSpaces",
     "slug": "muslimspaces",
     "version": "1.0.0",
+    "scheme": "muslimspaces",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.muslimspaces"
     },
     "android": {},
     "web": {
       "bundler": "metro"
-    }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "@maplibre/maplibre-react-native"
+    ]
   }
 }

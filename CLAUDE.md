@@ -35,6 +35,12 @@ dependency, check it's free/self-hostable within Railway before adding it.
   produce the typed client both apps import.
 - **Auth**: rolled ourselves (no BaaS auth provider) — `@nestjs/passport` +
   `passport-jwt`, argon2 for password hashing. Do not hand-roll crypto.
+  On web, the JWT lives in an httpOnly cookie, so every authenticated write
+  from a Client Component goes through a Next.js Route Handler that reads
+  the cookie server-side (see "Auth-proxy" pattern in web's `lib/`). Mobile
+  has no such constraint — there's no browser/httpOnly boundary — so
+  `apps/mobile` stores the JWT directly in `expo-secure-store` and the API
+  client attaches it itself; there is no auth-proxy layer on mobile.
 - **Database**: Postgres + PostGIS on Railway's Postgres template. Location
   data uses PostGIS `geography(Point, 4326)` columns with GiST spatial
   indexes — required for radius/nearest/bounding-box queries.
@@ -61,7 +67,13 @@ dependency, check it's free/self-hostable within Railway before adding it.
 - **Maps**: MapLibre GL (fully open-source), not Mapbox — Mapbox needs an
   account + has usage billing, which conflicts with the no-paid-services
   constraint. Web uses `maplibre-gl`; Expo uses
-  `@maplibre/maplibre-react-native`.
+  `@maplibre/maplibre-react-native`, pinned to **10.4.2** specifically —
+  11.x requires React 19.1+/React Native 0.80+/Expo 54+, which conflicts
+  with the version-alignment constraint in "packages/ui architecture"
+  below. 10.4.2's peer ranges (`react-native >=0.59.9`, etc.) are loose
+  enough to match this project's pinned RN 0.76.9 without issue. This is a
+  **native module** (unlike `maplibre-gl`, which is pure JS) — see
+  "apps/mobile architecture" below for what that means for local dev.
 - **Map tiles**: [OpenFreeMap](https://openfreemap.org) — free, whole-planet
   vector tiles, no API key, explicitly built for production use (not a
   rate-limited courtesy server like `tile.openstreetmap.org`, which its own
@@ -225,6 +237,12 @@ and break the build.
   `PoisService`/`FavoritesService` still catch FK violations themselves
   first (for a more specific message) — the filter is the fallback for
   everything else.
+- `apps/mobile/ios/` and `apps/mobile/android/` are gitignored — this
+  project uses Expo's Continuous Native Generation (CNG), so those
+  directories are regenerated from `app.json` + installed config plugins
+  by `expo prebuild` (which `expo run:ios`/`expo run:android` invoke
+  automatically). Never hand-edit files inside them; a change that needs
+  to survive a fresh prebuild belongs in `app.json` or a config plugin.
 - Pin exact versions (no `^` range) for `react`/`react-dom`/`@types/react`/
   `@types/react-dom` in `apps/web`. A floating range can drift to a patch
   whose types conflict with Next's generated `LayoutProps`/`PageProps`
@@ -283,3 +301,47 @@ one app's React version without bumping the other the same way. Reason:
   has no such concept). Next's RSC compiler flags this at build time if
   it's missing, since `apps/web/src/app/page.tsx` and friends are Server
   Components by default.
+
+### `apps/mobile` architecture
+
+- **Routing**: Expo Router (file-based, `app/` directory), not React
+  Navigation configured by hand — keeps routing philosophy consistent with
+  Next's App Router on web. `(tabs)/` holds the three bottom tabs (Explore,
+  Favorites, Profile); `pois/[id]`, `blog/index`, `blog/[slug]`, `about`,
+  `login`, `signup` are pushed/modal screens outside the tab group, declared
+  explicitly in the root `app/_layout.tsx`'s `<Stack>` (Expo Router doesn't
+  require this, but explicit `<Stack.Screen>` entries make header
+  options — title, modal presentation — easy to see in one place rather
+  than scattered per-screen). `main` in `package.json` is
+  `"expo-router/entry"`, replacing the old bare `App.tsx`/`index.ts` pair.
+- **`apps/mobile/tsconfig.json` also needs `"moduleResolution": "bundler"`**
+  (overriding `expo/tsconfig.base`'s default `"node"`) — plain `"node"`
+  resolution predates package.json `exports` subpaths and can't resolve
+  `@muslimspaces/ui/map`, even though Metro itself (bundler resolution)
+  handles it fine at runtime. Keep this alongside the existing
+  `moduleSuffixes` override, not instead of it — they solve different
+  problems.
+- **`@maplibre/maplibre-react-native` is a native module**, unlike
+  `maplibre-gl` on web — it requires compiled native code, so it **cannot
+  run inside plain Expo Go**. Local dev needs a custom dev client
+  (`expo-dev-client`, already a dependency) built via `npx expo run:ios` /
+  `npx expo run:android` (or an EAS dev-client build) at least once, and
+  after that `pnpm dev` (`expo start`) reconnects to the same dev client
+  for fast-refresh iteration. `app.json` lists
+  `"@maplibre/maplibre-react-native"` in `plugins` so `expo prebuild` wires
+  its native config automatically.
+- **Auth token storage**: `expo-secure-store`, not AsyncStorage — the JWT
+  is sensitive enough to warrant the Keychain/Keystore-backed API rather
+  than plain unencrypted storage. `src/lib/api-client.ts` wraps
+  `createApiClient` with a `getToken` that reads SecureStore directly;
+  `src/auth/AuthContext.tsx` is the single source of truth for the current
+  user across all screens (login/signup/logout mutate it, `useAuth()` reads
+  it) — don't call `SecureStore` directly from screen components.
+- **Media uploads from mobile** (avatar photo) pass a
+  `{ uri, name, type }` object (from `expo-image-picker`) to
+  `packages/shared`'s `media.upload(file: Blob, filename)`, cast through
+  `as unknown as Blob` — React Native's `FormData.append` accepts that
+  object shape as a file part at runtime (it has no real `Blob`/DOM
+  environment), even though it doesn't structurally satisfy TypeScript's
+  DOM `Blob` interface. This is the standard RN pattern for file uploads,
+  not a hack specific to this codebase.
