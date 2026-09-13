@@ -10,3 +10,4 @@ export * from "./Input";
 export * from "./Textarea";
 export * from "./Rating";
 export * from "./Skeleton";
+export * from "./POICard";

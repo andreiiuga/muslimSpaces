@@ -5,10 +5,15 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./map": "./src/MapView/index.ts"
   },
   "scripts": {
     "lint": "eslint src"
+  },
+  "dependencies": {
+    "@muslimspaces/shared": "workspace:*",
+    "maplibre-gl": "^4.7.1"
   },
   "peerDependencies": {
     "lucide-react": "*",

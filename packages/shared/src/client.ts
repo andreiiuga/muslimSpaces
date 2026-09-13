@@ -72,7 +72,11 @@ export function createApiClient({ baseUrl, getToken }: ApiClientOptions) {
     const res = await fetch(`${baseUrl}${path}`, {
       ...init,
       headers: {
-        "Content-Type": "application/json",
+        // Fastify's default JSON body parser rejects an empty body when
+        // Content-Type claims JSON (e.g. POST /pois/:id/favorite, which
+        // takes no body) — only set this header when there's actually a
+        // body to parse.
+        ...(init?.body ? { "Content-Type": "application/json" } : {}),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...init?.headers,
       },

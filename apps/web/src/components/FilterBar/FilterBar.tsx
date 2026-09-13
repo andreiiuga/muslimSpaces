@@ -1,0 +1,45 @@
+"use client";
+
+import { Chip, spacing } from "@muslimspaces/ui";
+import type { Category } from "@muslimspaces/shared";
+
+export function FilterBar({
+  categories,
+  selectedCategoryId,
+  onCategoryChange,
+  openNow,
+  onOpenNowChange,
+}: {
+  categories: Category[];
+  selectedCategoryId: string | null;
+  onCategoryChange: (categoryId: string | null) => void;
+  openNow: boolean;
+  onOpenNowChange: (value: boolean) => void;
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        gap: spacing.sm,
+        overflowX: "auto",
+        padding: `${spacing.md}px ${spacing.xl}px`,
+      }}
+    >
+      <Chip selected={selectedCategoryId === null} onPress={() => onCategoryChange(null)}>
+        All
+      </Chip>
+      {categories.map((category) => (
+        <Chip
+          key={category.id}
+          selected={selectedCategoryId === category.id}
+          onPress={() => onCategoryChange(selectedCategoryId === category.id ? null : category.id)}
+        >
+          {category.name.en}
+        </Chip>
+      ))}
+      <Chip selected={openNow} onPress={() => onOpenNowChange(!openNow)}>
+        Open now
+      </Chip>
+    </div>
+  );
+}
