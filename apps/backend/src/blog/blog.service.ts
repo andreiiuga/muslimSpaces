@@ -65,6 +65,11 @@ export class BlogService {
     return this.toDto(saved);
   }
 
+  async remove(id: string): Promise<void> {
+    const result = await this.blogPostsRepository.delete({ id });
+    if (result.affected === 0) throw new NotFoundException("Post not found");
+  }
+
   private async findOrThrow(id: string): Promise<BlogPostEntity> {
     const post = await this.blogPostsRepository.findOne({ where: { id } });
     if (!post) throw new NotFoundException("Post not found");

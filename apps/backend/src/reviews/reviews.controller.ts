@@ -1,6 +1,6 @@
-import { Body, Controller, Delete, Get, Param, Patch, UseGuards } from "@nestjs/common";
-import { setReviewStatusSchema } from "@muslimspaces/shared";
-import type { SetReviewStatusPayload } from "@muslimspaces/shared";
+import { Body, Controller, Delete, Get, Param, Patch, Query, UseGuards } from "@nestjs/common";
+import { listReviewsQuerySchema, setReviewStatusSchema } from "@muslimspaces/shared";
+import type { ListReviewsQuery, SetReviewStatusPayload } from "@muslimspaces/shared";
 import { ZodValidationPipe } from "../common/pipes/zod-validation.pipe";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
@@ -11,6 +11,17 @@ import { ReviewsService } from "./reviews.service";
 @Controller("reviews")
 export class ReviewsController {
   constructor(private readonly reviewsService: ReviewsService) {}
+
+  // Admin moderation listing — must stay above ":id"-shaped routes... this
+  // one has zero path segments so there's no ordering risk, but "mine"
+  // (one segment, static) still needs to precede any single-segment
+  // dynamic route if one is ever added here.
+  @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles("moderator", "admin")
+  list(@Query(new ZodValidationPipe(listReviewsQuerySchema)) query: ListReviewsQuery) {
+    return this.reviewsService.listAll(query);
+  }
 
   @Get("mine")
   @UseGuards(JwtAuthGuard)

@@ -29,6 +29,12 @@ export class UserEntity {
   @Column({ name: "preferred_locale", default: "ro" })
   preferredLocale: string;
 
+  @Column({ type: "varchar", name: "display_name", nullable: true })
+  displayName: string | null;
+
+  @Column({ type: "varchar", name: "avatar_key", nullable: true })
+  avatarKey: string | null;
+
   @CreateDateColumn({ name: "created_at" })
   createdAt: Date;
 

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, UseGuards } from "@nestjs/common";
 import { createBlogPostSchema, setBlogPostStatusSchema, updateBlogPostSchema } from "@muslimspaces/shared";
 import type {
   CreateBlogPostPayload,
@@ -54,5 +54,13 @@ export class BlogController {
     @Body(new ZodValidationPipe(setBlogPostStatusSchema)) body: SetBlogPostStatusPayload,
   ) {
     return this.blogService.setStatus(id, body);
+  }
+
+  @Delete(":id")
+  @HttpCode(204)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles("moderator", "admin")
+  remove(@Param("id") id: string) {
+    return this.blogService.remove(id);
   }
 }

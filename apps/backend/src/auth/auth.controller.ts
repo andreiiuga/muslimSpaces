@@ -1,6 +1,11 @@
 import { Body, Controller, Get, HttpCode, Patch, Post, UseGuards } from "@nestjs/common";
-import { loginSchema, signupSchema, updatePreferredLocaleSchema } from "@muslimspaces/shared";
-import type { LoginPayload, SignupPayload, UpdatePreferredLocalePayload } from "@muslimspaces/shared";
+import { changePasswordSchema, loginSchema, signupSchema, updateProfileSchema } from "@muslimspaces/shared";
+import type {
+  ChangePasswordPayload,
+  LoginPayload,
+  SignupPayload,
+  UpdateProfilePayload,
+} from "@muslimspaces/shared";
 import { ZodValidationPipe } from "../common/pipes/zod-validation.pipe";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { CurrentUser, RequestUser } from "./decorators/current-user.decorator";
@@ -27,12 +32,22 @@ export class AuthController {
     return this.authService.me(user.userId);
   }
 
-  @Patch("me/locale")
+  @Patch("me/profile")
   @UseGuards(JwtAuthGuard)
-  updateLocale(
-    @Body(new ZodValidationPipe(updatePreferredLocaleSchema)) body: UpdatePreferredLocalePayload,
+  updateProfile(
+    @Body(new ZodValidationPipe(updateProfileSchema)) body: UpdateProfilePayload,
     @CurrentUser() user: RequestUser,
   ) {
-    return this.authService.updatePreferredLocale(user.userId, body.preferredLocale);
+    return this.authService.updateProfile(user.userId, body);
+  }
+
+  @Post("change-password")
+  @HttpCode(204)
+  @UseGuards(JwtAuthGuard)
+  changePassword(
+    @Body(new ZodValidationPipe(changePasswordSchema)) body: ChangePasswordPayload,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return this.authService.changePassword(user.userId, body);
   }
 }

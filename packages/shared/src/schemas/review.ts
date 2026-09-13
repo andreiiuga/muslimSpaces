@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { paginationQuerySchema } from "./common";
 
 // No "pending" state: reviews publish immediately (rate-limited instead of
 // pre-moderated — see ReviewsModule). `hidden` is a moderator takedown
@@ -30,3 +31,9 @@ export const setReviewStatusSchema = z.object({
   status: reviewStatusSchema,
 });
 export type SetReviewStatusPayload = z.infer<typeof setReviewStatusSchema>;
+
+// Admin moderation listing — GET /reviews, moderator/admin only.
+export const listReviewsQuerySchema = paginationQuerySchema.extend({
+  status: reviewStatusSchema.optional(),
+});
+export type ListReviewsQuery = z.infer<typeof listReviewsQuerySchema>;

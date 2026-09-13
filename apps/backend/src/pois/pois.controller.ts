@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
 import {
   bboxQuerySchema,
   createPoiSchema,
@@ -69,7 +69,7 @@ export class PoisController {
     @Body(new ZodValidationPipe(createPoiSchema)) body: CreatePoiPayload,
     @CurrentUser() user: RequestUser,
   ) {
-    return this.poisService.create(body, user.userId);
+    return this.poisService.create(body, user);
   }
 
   @Patch(":id")
@@ -90,5 +90,13 @@ export class PoisController {
     @Body(new ZodValidationPipe(moderatePoiSchema)) body: ModeratePoiPayload,
   ) {
     return this.poisService.moderate(id, body);
+  }
+
+  @Delete(":id")
+  @HttpCode(204)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles("moderator", "admin")
+  remove(@Param("id") id: string) {
+    return this.poisService.remove(id);
   }
 }

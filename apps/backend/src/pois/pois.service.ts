@@ -85,7 +85,10 @@ export class PoisService {
     return this.toDto(poi);
   }
 
-  async create(payload: CreatePoiPayload, submittedById: string): Promise<Poi> {
+  async create(payload: CreatePoiPayload, submitter: RequestUser): Promise<Poi> {
+    // Moderators/admins don't need to self-approve their own submissions.
+    const isModerator = submitter.role === "moderator" || submitter.role === "admin";
+
     const poiId = await this.runWrite(async (manager) => {
       const poi = manager.create(PoiEntity, {
         name: payload.name,
@@ -95,7 +98,8 @@ export class PoisService {
         address: payload.address,
         phone: payload.phone ?? null,
         website: payload.website ?? null,
-        submittedById,
+        submittedById: submitter.userId,
+        status: isModerator ? PoiStatus.APPROVED : PoiStatus.PENDING,
       });
       const saved = await manager.save(poi);
 
@@ -176,6 +180,11 @@ export class PoisService {
     poi.status = payload.status === "approved" ? PoiStatus.APPROVED : PoiStatus.REJECTED;
     await this.poisRepository.save(poi);
     return this.toDto(poi);
+  }
+
+  async remove(id: string): Promise<void> {
+    const result = await this.poisRepository.delete({ id });
+    if (result.affected === 0) throw new NotFoundException("POI not found");
   }
 
   /** Radius search around a point — used by map "near me" style queries. */

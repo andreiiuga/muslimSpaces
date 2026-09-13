@@ -18,6 +18,8 @@ export const authUserSchema = z.object({
   email: z.string().email(),
   role: roleSchema,
   preferredLocale: z.string().min(2).max(10),
+  displayName: z.string().min(1).max(80).optional(),
+  avatarUrl: z.string().url().optional(),
   createdAt: z.string().datetime(),
 });
 export type AuthUser = z.infer<typeof authUserSchema>;
@@ -28,7 +30,16 @@ export const authResponseSchema = z.object({
 });
 export type AuthResponse = z.infer<typeof authResponseSchema>;
 
-export const updatePreferredLocaleSchema = z.object({
-  preferredLocale: z.string().min(2).max(10),
+// One endpoint for "edit profile" rather than one PATCH per field.
+export const updateProfileSchema = z.object({
+  displayName: z.string().min(1).max(80).optional(),
+  preferredLocale: z.string().min(2).max(10).optional(),
+  avatarKey: z.string().min(1).optional(),
 });
-export type UpdatePreferredLocalePayload = z.infer<typeof updatePreferredLocaleSchema>;
+export type UpdateProfilePayload = z.infer<typeof updateProfileSchema>;
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: z.string().min(8).max(72),
+});
+export type ChangePasswordPayload = z.infer<typeof changePasswordSchema>;

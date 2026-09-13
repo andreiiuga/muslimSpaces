@@ -2,9 +2,10 @@ import { z } from "zod";
 import {
   authResponseSchema,
   authUserSchema,
+  type ChangePasswordPayload,
   type LoginPayload,
   type SignupPayload,
-  type UpdatePreferredLocalePayload,
+  type UpdateProfilePayload,
 } from "./schemas/auth";
 import { categorySchema, type CreateCategoryPayload } from "./schemas/category";
 import {
@@ -17,7 +18,12 @@ import {
 import { poiHourSchema, type SetPoiHoursPayload } from "./schemas/poi-hours";
 import { poiImageSchema, type AttachPoiImagePayload } from "./schemas/poi-image";
 import { mediaUploadResponseSchema } from "./schemas/media";
-import { reviewSchema, type SetReviewStatusPayload, type SubmitReviewPayload } from "./schemas/review";
+import {
+  reviewSchema,
+  type ListReviewsQuery,
+  type SetReviewStatusPayload,
+  type SubmitReviewPayload,
+} from "./schemas/review";
 import { favoriteSchema } from "./schemas/favorite";
 import {
   blogPostSchema,
@@ -124,9 +130,14 @@ export function createApiClient({ baseUrl, getToken }: ApiClientOptions) {
           body: JSON.stringify(payload),
         }),
       me: () => request("/auth/me", authUserSchema),
-      updatePreferredLocale: (payload: UpdatePreferredLocalePayload) =>
-        request("/auth/me/locale", authUserSchema, {
+      updateProfile: (payload: UpdateProfilePayload) =>
+        request("/auth/me/profile", authUserSchema, {
           method: "PATCH",
+          body: JSON.stringify(payload),
+        }),
+      changePassword: (payload: ChangePasswordPayload) =>
+        request("/auth/change-password", z.void(), {
+          method: "POST",
           body: JSON.stringify(payload),
         }),
     },
@@ -157,6 +168,7 @@ export function createApiClient({ baseUrl, getToken }: ApiClientOptions) {
           method: "PATCH",
           body: JSON.stringify(payload),
         }),
+      remove: (id: string) => request(`/pois/${id}`, z.void(), { method: "DELETE" }),
       nearby: (query: RadiusQuery) =>
         request(`/pois/nearby${toQueryString(query)}`, z.array(poiSchema)),
       nearest: (query: NearestQuery) =>
@@ -202,6 +214,9 @@ export function createApiClient({ baseUrl, getToken }: ApiClientOptions) {
     },
     reviews: {
       mine: () => request("/reviews/mine", z.array(reviewSchema)),
+      // Admin moderation listing — moderator/admin only.
+      list: (query?: Partial<ListReviewsQuery>) =>
+        request(`/reviews${toQueryString(query)}`, z.array(reviewSchema)),
       setStatus: (reviewId: string, payload: SetReviewStatusPayload) =>
         request(`/reviews/${reviewId}`, reviewSchema, {
           method: "PATCH",
@@ -232,6 +247,7 @@ export function createApiClient({ baseUrl, getToken }: ApiClientOptions) {
           method: "PATCH",
           body: JSON.stringify(payload),
         }),
+      remove: (id: string) => request(`/blog/${id}`, z.void(), { method: "DELETE" }),
     },
   };
 }

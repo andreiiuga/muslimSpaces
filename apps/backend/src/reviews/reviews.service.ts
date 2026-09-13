@@ -1,7 +1,12 @@
 import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { DataSource, EntityManager, Repository } from "typeorm";
-import type { Review, SetReviewStatusPayload, SubmitReviewPayload } from "@muslimspaces/shared";
+import type {
+  ListReviewsQuery,
+  Review,
+  SetReviewStatusPayload,
+  SubmitReviewPayload,
+} from "@muslimspaces/shared";
 import type { RequestUser } from "../auth/decorators/current-user.decorator";
 import { PoiEntity } from "../pois/entities/poi.entity";
 import { ReviewEntity, ReviewStatus } from "./entities/review.entity";
@@ -14,6 +19,17 @@ export class ReviewsService {
     private readonly reviewsRepository: Repository<ReviewEntity>,
     private readonly dataSource: DataSource,
   ) {}
+
+  /** Admin moderation listing — every review across every POI, optionally filtered by status. */
+  async listAll(query: ListReviewsQuery): Promise<Review[]> {
+    const rows = await this.reviewsRepository.find({
+      where: query.status ? { status: query.status as ReviewStatus } : {},
+      order: { createdAt: "DESC" },
+      take: query.limit,
+      skip: query.offset,
+    });
+    return rows.map(toReviewDto);
+  }
 
   async listForPoi(poiId: string): Promise<Review[]> {
     const rows = await this.reviewsRepository.find({
