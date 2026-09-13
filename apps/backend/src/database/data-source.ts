@@ -1,4 +1,9 @@
 import "reflect-metadata";
+// Loaded here, not left to @nestjs/config, because this file's top-level
+// `process.env.DATABASE_URL` read happens at import time — before Nest's
+// bootstrap (and ConfigModule.forRoot()) ever runs — and because the
+// TypeORM CLI imports this file directly, bypassing Nest entirely.
+import "dotenv/config";
 import { DataSource, DataSourceOptions } from "typeorm";
 
 export const dataSourceOptions: DataSourceOptions = {

@@ -53,6 +53,9 @@ importers:
       argon2:
         specifier: ^0.41.1
         version: 0.41.1
+      dotenv:
+        specifier: ^16.4.5
+        version: 16.6.1
       fastify:
         specifier: ^4.28.1
         version: 4.28.1
