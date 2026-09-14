@@ -14,7 +14,7 @@ export default async function AdminBlogPage() {
         <Text size="xl" weight="bold">Blog</Text>
         <NewBlogPostButton />
       </div>
-      <div style={{ marginTop: spacing.lg }}>
+      <div style={{ marginTop: spacing.lg, overflowX: "auto" }}>
         {posts.length === 0 ? <Text>No posts yet.</Text> : <BlogAdminTable posts={posts} />}
       </div>
     </div>

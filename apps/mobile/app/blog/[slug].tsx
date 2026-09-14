@@ -12,6 +12,7 @@ export default function BlogPostScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const [post, setPost] = useState<BlogPost | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     api.blog
@@ -19,7 +20,7 @@ export default function BlogPostScreen() {
       .then(setPost)
       .catch((err) => {
         if (err instanceof ApiError && err.status === 404) setNotFound(true);
-        else throw err;
+        else setError(true);
       });
   }, [slug]);
 
@@ -27,6 +28,14 @@ export default function BlogPostScreen() {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: spacing.xl }}>
         <Text color={colors.textMuted}>This post isn't available.</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: spacing.xl }}>
+        <Text color={colors.danger}>Couldn't load this post. Try again later.</Text>
       </View>
     );
   }

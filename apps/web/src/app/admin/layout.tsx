@@ -15,8 +15,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   return (
-    <div style={{ display: "flex", minHeight: "calc(100vh - 65px)" }}>
+    <div className="admin-shell" style={{ display: "flex", minHeight: "calc(100vh - 65px)" }}>
       <aside
+        className="admin-sidebar"
         style={{
           width: 200,
           borderRight: `1px solid ${colors.border}`,
@@ -25,13 +26,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         }}
       >
         <Text size="sm" weight="semibold" color={colors.textMuted}>ADMIN</Text>
-        <nav style={{ marginTop: spacing.md, display: "flex", flexDirection: "column", gap: spacing.sm }}>
+        <nav className="admin-sidebar-nav" style={{ marginTop: spacing.md, display: "flex", flexDirection: "column", gap: spacing.sm }}>
           <AdminLink href="/admin/pois">POIs</AdminLink>
           <AdminLink href="/admin/blog">Blog</AdminLink>
           <AdminLink href="/admin/reviews">Reviews</AdminLink>
         </nav>
       </aside>
-      <div style={{ flex: 1, padding: spacing.xl }}>{children}</div>
+      <div style={{ flex: 1, padding: spacing.xl, minWidth: 0 }}>{children}</div>
     </div>
   );
 }

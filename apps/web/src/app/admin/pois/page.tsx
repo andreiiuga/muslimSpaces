@@ -23,7 +23,7 @@ export default async function AdminPoisPage() {
         <Text size="xl" weight="bold">POIs</Text>
         <NewPoiButton />
       </div>
-      <div style={{ marginTop: spacing.lg }}>
+      <div style={{ marginTop: spacing.lg, overflowX: "auto" }}>
         {pois.length === 0 ? (
           <Text>No POIs yet.</Text>
         ) : (

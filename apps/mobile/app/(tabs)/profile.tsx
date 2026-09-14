@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { useRouter } from "expo-router";
-import { Avatar, Button, Text, colors, spacing } from "@muslimspaces/ui";
+import { Avatar, Button, Skeleton, Text, colors, spacing } from "@muslimspaces/ui";
 import { useAuth } from "../../src/auth/AuthContext";
 import { EditProfileForm } from "../../src/components/EditProfileForm";
 import { ChangePasswordForm } from "../../src/components/ChangePasswordForm";
@@ -11,7 +11,14 @@ export default function ProfileScreen() {
   const { user, loading, logout, refreshUser } = useAuth();
   const [localUser, setLocalUser] = useState(user);
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <View style={{ padding: spacing.xl, gap: spacing.lg, alignItems: "center" }}>
+        <Skeleton width={72} height={72} circle />
+        <Skeleton width="50%" height={20} />
+      </View>
+    );
+  }
 
   if (!user) {
     return (

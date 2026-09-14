@@ -1,0 +1,87 @@
+/*
+ * The design system is inline-styles-only (see packages/ui) — this file
+ * exists purely because React inline styles can't express @media queries.
+ * Keep it to layout-only responsive classes; anything else belongs inline.
+ */
+
+.explore-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: calc(100vh - 140px);
+}
+
+.explore-map-pane {
+  position: sticky;
+  top: 0;
+  height: 100%;
+}
+
+.poi-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 640px) {
+  /* A 3-column grid of photos is cramped on a phone screen — scroll
+     horizontally instead, one photo at a time, same as the mobile app. */
+  .poi-gallery {
+    display: flex !important;
+    overflow-x: auto;
+  }
+
+  .poi-gallery > img {
+    flex: 0 0 auto;
+    width: 85% !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-shell {
+    flex-direction: column;
+  }
+
+  .admin-sidebar {
+    width: 100% !important;
+    border-right: none !important;
+    /* matches colors.border in packages/ui/src/tokens.ts */
+    border-bottom: 1px solid #e7e2d8;
+  }
+
+  .admin-sidebar-nav {
+    flex-direction: row !important;
+    flex-wrap: wrap;
+  }
+
+  /* Same stacked map-above-list layout as the native app on small
+     viewports, instead of the desktop side-by-side split. */
+  .explore-layout {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+  }
+
+  .explore-map-pane {
+    position: static;
+    height: 280px;
+    order: -1;
+  }
+
+  .poi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Let the three navbar sections wrap onto their own rows instead of
+     overflowing/squeezing — nothing is hidden, just re-flowed. */
+  .navbar {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .navbar-links {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+  }
+}

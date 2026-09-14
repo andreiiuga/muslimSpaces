@@ -25,7 +25,7 @@ export default async function AdminReviewsPage() {
   return (
     <div>
       <Text size="xl" weight="bold">Reviews</Text>
-      <div style={{ marginTop: spacing.lg }}>
+      <div style={{ marginTop: spacing.lg, overflowX: "auto" }}>
         {reviews.length === 0 ? (
           <Text>No reviews yet.</Text>
         ) : (

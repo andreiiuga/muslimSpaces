@@ -58,6 +58,7 @@ export default async function PoiDetailPage({ params }: { params: Promise<{ id: 
     <main style={{ maxWidth: 800, margin: "0 auto", padding: spacing.xl }}>
       {images.length > 0 && (
         <div
+          className="poi-gallery"
           style={{
             display: "grid",
             gridTemplateColumns: `repeat(${Math.min(images.length, 3)}, 1fr)`,

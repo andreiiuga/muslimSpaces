@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { FlatList, View } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
-import { Button, POICard, Text, colors, spacing } from "@muslimspaces/ui";
+import { Button, POICard, Skeleton, Text, colors, spacing } from "@muslimspaces/ui";
 import type { Category, Poi } from "@muslimspaces/shared";
 import { api } from "../../src/lib/api-client";
 import { useAuth } from "../../src/auth/AuthContext";
@@ -47,19 +47,26 @@ export default function FavoritesScreen() {
     );
   }
 
+  if (loading && favorites.length === 0) {
+    return (
+      <View style={{ padding: spacing.lg, gap: spacing.md }}>
+        <Skeleton height={140} borderRadius={16} />
+        <Skeleton height={140} borderRadius={16} />
+      </View>
+    );
+  }
+
   return (
     <FlatList
       data={favorites}
       keyExtractor={(item) => item.id}
       contentContainerStyle={{ padding: spacing.lg, gap: spacing.md, flexGrow: 1 }}
       ListEmptyComponent={
-        !loading ? (
-          <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-            <Text color={colors.textMuted} align="center">
-              No favorites yet — save places you like from their page.
-            </Text>
-          </View>
-        ) : null
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+          <Text color={colors.textMuted} align="center">
+            No favorites yet — save places you like from their page.
+          </Text>
+        </View>
       }
       renderItem={({ item }) => (
         <POICard

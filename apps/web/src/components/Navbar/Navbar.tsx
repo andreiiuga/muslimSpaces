@@ -11,6 +11,7 @@ export async function Navbar() {
 
   return (
     <header
+      className="navbar"
       style={{
         display: "flex",
         alignItems: "center",
@@ -32,7 +33,7 @@ export async function Navbar() {
         MuslimSpaces
       </Link>
 
-      <nav style={{ display: "flex", alignItems: "center", gap: spacing.xl }}>
+      <nav className="navbar-links" style={{ display: "flex", alignItems: "center", gap: spacing.xl }}>
         <NavLink href="/blog">Blog</NavLink>
         <NavLink href="/about">About</NavLink>
       </nav>

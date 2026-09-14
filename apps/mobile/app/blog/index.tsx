@@ -9,10 +9,22 @@ import { api } from "../../src/lib/api-client";
 export default function BlogListScreen() {
   const router = useRouter();
   const [posts, setPosts] = useState<BlogPost[] | null>(null);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
-    api.blog.list().then(setPosts);
+    api.blog
+      .list()
+      .then(setPosts)
+      .catch(() => setError(true));
   }, []);
+
+  if (error) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: spacing.xl }}>
+        <Text color={colors.danger}>Couldn't load the blog. Try again later.</Text>
+      </View>
+    );
+  }
 
   if (!posts) {
     return (

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { colors } from "@muslimspaces/ui";
 import { Navbar } from "../components/Navbar/Navbar";
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: "MuslimSpaces",

@@ -20,6 +20,7 @@ export default function ExploreScreen() {
   const [openNow, setOpenNow] = useState(false);
   const [bounds, setBounds] = useState<MapBounds | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     api.categories.list().then(setCategories);
@@ -42,6 +43,7 @@ export default function ExploreScreen() {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setError(null);
 
     const query = bounds
       ? api.pois.bbox({
@@ -59,6 +61,9 @@ export default function ExploreScreen() {
     query
       .then((result) => {
         if (!cancelled) setPois(result);
+      })
+      .catch(() => {
+        if (!cancelled) setError("Couldn't load places for this area.");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -106,7 +111,12 @@ export default function ExploreScreen() {
           <View style={{ height: 260, borderRadius: 16, overflow: "hidden", marginTop: spacing.sm }}>
             <MapView pois={pois} onBoundsChange={setBounds} onMarkerPress={(id) => router.push(`/pois/${id}`)} />
           </View>
-          {loading && (
+          {error && (
+            <Text size="sm" color={colors.danger} align="center">
+              {error}
+            </Text>
+          )}
+          {loading && !error && (
             <Text size="sm" color={colors.textMuted} align="center">
               Updating…
             </Text>

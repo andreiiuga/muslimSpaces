@@ -35,6 +35,7 @@ export function ExploreView({
   const [openNow, setOpenNow] = useState(false);
   const [bounds, setBounds] = useState<MapBounds | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Initial SSR list covers first paint (and SEO); once the map reports a
   // real viewport, subsequent fetches are viewport-driven so the list and
@@ -43,6 +44,7 @@ export function ExploreView({
     if (!bounds) return;
     let cancelled = false;
     setLoading(true);
+    setError(null);
 
     getBrowserApiClient()
       .pois.bbox({
@@ -53,6 +55,9 @@ export function ExploreView({
       })
       .then((result) => {
         if (!cancelled) setPois(result);
+      })
+      .catch(() => {
+        if (!cancelled) setError("Couldn't load places for this area.");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -92,39 +97,42 @@ export function ExploreView({
         onOpenNowChange={setOpenNow}
       />
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          height: "calc(100vh - 140px)",
-        }}
-      >
+      <div className="explore-layout">
         <div style={{ overflowY: "auto", padding: spacing.xl }}>
-          {loading && <Text size="sm" color={colors.textMuted}>Updating…</Text>}
-          {pois.length === 0 ? (
-            <Text color={colors.textMuted}>No POIs in this area yet.</Text>
-          ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: spacing.lg }}>
-              {pois.map((poi) => (
-                <div key={poi.id} style={{ position: "relative" }}>
-                  <Link
-                    href={`/pois/${poi.id}`}
-                    aria-label={poi.name.ro}
-                    style={{ position: "absolute", inset: 0, zIndex: 1 }}
-                  />
-                  <POICard
-                    poi={poi}
-                    categoryLabel={categoryLabel(poi)}
-                    isFavorite={favoriteIds.has(poi.id)}
-                    onToggleFavorite={() => toggleFavorite(poi.id)}
-                  />
-                </div>
+          {error && <Text size="sm" color={colors.danger}>{error}</Text>}
+          {loading && pois.length === 0 ? (
+            <div className="poi-grid" style={{ gap: spacing.lg }}>
+              {[0, 1, 2, 3].map((i) => (
+                <Skeleton key={i} height={220} borderRadius={16} />
               ))}
             </div>
+          ) : pois.length === 0 ? (
+            <Text color={colors.textMuted}>No POIs in this area yet.</Text>
+          ) : (
+            <>
+              {loading && <Text size="sm" color={colors.textMuted}>Updating…</Text>}
+              <div className="poi-grid" style={{ gap: spacing.lg }}>
+                {pois.map((poi) => (
+                  <div key={poi.id} style={{ position: "relative" }}>
+                    <Link
+                      href={`/pois/${poi.id}`}
+                      aria-label={poi.name.ro}
+                      style={{ position: "absolute", inset: 0, zIndex: 1 }}
+                    />
+                    <POICard
+                      poi={poi}
+                      categoryLabel={categoryLabel(poi)}
+                      isFavorite={favoriteIds.has(poi.id)}
+                      onToggleFavorite={() => toggleFavorite(poi.id)}
+                    />
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
 
-        <div style={{ position: "sticky", top: 0, height: "100%" }}>
+        <div className="explore-map-pane">
           <MapView pois={pois} onBoundsChange={setBounds} onMarkerPress={(id) => router.push(`/pois/${id}`)} />
         </div>
       </div>

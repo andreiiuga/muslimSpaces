@@ -36,11 +36,13 @@ export default function PoiDetailScreen() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [isFavorite, setIsFavorite] = useState(false);
   const [notFound, setNotFound] = useState(false);
+  const [error, setError] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(() => {
     setLoading(true);
     setNotFound(false);
+    setError(false);
 
     api.pois
       .get(id)
@@ -65,7 +67,7 @@ export default function PoiDetailScreen() {
       })
       .catch((err) => {
         if (err instanceof ApiError && err.status === 404) setNotFound(true);
-        else throw err;
+        else setError(true);
       })
       .finally(() => setLoading(false));
   }, [id, user]);
@@ -86,6 +88,14 @@ export default function PoiDetailScreen() {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: spacing.xl }}>
         <Text color={colors.textMuted}>This place isn't available.</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: spacing.xl }}>
+        <Text color={colors.danger}>Couldn't load this place. Try again later.</Text>
       </View>
     );
   }
