@@ -67,13 +67,21 @@ dependency, check it's free/self-hostable within Railway before adding it.
 - **Maps**: MapLibre GL (fully open-source), not Mapbox — Mapbox needs an
   account + has usage billing, which conflicts with the no-paid-services
   constraint. Web uses `maplibre-gl`; Expo uses
-  `@maplibre/maplibre-react-native`, pinned to **10.4.2** specifically —
-  11.x requires React 19.1+/React Native 0.80+/Expo 54+, which conflicts
-  with the version-alignment constraint in "packages/ui architecture"
-  below. 10.4.2's peer ranges (`react-native >=0.59.9`, etc.) are loose
-  enough to match this project's pinned RN 0.76.9 without issue. This is a
-  **native module** (unlike `maplibre-gl`, which is pure JS) — see
-  "apps/mobile architecture" below for what that means for local dev.
+  `@maplibre/maplibre-react-native`, on **11.3.10** (its peer ranges —
+  `react>=19.1`, `react-native>=0.80`, `expo>=54` — line up with this
+  project's Expo 57/RN 0.86/React 19.2.3 pins; see "packages/ui
+  architecture" below). Earlier in this project it was pinned back to
+  10.4.2 specifically because 11.x's peer ranges didn't fit the
+  then-current Expo 52/RN 0.76/React 18.3.1 pins — that constraint went
+  away when the whole stack was bumped for native tab bar support (see
+  "apps/mobile architecture"). Note the v10→v11 API rewrite if you ever
+  touch `MapView.native.tsx`: `MapView`→`Map`, `PointAnnotation`→`Marker`
+  (`coordinate`→`lngLat`, `onSelected`→`onPress`), `Camera`'s
+  `defaultSettings`→`initialViewState`, and `onRegionDidChange`'s payload
+  is now a flat `event.nativeEvent.bounds` tuple instead of a nested
+  GeoJSON feature. This is a **native module** (unlike `maplibre-gl`,
+  which is pure JS) — see "apps/mobile architecture" below for what that
+  means for local dev.
 - **Map tiles**: [OpenFreeMap](https://openfreemap.org) — free, whole-planet
   vector tiles, no API key, explicitly built for production use (not a
   rate-limited courtesy server like `tile.openstreetmap.org`, which its own
@@ -216,7 +224,12 @@ and break the build.
 - `apps/mobile` needs Node **>=20.19.4** to run the Expo CLI (`expo start`,
   `expo export`, etc.) — plain `tsc`/`pnpm install` work fine on older Node,
   but the CLI itself refuses to start below that version. Use `nvm use` (or
-  `nvm exec <version> npx expo ...`) if your default Node is older.
+  `nvm exec <version> npx expo ...`) if your default Node is older. Caveat:
+  `nvm exec <version> npx expo install ...` can fail with `spawn pnpm ENOENT`
+  if pnpm itself isn't installed under that nvm'd Node version — in that case
+  run the underlying `pnpm add <packages>` command directly (under the
+  default Node) using the exact versions the failed `expo install` command
+  printed, rather than fighting nvm's PATH.
 - If Metro fails to resolve `@babel/runtime/helpers/...`: pnpm's strict
   linking doesn't hoist transitive deps the way npm/yarn's flat
   `node_modules` does, and Metro (unlike Node's `require`) expects
@@ -256,9 +269,12 @@ and break the build.
 ### `packages/ui` architecture — read before touching any component here
 
 **`apps/web` and `apps/mobile` are deliberately pinned to the exact same
-`react` (18.3.1), `react-native` (0.76.9), `lucide-react`/`lucide-react-native`
-(0.468.0) versions.** This is load-bearing, not a coincidence — do not bump
-one app's React version without bumping the other the same way. Reason:
+`react` (19.2.3), `react-native` (0.86.3), `lucide-react`/`lucide-react-native`
+(1.46.0) versions.** This is load-bearing, not a coincidence — do not bump
+one app's React version without bumping the other the same way. (Bumped
+together from 18.3.1/0.76.9/0.468.0 when the mobile app moved to Expo SDK 57
+for native tab bar support — see "apps/mobile architecture" — re-verified with
+the same `readlink -f` single-instance check described below.) Reason:
 
 - `packages/ui` ships raw `.tsx`/`.native.tsx` source, consumed directly by
   each app's own bundler (`transpilePackages: ["@muslimspaces/ui"]` in
@@ -314,6 +330,29 @@ one app's React version without bumping the other the same way. Reason:
   options — title, modal presentation — easy to see in one place rather
   than scattered per-screen). `main` in `package.json` is
   `"expo-router/entry"`, replacing the old bare `App.tsx`/`index.ts` pair.
+- **Bottom tab bar**: `app/(tabs)/_layout.tsx` uses `NativeTabs`/
+  `NativeTabs.Trigger` from `expo-router/unstable-native-tabs` — a *real*
+  native tab bar (`UITabBarController` on iOS, Material bottom nav on
+  Android), not a JS-rendered React Navigation bar. This is what gets iOS
+  26's Liquid Glass automatically, with zero custom styling code — the OS
+  draws it. Deliberately chosen over a hand-rolled blur-view approximation
+  bolted onto React Navigation's bottom-tabs. Two real consequences:
+  - The import path is still `unstable-native-tabs` even on the latest
+    stable Expo SDK (57) — Expo has not stabilized this API. Treat it as a
+    genuine preview API that may need updating on a future SDK bump, not a
+    typo.
+  - Icons can't be arbitrary React components (unlike the rest of the app,
+    which uses `lucide-react-native` everywhere else) — `NativeTabs.Trigger.Icon`
+    takes an SF Symbol name (`sf`, iOS) and a Material Symbol name (`md`,
+    Android), both **strict literal-union types** validated against each
+    platform's real icon catalog (`sf-symbols-typescript`, `expo-symbols`) —
+    a typo is a type error, not a runtime blank icon. Tab config (route
+    name, label, `sf`/`md` icon names) lives in
+    `src/navigation/tabs.ts` as a small typed array so `_layout.tsx` just
+    maps over it, rather than repeating the same JSX shape three times.
+    This isn't a `packages/ui` component — `NativeTabs`' compound API has
+    no web equivalent (same reasoning that keeps `Navbar` in `apps/web`
+    only, not shared).
 - **`apps/mobile/tsconfig.json` also needs `"moduleResolution": "bundler"`**
   (overriding `expo/tsconfig.base`'s default `"node"`) — plain `"node"`
   resolution predates package.json `exports` subpaths and can't resolve
@@ -345,3 +384,14 @@ one app's React version without bumping the other the same way. Reason:
   environment), even though it doesn't structurally satisfy TypeScript's
   DOM `Blob` interface. This is the standard RN pattern for file uploads,
   not a hack specific to this codebase.
+- **Expo SDK 57 / React Native 0.86 / New Architecture is mandatory** —
+  RN 0.82 removed the legacy bridge entirely, so every native module in the
+  dependency tree must be New-Architecture-compatible; there is no
+  `newArchEnabled: false` opt-out anymore. This is also *why* React bumped
+  to 19.2.3 (RN 0.86.3's own `react` peer requirement is `^19.2.3` exactly,
+  not a preference).
+- **`react-native-reanimated` and `react-native-worklets` are present but
+  unused directly** — they're transitive peer dependencies of `expo-router`
+  57 (pulled in by an internal drawer-navigator dependency, not anything
+  this app uses) and of `expo-modules-core` respectively. Don't remove them
+  as "unused"; `pnpm install` will flag the missing peers again if you do.

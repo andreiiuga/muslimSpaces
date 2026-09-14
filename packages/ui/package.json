@@ -37,12 +37,12 @@
     }
   },
   "devDependencies": {
-    "@maplibre/maplibre-react-native": "10.4.2",
-    "@types/react": "~18.3.12",
-    "lucide-react": "^0.468.0",
-    "lucide-react-native": "^0.468.0",
-    "react": "18.3.1",
-    "react-native": "0.76.9",
-    "react-native-svg": "15.8.0"
+    "@maplibre/maplibre-react-native": "11.3.10",
+    "@types/react": "~19.2.18",
+    "lucide-react": "^1.46.0",
+    "lucide-react-native": "^1.46.0",
+    "react": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-svg": "15.15.4"
   }
 }
