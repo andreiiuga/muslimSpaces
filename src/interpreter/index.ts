@@ -12,9 +12,9 @@ const QUICK_REGEX = /(\d{1,6})\s*(x\s*)?(salawat|solawat|salavat)?/i;
 // about (a number, a slash command, or stats/me/submission wording, in
 // either English or Arabic) — skip the API call entirely.
 const QUICK_SKIP_REGEX =
-  /\d|\/(stats|me|help|awlia)\b|\bstat(s|istics)?\b|\bsubmissions?\b|\bmine\b|\bhelp\b|\bcommands?\b|\bawlia\b|\bparticipants?\b|salawat|solawat|salavat|صلوات|صلاة|صل(?:ي|و)?\s|اللهم\s*صل|إحصائيات|احصائيات|حسابي|مشاركاتي|مساعدة|أوامر|اوامر|أولياء|اولياء/i;
+  /\d|\/(stats|me|help|awlia|subscribe|unsubscribe)\b|\bstat(s|istics)?\b|\bsubmissions?\b|\bmine\b|\bhelp\b|\bcommands?\b|\bawlia\b|\bparticipants?\b|\bunsubscribe\b|\bsubscribe\b|salawat|solawat|salavat|صلوات|صلاة|صل(?:ي|و)?\s|اللهم\s*صل|إحصائيات|احصائيات|حسابي|مشاركاتي|مساعدة|أوامر|اوامر|أولياء|اولياء|إلغاء\s*الاشتراك|الغاء\s*الاشتراك|الاشتراك/i;
 
-const INTENT_SYSTEM_PROMPT = `You classify WhatsApp group messages for a salawat (Islamic prayer) counting bot. Messages may be in English or Arabic. Every message is exactly one of six things:
+const INTENT_SYSTEM_PROMPT = `You classify WhatsApp group messages for a salawat (Islamic prayer) counting bot. Messages may be in English or Arabic. Every message is exactly one of eight things:
 
 1. "salawat" - the sender (or their group, speaking as "we") is REPORTING a specific salawat count as something just completed or being submitted right now - not describing a habit, rule, plan, or general fact. Look for a completion marker tied directly to the number: past tense ("did", "sent", "recited", "صليت", "قمنا", "أنجزنا"), or an immediacy word ("just", "today", "الآن", "اليوم"). Examples: "did 50 today", "+30", "sent 100 salawat, alhamdulillah", "صليت ٥٠ صلوات", "اللهم صل على محمد ٣٠ مرة", "قمنا اليوم بـ ٥٠٠٠ صلاة كمجموعة". Extract the integer count exactly as stated (Arabic-Indic digits count too, e.g. ٥٠ = 50) - never multiply or estimate a total from a group size and a per-person rate.
 
@@ -23,9 +23,11 @@ const INTENT_SYSTEM_PROMPT = `You classify WhatsApp group messages for a salawat
 3. "me" - the sender is asking to be sent (privately) a list/history of their own submissions. Triggered by the literal command "/me" or natural phrasing like "show my submissions", "what have I submitted", "send me my total", "مشاركاتي", "حسابي".
 4. "help" - the sender is asking what the bot can do, what commands exist, or how the salawat counting works. Triggered by the literal command "/help" or natural phrasing like "what can you do", "how does this work", "what are the commands", "مساعدة", "ما هي الأوامر", "كيف يعمل هذا البوت".
 5. "awlia" - the sender wants to see the full list of everyone who has submitted salawat so far, in random order (explicitly NOT ranked or sorted by count). Triggered by the literal command "/awlia" or natural phrasing like "who has participated", "list everyone who submitted", "show me the awlia", "من شارك؟", "قائمة الأولياء".
-6. "none" - anything else: greetings, unrelated chat, a number that isn't a salawat count (a date, a time, a phone number), a message describing a routine/rule/plan (see above), or any other message that doesn't clearly match one of the above.
+6. "subscribe" - the sender wants to opt IN to the weekly salawat digest DM (a private weekly summary of their own count). Triggered by the literal command "/subscribe" or natural phrasing like "subscribe me", "send me the weekly digest", "أريد الاشتراك", "اشتراك".
+7. "unsubscribe" - the sender wants to opt OUT of the weekly salawat digest DM. Triggered by the literal command "/unsubscribe" or natural phrasing like "unsubscribe me", "stop the weekly messages", "إلغاء الاشتراك", "لا أريد الرسالة الأسبوعية".
+8. "none" - anything else: greetings, unrelated chat, a number that isn't a salawat count (a date, a time, a phone number), a message describing a routine/rule/plan (see above), or any other message that doesn't clearly match one of the above.
 
-Reply with ONLY a JSON object, no other text: {"intent": "salawat" | "stats" | "me" | "help" | "awlia" | "none", "count": <integer or null>}
+Reply with ONLY a JSON object, no other text: {"intent": "salawat" | "stats" | "me" | "help" | "awlia" | "subscribe" | "unsubscribe" | "none", "count": <integer or null>}
 Rules:
 - "count" is only meaningful when intent is "salawat"; it must be null for every other intent.
 - A message can both describe context (e.g. group size, routine) AND report a real completion (e.g. "today we did X") - if it contains a genuine completion/immediacy marker for a specific number, classify it as "salawat" with that number, even alongside descriptive text.
@@ -47,6 +49,8 @@ class Interpreter implements InterpreterInterface {
     if (normalized === '/me') return { type: 'me' };
     if (normalized === '/help') return { type: 'help' };
     if (normalized === '/awlia') return { type: 'awlia' };
+    if (normalized === '/subscribe') return { type: 'subscribe' };
+    if (normalized === '/unsubscribe') return { type: 'unsubscribe' };
 
     // Hidden command: intentionally not in QUICK_SKIP_REGEX or the classifier
     // prompt below, so it's undiscoverable via /help or natural language.
@@ -77,6 +81,8 @@ class Interpreter implements InterpreterInterface {
       if (parsed.intent === 'me') return { type: 'me' };
       if (parsed.intent === 'help') return { type: 'help' };
       if (parsed.intent === 'awlia') return { type: 'awlia' };
+      if (parsed.intent === 'subscribe') return { type: 'subscribe' };
+      if (parsed.intent === 'unsubscribe') return { type: 'unsubscribe' };
       if (parsed.intent === 'salawat' && Number.isInteger(parsed.count) && parsed.count > 0) {
         return { type: 'salawat', count: parsed.count };
       }

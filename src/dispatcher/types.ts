@@ -58,6 +58,24 @@ export type UpdateGoalResponse = {
   goal: number;
 };
 
+/** Confirms the sender is opted in to the weekly salawat digest DM. */
+export type SubscribeResponse = {
+  type: 'subscribe';
+};
+
+/** Confirms the sender is opted out of the weekly salawat digest DM. */
+export type UnsubscribeResponse = {
+  type: 'unsubscribe';
+};
+
+/** One recipient's weekly salawat digest DM - their own count and day-of-week distribution, rolling last 7 days. */
+export type WeeklyDigestResponse = {
+  type: 'weekly-digest';
+  user: DispatchedUser;
+  total: number;
+  distribution: DayCount[];
+};
+
 /** Greets a member who just joined the group. Not triggered by a Command - fired directly off a join event. */
 export type WelcomeResponse = {
   type: 'welcome';
@@ -76,7 +94,10 @@ export type DispatchResponse =
   | HelpResponse
   | AwliaResponse
   | UpdateGoalResponse
-  | WelcomeResponse;
+  | WelcomeResponse
+  | SubscribeResponse
+  | UnsubscribeResponse
+  | WeeklyDigestResponse;
 
 /**
  * Public contract for the Dispatcher module.
@@ -87,4 +108,15 @@ export interface DispatcherInterface {
 
   /** Build a welcome response for someone who just joined the group (not driven by a Command). */
   handleGroupJoin(sender: MessageSender): Promise<DispatchResponse>;
+
+  /**
+   * Build one weekly-digest response per subscribed user who has salawat
+   * submissions in the last 7 days and hasn't already been sent a digest
+   * within that same rolling window. Not driven by a Command - triggered by
+   * the internal weekly-digest endpoint.
+   */
+  buildWeeklyDigests(): Promise<WeeklyDigestResponse[]>;
+
+  /** Marks a user as having just been sent their weekly digest, so a re-trigger within 7 days skips them. */
+  markWeeklyDigestSent(userId: number): Promise<void>;
 }

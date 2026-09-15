@@ -8,6 +8,7 @@ import type {
   StatsResponse,
   UpdateGoalResponse,
   WelcomeResponse,
+  WeeklyDigestResponse,
 } from '../dispatcher/types.js';
 
 const { mockCreate } = vi.hoisted(() => ({ mockCreate: vi.fn() }));
@@ -262,6 +263,70 @@ describe('/update-goal (hidden command)', () => {
 
     expect(mockCreate).not.toHaveBeenCalled();
     expect(text).toContain('250,000');
+  });
+});
+
+describe('/subscribe and /unsubscribe', () => {
+  it('confirms subscription bilingually without calling the API', async () => {
+    const text = await presenter.processResponse({ type: 'subscribe' });
+
+    expect(mockCreate).not.toHaveBeenCalled();
+    expect(text).toContain('subscribed');
+    expect(text).toContain('اشتراكك');
+  });
+
+  it('confirms unsubscription bilingually without calling the API', async () => {
+    const text = await presenter.processResponse({ type: 'unsubscribe' });
+
+    expect(mockCreate).not.toHaveBeenCalled();
+    expect(text).toContain('unsubscribed');
+    expect(text).toContain('إلغاء اشتراكك');
+  });
+});
+
+describe('weekly digest', () => {
+  const distribution: DayCount[] = [
+    { day: 'Mon', count: 8 },
+    { day: 'Tue', count: 10 },
+    { day: 'Wed', count: 0 },
+    { day: 'Thu', count: 3 },
+    { day: 'Fri', count: 5 },
+    { day: 'Sat', count: 6 },
+    { day: 'Sun', count: 2 },
+  ];
+  const total = distribution.reduce((sum, d) => sum + d.count, 0);
+
+  it('personalizes the greeting, shows the bar chart once, and explains how to unsubscribe', async () => {
+    const response: WeeklyDigestResponse = {
+      type: 'weekly-digest',
+      user: { id: 1, name: 'Amina', phoneNumber: '123' },
+      total,
+      distribution,
+    };
+
+    const text = await presenter.processResponse(response);
+
+    expect(mockCreate).not.toHaveBeenCalled();
+    expect(text).toContain('Salam, Amina!');
+    expect(text).toContain(`Total: ${total}`);
+    expect(text).toContain('/unsubscribe');
+    expect(text).toContain('/subscribe');
+    const max = Math.max(...distribution.map((d) => d.count), 1);
+    distribution.forEach((d) => expect(text).toContain(`${d.day} ${renderBar(d.count, max)} ${d.count}`));
+  });
+
+  it('falls back to a generic greeting when no name is known', async () => {
+    const response: WeeklyDigestResponse = {
+      type: 'weekly-digest',
+      user: { id: 1, name: null, phoneNumber: '123' },
+      total,
+      distribution,
+    };
+
+    const text = await presenter.processResponse(response);
+
+    expect(text).toContain('Salam! 🌙');
+    expect(text).not.toContain('null');
   });
 });
 

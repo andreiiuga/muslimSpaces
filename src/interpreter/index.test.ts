@@ -39,6 +39,16 @@ describe('fast paths (no API call)', () => {
     expect(mockCreate).not.toHaveBeenCalled();
   });
 
+  it('detects /subscribe literally', async () => {
+    await expect(interpreter.processMessage('/subscribe')).resolves.toEqual({ type: 'subscribe' });
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it('detects /unsubscribe literally', async () => {
+    await expect(interpreter.processMessage('/unsubscribe')).resolves.toEqual({ type: 'unsubscribe' });
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
   it('detects /update-goal literally, without calling the API', async () => {
     await expect(interpreter.processMessage('/update-goal 200000')).resolves.toEqual({
       type: 'update-goal',
@@ -108,6 +118,20 @@ describe('Claude-classified intents', () => {
     respondWith({ intent: 'awlia', count: null });
     await expect(interpreter.processMessage('who are all the participants so far?')).resolves.toEqual({
       type: 'awlia',
+    });
+  });
+
+  it('classifies natural-language subscribe requests', async () => {
+    respondWith({ intent: 'subscribe', count: null });
+    await expect(interpreter.processMessage('please subscribe me to the weekly digest')).resolves.toEqual({
+      type: 'subscribe',
+    });
+  });
+
+  it('classifies natural-language unsubscribe requests', async () => {
+    respondWith({ intent: 'unsubscribe', count: null });
+    await expect(interpreter.processMessage('please unsubscribe me from the weekly messages')).resolves.toEqual({
+      type: 'unsubscribe',
     });
   });
 

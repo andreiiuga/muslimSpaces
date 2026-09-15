@@ -17,13 +17,27 @@ export type HelpCommand = { type: 'help' };
 /** Request for a randomized (not ranked) list of everyone who has submitted at least once. */
 export type AwliaCommand = { type: 'awlia' };
 
+/** Opts the sender into the weekly salawat digest DM. */
+export type SubscribeCommand = { type: 'subscribe' };
+
+/** Opts the sender out of the weekly salawat digest DM. */
+export type UnsubscribeCommand = { type: 'unsubscribe' };
+
 /**
  * Sets the group's shared submission goal. Deliberately undocumented: not
  * listed in /help, not in the natural-language classifier, fast-path only.
  */
 export type UpdateGoalCommand = { type: 'update-goal'; goal: number };
 
-export type Command = SalawatCommand | StatsCommand | MeCommand | HelpCommand | AwliaCommand | UpdateGoalCommand;
+export type Command =
+  | SalawatCommand
+  | StatsCommand
+  | MeCommand
+  | HelpCommand
+  | AwliaCommand
+  | UpdateGoalCommand
+  | SubscribeCommand
+  | UnsubscribeCommand;
 
 export interface InterpreterInterface {
   /** Extract a salawat count from a message, if present. */

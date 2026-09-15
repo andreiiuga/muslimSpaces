@@ -7,11 +7,15 @@ datasource db {
 }
 
 model User {
-  id          Int          @id @default(autoincrement())
-  phoneNumber String       @unique
-  name        String?
-  createdAt   DateTime     @default(now())
-  submissions Submission[]
+  id                Int          @id @default(autoincrement())
+  phoneNumber       String       @unique
+  name              String?
+  createdAt         DateTime     @default(now())
+  submissions       Submission[]
+  /// Opted in to the weekly salawat digest DM. Defaults to true; toggled via /subscribe and /unsubscribe.
+  subscribed        Boolean      @default(true)
+  /// When the weekly digest was last sent to this user - guards against re-sending within the same rolling week.
+  lastDigestSentAt  DateTime?
 }
 
 model Submission {

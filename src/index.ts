@@ -3,9 +3,12 @@ import messenger from './messenger/index.js';
 import interpreter from './interpreter/index.js';
 import dispatcher from './dispatcher/index.js';
 import presenter from './presenter/index.js';
+import { startInternalServer } from './server/index.js';
 
 const GROUP_ID = process.env.GROUP_ID || null; // e.g. "1234567890-1234567890@g.us"
 const SEND_DELAY_MS = parseInt(process.env.SEND_DELAY_MS || '1500', 10);
+const INTERNAL_PORT = parseInt(process.env.INTERNAL_PORT || '8080', 10);
+const INTERNAL_API_SECRET = process.env.INTERNAL_API_SECRET || null;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -49,6 +52,37 @@ async function start() {
     const helpText = await presenter.processResponse(helpResponse);
     await messenger.sendMessage({ text: helpText, chatId: groupId });
   })
+
+  // Only started when INTERNAL_API_SECRET is set, so the endpoint fails
+  // closed rather than accidentally running unauthenticated.
+  if (INTERNAL_API_SECRET) {
+    startInternalServer(INTERNAL_PORT, INTERNAL_API_SECRET, sendWeeklyDigests);
+  } else {
+    console.warn('INTERNAL_API_SECRET not set - the internal /weekly-digest endpoint is disabled.');
+  }
+}
+
+/**
+ * DMs every subscribed user with salawat in the last rolling 7 days their
+ * personal count + distribution, then marks them sent so a re-trigger within
+ * the week is a no-op for them. Triggered by the internal /weekly-digest
+ * endpoint, which an external cron job calls on whatever schedule is set.
+ */
+async function sendWeeklyDigests(): Promise<{ sent: number }> {
+  const digests = await dispatcher.buildWeeklyDigests();
+  let sent = 0;
+
+  for (const digest of digests) {
+    const text = await presenter.processResponse(digest);
+    const chatId = `${digest.user.phoneNumber}@s.whatsapp.net`;
+    await messenger.sendMessage({ text, chatId });
+    await dispatcher.markWeeklyDigestSent(digest.user.id);
+    sent++;
+    await sleep(SEND_DELAY_MS);
+  }
+
+  console.log(`Weekly digest: sent to ${sent} user(s).`);
+  return { sent };
 }
 
 

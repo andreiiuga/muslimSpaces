@@ -7,6 +7,7 @@ const { mockPrisma } = vi.hoisted(() => ({
       findUnique: vi.fn(),
       create: vi.fn(),
       findMany: vi.fn(),
+      update: vi.fn(),
     },
     submission: {
       create: vi.fn(),
@@ -233,6 +234,92 @@ describe('shared goal lookup', () => {
     if (response.type !== 'help') throw new Error('expected a help response');
 
     expect(response.goal).toBe(250000);
+  });
+});
+
+describe('/subscribe and /unsubscribe', () => {
+  it('subscribes an existing user', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({ id: 7, name: 'Amina', phoneNumber: '123' });
+
+    const response = await dispatcher.processCommand({ type: 'subscribe' }, sender);
+
+    expect(mockPrisma.user.update).toHaveBeenCalledWith({ where: { id: 7 }, data: { subscribed: true } });
+    expect(response).toEqual({ type: 'subscribe' });
+  });
+
+  it('creates the user first if they have never submitted before subscribing', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue(null);
+    mockPrisma.user.create.mockResolvedValue({ id: 8, name: 'Amina', phoneNumber: '123' });
+
+    await dispatcher.processCommand({ type: 'subscribe' }, sender);
+
+    expect(mockPrisma.user.create).toHaveBeenCalledWith({ data: { phoneNumber: '123', name: 'Amina' } });
+    expect(mockPrisma.user.update).toHaveBeenCalledWith({ where: { id: 8 }, data: { subscribed: true } });
+  });
+
+  it('unsubscribes an existing user', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({ id: 7, name: 'Amina', phoneNumber: '123' });
+
+    const response = await dispatcher.processCommand({ type: 'unsubscribe' }, sender);
+
+    expect(mockPrisma.user.update).toHaveBeenCalledWith({ where: { id: 7 }, data: { subscribed: false } });
+    expect(response).toEqual({ type: 'unsubscribe' });
+  });
+});
+
+describe('weekly digest', () => {
+  it('queries only subscribed users with submissions in the last 7 days who have not just been sent one', async () => {
+    mockPrisma.user.findMany.mockResolvedValue([]);
+
+    await dispatcher.buildWeeklyDigests();
+
+    expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          subscribed: true,
+          OR: [{ lastDigestSentAt: null }, { lastDigestSentAt: { lt: expect.any(Date) } }],
+          submissions: { some: { submittedAt: { gte: expect.any(Date) } } },
+        }),
+      }),
+    );
+  });
+
+  it('builds one response per user with their own total and day-of-week distribution', async () => {
+    const dayA = new Date(2026, 8, 7); // Monday
+    const dayB = new Date(dayA.getFullYear(), dayA.getMonth(), dayA.getDate() + 1); // Tuesday
+
+    mockPrisma.user.findMany.mockResolvedValue([
+      {
+        id: 1,
+        name: 'Amina',
+        phoneNumber: '123',
+        submissions: [
+          { count: 10, submittedAt: dayA },
+          { count: 5, submittedAt: dayB },
+        ],
+      },
+    ]);
+
+    const digests = await dispatcher.buildWeeklyDigests();
+
+    expect(digests).toHaveLength(1);
+    expect(digests[0]).toMatchObject({
+      type: 'weekly-digest',
+      user: { id: 1, name: 'Amina', phoneNumber: '123' },
+      total: 15,
+    });
+    const byDay = Object.fromEntries(digests[0]!.distribution.map((d) => [d.day, d.count]));
+    expect(byDay['Mon']).toBe(10);
+    expect(byDay['Tue']).toBe(5);
+  });
+
+  it('marks a user as digested by stamping lastDigestSentAt', async () => {
+    await dispatcher.markWeeklyDigestSent(3);
+
+    expect(mockPrisma.user.update).toHaveBeenCalledWith({
+      where: { id: 3 },
+      data: { lastDigestSentAt: expect.any(Date) },
+    });
   });
 });
 

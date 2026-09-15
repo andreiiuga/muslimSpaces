@@ -8,6 +8,7 @@ import type {
   DispatchResponse,
   UpdateGoalResponse,
   WelcomeResponse,
+  WeeklyDigestResponse,
 } from '../dispatcher/types.js';
 import type { PresenterInterface } from './types.js';
 
@@ -102,6 +103,12 @@ class Presenter implements PresenterInterface {
         return this.presentUpdateGoal(response);
       case 'welcome':
         return this.presentWelcome(response);
+      case 'subscribe':
+        return this.presentSubscribe();
+      case 'unsubscribe':
+        return this.presentUnsubscribe();
+      case 'weekly-digest':
+        return this.presentWeeklyDigest(response);
     }
   }
 
@@ -227,6 +234,8 @@ Rules:
       '• /me — privately see your own submission history.',
       '• /awlia — see everyone who has taken part, in random order.',
       '• /help — show this message.',
+      '• /unsubscribe — opt out of the weekly private digest of your own salawat (on by default).',
+      '• /subscribe — opt back in to the weekly digest.',
       '',
       `We're counting together toward a shared goal of ${goalStr} salawat — every submission adds to the group total, no need to track your own.`,
       '',
@@ -236,6 +245,8 @@ Rules:
       '• /me — لعرض سجل مشاركاتك الخاص بشكل خاص.',
       '• /awlia — لعرض كل من شارك، بترتيب عشوائي.',
       '• /help — لعرض هذه الرسالة.',
+      '• /unsubscribe — لإيقاف الرسالة الأسبوعية الخاصة بصلواتك (مفعّلة افتراضيًا).',
+      '• /subscribe — للاشتراك مرة أخرى في الرسالة الأسبوعية.',
       '',
       `نجمع الصلوات معًا نحو هدف مشترك قدره ${goalStr} صلاة - كل مشاركة تُضاف إلى المجموع العام، فلا حاجة لحساب صلواتك بنفسك.`,
     ].join('\n');
@@ -260,6 +271,45 @@ Rules:
 
   private presentUpdateGoal({ goal }: UpdateGoalResponse): string {
     return `✅ Goal updated to ${goal.toLocaleString('en-US')} salawat.`;
+  }
+
+  private presentSubscribe(): string {
+    return [
+      "✅ You're subscribed to the weekly salawat digest — a private summary of your own count, once a week.",
+      '✅ تم اشتراكك في الرسالة الأسبوعية لصلواتك - ملخص خاص بعدد صلواتك، مرة كل أسبوع.',
+    ].join('\n');
+  }
+
+  private presentUnsubscribe(): string {
+    return [
+      "✅ You're unsubscribed from the weekly salawat digest. Send /subscribe anytime to opt back in.",
+      '✅ تم إلغاء اشتراكك من الرسالة الأسبوعية. أرسل /subscribe في أي وقت للاشتراك مرة أخرى.',
+    ].join('\n');
+  }
+
+  // Hardcoded like presentHelp/presentAwlia: sent to many recipients on a
+  // fan-out schedule, so it needs to stay fast, cheap, and consistent rather
+  // than costing one AI call per recipient.
+  private presentWeeklyDigest({ user, total, distribution }: WeeklyDigestResponse): string {
+    const max = Math.max(...distribution.map((d) => d.count), 1);
+    const barLines = distribution.map((d) => `${d.day} ${renderBar(d.count, max)} ${d.count}`);
+    const name = user.name;
+
+    return [
+      name ? `Salam, ${name}! 🌙` : 'Salam! 🌙',
+      'Your salawat this past week:',
+      ...barLines,
+      '─'.repeat(16),
+      `Total: ${total}`,
+      '',
+      "This is your automatic weekly digest. Send /unsubscribe anytime to stop it, or /subscribe to opt back in.",
+      '',
+      name ? `السلام عليك يا ${name}! 🌙` : 'السلام عليكم! 🌙',
+      'صلواتك خلال الأسبوع الماضي كما هو موضح أعلاه.',
+      `المجموع: ${total}`,
+      '',
+      'هذه رسالتك الأسبوعية التلقائية. أرسل /unsubscribe في أي وقت لإيقافها، أو /subscribe للاشتراك مرة أخرى.',
+    ].join('\n');
   }
 
   // Hardcoded like presentHelp/presentAwlia: carries exact totals, so it
