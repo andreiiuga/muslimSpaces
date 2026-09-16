@@ -23,12 +23,28 @@ group, to keep the account looking like normal usage.
   (not ranked by count).
 - `/help` — lists the commands above and briefly explains how the counting
   works, in English and Arabic.
+- `/unsubscribe` — opts out of the weekly private digest DM (see below). On by
+  default for everyone.
+- `/subscribe` — opts back in.
 
 Whenever one or more new members join the group, the bot automatically sends
 each of them a personal welcome message (using their name if it already knows
 it from a prior submission, otherwise a generic greeting, plus the current
 total and goal), followed by a single `/help` message for the whole batch of
 joiners.
+
+## Weekly digest
+
+Once a week, every subscribed user who logged at least one salawat in the
+last rolling 7 days gets a private DM with their own count and a day-by-day
+breakdown for that window (same bar-chart style as `/stats`, but scoped to
+them). The message also explains `/unsubscribe`/`/subscribe` inline, since
+that's the only place most users will ever see it.
+
+This isn't driven by the normal message pipeline — see
+[InternalListener](#internallistener) and
+[Deploy the weekly-digest cron job](#3-deploy-the-weekly-digest-cron-job)
+below for how it's triggered and deployed.
 
 ## 1. Run it locally first (to test + log in)
 
@@ -95,6 +111,43 @@ every time you redeploy.
 From then on, every valid salawat submission in the group gets tallied and
 answered with an AI-generated update automatically.
 
+## 3. Deploy the weekly-digest cron job
+
+The weekly digest (see [above](#weekly-digest)) needs two pieces on Railway,
+both in the **same project** as the bot:
+
+1. **An internal-only endpoint on the bot service itself.** The bot process
+   already starts one (see [InternalListener](#internallistener)) as long as
+   `INTERNAL_API_SECRET` is set:
+   ```bash
+   railway variables --set "INTERNAL_API_SECRET=<a long random secret>" \
+                      --set "INTERNAL_PORT=8080"
+   ```
+   Do **not** run `railway domain` / generate a public domain for this
+   service's port — the endpoint must only be reachable over Railway's
+   private network (`<service>.railway.internal`), never the public
+   internet. The shared secret is a second layer of defense on top of that,
+   not a substitute for it.
+
+2. **A second, separate service that calls it on a schedule** —
+   `weekly-digest-cron`, deployed from this same repo/branch
+   (`scripts/weekly-digest-cron.ts`), configured with:
+   - Start command: `npx tsx scripts/weekly-digest-cron.ts`
+   - Cron Schedule (Settings → Deploy): `0 7 * * 5` (Fridays 07:00 UTC —
+     adjust for your timezone; Railway cron has no timezone setting, so this
+     drifts an hour across DST changes)
+   - Restart Policy: `Never` (it's a run-once-and-exit script, not a
+     persistent service)
+   - Variables:
+     ```bash
+     railway variables --set "TARGET_URL=http://<bot-service>.railway.internal:8080/weekly-digest" \
+                        --set "INTERNAL_API_SECRET=<same secret as step 1>"
+     ```
+
+Railway only *executes* a cron-scheduled service's start command at the
+scheduled time — pushing new code just rebuilds the image and leaves it on
+standby, it does not run the script early.
+
 ## Testing
 
 Unit tests use [Vitest](https://vitest.dev) and mock the Anthropic SDK,
@@ -139,13 +192,16 @@ who knows the syntax can use them).
 ```mermaid
 flowchart TB
     WA["WhatsApp"] -->|incoming message / group join| MSG["Messenger"]
-    MSG -->|reply| WA
+    MSG -->|reply / DM| WA
 
     MSG -->|raw message| INT["Interpreter"]
     REN -->|formatted result| MSG
 
     INT -->|classify intent| CLAUDE["Claude API"]
     INT -->|command| DISP["Dispatcher"]
+
+    CRON["weekly-digest-cron<br/>(Railway service, Fri 07:00 UTC)"] -->|"POST /weekly-digest<br/>+ shared secret"| IL["InternalListener"]
+    IL -->|trigger| DISP
 
     DISP -->|query/update| DBJS["DB.js"]
     DBJS -->|data| DISP
@@ -154,6 +210,12 @@ flowchart TB
     DISP -->|raw result| REN["Presenter"]
     REN -->|format/caption| CLAUDE
 ```
+
+`Messenger` and `InternalListener` are peers: both sit on an I/O boundary
+(a WhatsApp socket, an HTTP port) waiting for external events and handing
+them to registered handlers, same `connect()`/`addXHandler()` shape. Neither
+knows about the other — they both just feed the `Dispatcher` and get their
+replies sent back out through `Messenger`.
 
 ---
 
@@ -174,6 +236,29 @@ Owns the WhatsApp integration (Baileys).
 - Receives the formatted result directly from the **Presenter** and sends it back to the user over WhatsApp
   Entry point on the way in (to the Interpreter) and exit point on the way out (from the Presenter).
 
+### InternalListener
+
+Owns the internal-only HTTP endpoint (`POST /weekly-digest`) that triggers
+the weekly digest fan-out. Runs inside the same process as the bot, on a
+port that must never be exposed publicly — only reachable via Railway's
+private network, gated further by a shared secret header
+(`x-internal-secret`, constant-time compared).
+
+- `listen(port, secret)` — starts the HTTP server (async, resolves once bound)
+- `addWeeklyDigestHandler(handler)` — registers the handler invoked on a
+  valid request, mirroring `Messenger.addMessageHandler` /
+  `addGroupJoinHandler` (a dedicated method per trigger kind, not a generic
+  router)
+- `close()` — stops listening
+
+It does not call the Dispatcher directly — `src/index.ts` wires
+`addWeeklyDigestHandler` to a small orchestration function (same pattern as
+the message and group-join handlers) that calls
+`Dispatcher.buildWeeklyDigests()`, formats each result via the
+**Presenter**, and sends it via the **Messenger**. See
+[Weekly digest cron job](#3-deploy-the-weekly-digest-cron-job) for what
+calls this endpoint and when.
+
 ### Interpreter
 
 Owns the NLU layer.
@@ -190,7 +275,9 @@ Owns the NLU layer.
 
 Owns command execution — the business logic core of the bot.
 
-- Receives a structured command from the **Interpreter**
+- Receives a structured command from the **Interpreter**, or a weekly-digest
+  trigger from the **InternalListener** (`buildWeeklyDigests()` /
+  `markWeeklyDigestSent()` - not Command-driven, same as `handleGroupJoin()`)
 - Executes the appropriate logic for that command
 - Reads/writes persistent data via **DB.js** (no external API calls happen here)
 - Passes the raw result to the **Presenter**
@@ -234,6 +321,24 @@ PostgreSQL — local via Docker in development, Railway-hosted in production. Sc
 5. **Dispatcher** passes the raw result to the **Presenter**
 6. **Presenter** formats it into a human-friendly message and sends it to **Messenger**
 7. **Messenger** sends the reply back over **WhatsApp**
+
+## Weekly digest flow (cron-triggered)
+
+1. The `weekly-digest-cron` Railway service fires on its schedule (Fridays
+   07:00 UTC), runs `scripts/weekly-digest-cron.ts`, and exits
+2. That script `POST`s `/weekly-digest` to the bot's **InternalListener**
+   over Railway's private network, with the shared secret header
+3. **InternalListener** authenticates the request and invokes the registered
+   handler (wired in `src/index.ts`)
+4. That handler calls **Dispatcher.buildWeeklyDigests()** — one result per
+   eligible subscribed user (salawat in the last rolling 7 days, not already
+   digested this window)
+5. For each result: **Presenter** formats the personal digest message,
+   **Messenger** DMs it to that user, then **Dispatcher.markWeeklyDigestSent()**
+   records it (throttled by `SEND_DELAY_MS` between sends, same as the
+   group-join welcome batch)
+6. The handler resolves with a count; **InternalListener** responds `200`
+   with `{ "sent": <n> }` to the cron script, which logs it and exits
 
 # Database Setup — salawat-bot
 
@@ -370,11 +475,15 @@ datasource db {
 }
 
 model User {
-  id          Int          @id @default(autoincrement())
-  phoneNumber String       @unique
-  name        String?
-  createdAt   DateTime     @default(now())
-  submissions Submission[]
+  id                Int          @id @default(autoincrement())
+  phoneNumber       String       @unique
+  name              String?
+  createdAt         DateTime     @default(now())
+  submissions       Submission[]
+  /// Opted in to the weekly salawat digest DM. Defaults to true; toggled via /subscribe and /unsubscribe.
+  subscribed        Boolean      @default(true)
+  /// When the weekly digest was last sent to this user - guards against re-sending within the same rolling week.
+  lastDigestSentAt  DateTime?
 }
 
 model Submission {
@@ -383,6 +492,12 @@ model Submission {
   submittedAt DateTime @default(now())
   author      User     @relation(fields: [authorId], references: [id])
   authorId    Int
+}
+
+// Singleton row (id always 1) holding group-wide, runtime-configurable settings.
+model Setting {
+  id   Int @id @default(1)
+  goal Int @default(100000)
 }
 ```
 
@@ -393,13 +508,18 @@ model Submission {
 ### Project layout
 
 Project: **whatsApp auto replay claude bot**
-Environment: `production`
+Environment: `production` and `staging` (as of the weekly-digest work, the
+bot is deliberately kept running in `staging` only — `production` is off)
 
 Services (same project, so Railway's `${{ServiceName.VAR}}` reference syntax works):
 
-- `whatsAppAiClaudeBot` — the Node app
+- `whatsAppAiClaudeBot` — the Node app (WhatsApp connection + InternalListener)
 - `Postgres` — dedicated Postgres instance
   > Note: a Postgres instance was briefly created in a separate Railway project (`empowering-gratitude`) by mistake, then deleted. Cross-project references don't work with the `${{ }}` shorthand — that's why both services need to live in the same project.
+- `weekly-digest-cron` — the cron-scheduled service described in
+  [Deploy the weekly-digest cron job](#3-deploy-the-weekly-digest-cron-job)
+  above. Its `TARGET_URL` points at `whatsAppAiClaudeBot`'s private network
+  address; its `INTERNAL_API_SECRET` must match the same variable there.
 
 ### Environment variable
 
