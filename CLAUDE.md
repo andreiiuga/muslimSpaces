@@ -390,8 +390,24 @@ the same `readlink -f` single-instance check described below.) Reason:
   `newArchEnabled: false` opt-out anymore. This is also *why* React bumped
   to 19.2.3 (RN 0.86.3's own `react` peer requirement is `^19.2.3` exactly,
   not a preference).
-- **`react-native-reanimated` and `react-native-worklets` are present but
-  unused directly** — they're transitive peer dependencies of `expo-router`
-  57 (pulled in by an internal drawer-navigator dependency, not anything
-  this app uses) and of `expo-modules-core` respectively. Don't remove them
-  as "unused"; `pnpm install` will flag the missing peers again if you do.
+- **`react-native-reanimated` and `react-native-worklets`** were originally
+  added as transitive peer dependencies of `expo-router` 57 (pulled in by an
+  internal drawer-navigator dependency, not anything this app used at the
+  time) and of `expo-modules-core` respectively — `pnpm install` will flag
+  the missing peers again if you remove them. `react-native-reanimated` is
+  now also a *direct* dependency in practice: `@gorhom/bottom-sheet` (the
+  Explore tab's draggable POI sheet) is built on it.
+- **`react-native-screens` is pinned to a nightly build**
+  (`4.29.0-nightly-20260915-8b2163ba5`), not a tagged release — temporarily,
+  and deliberately, not an oversight. `expo-router`'s `NativeTabs` renders
+  through `react-native-screens`' native tab host, which has a real bug:
+  `setTabBarHidden:animated:` was hardcoded to `NO`
+  ([react-native-screens#4627](https://github.com/software-mansion/react-native-screens/issues/4627)),
+  so toggling `NativeTabs`' `hidden` prop (see "Bottom tab bar" above) could
+  only ever snap instantly, never slide. The fix
+  ([#4632](https://github.com/software-mansion/react-native-screens/pull/4632),
+  merged 2026-09-14, adds `ios.tabBarHiddenAnimationEnabled`, default
+  `true`) isn't in a stable release yet — confirmed absent from `4.28.0`,
+  confirmed present in the `4.29.0-nightly-20260915` build pinned here.
+  **Swap this pin for the first stable 4.x release that includes the fix**
+  (the PR is labeled `action:backport-to-v4`) and drop this note once done.
