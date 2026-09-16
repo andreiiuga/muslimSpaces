@@ -1,7 +1,11 @@
 import { Pressable, View } from "react-native";
 import { usePathname, useRouter } from "expo-router";
 import { BlurView } from "expo-blur";
-import Animated, { Extrapolation, interpolate, useAnimatedStyle } from "react-native-reanimated";
+import Animated, {
+  Extrapolation,
+  interpolate,
+  useAnimatedStyle,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Text, colors, spacing } from "@muslimspaces/ui";
 import { TABS } from "../navigation/tabs";
@@ -32,7 +36,14 @@ export function CustomTabBar() {
   // hide it again).
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
-      { translateY: interpolate(bottomSheetIndex.value, [0, 1], [hiddenOffset, 0], Extrapolation.CLAMP) },
+      {
+        translateY: interpolate(
+          bottomSheetIndex.value,
+          [0, 1],
+          [hiddenOffset, 0],
+          Extrapolation.CLAMP,
+        ),
+      },
     ],
   }));
 
@@ -40,14 +51,24 @@ export function CustomTabBar() {
     <Animated.View
       pointerEvents="box-none"
       style={[
-        { position: "absolute", left: spacing.md, right: spacing.md, bottom: insets.bottom + spacing.sm },
+        {
+          position: "absolute",
+          left: spacing["2xl"],
+          right: spacing["2xl"],
+          bottom: insets.bottom,
+        },
         animatedStyle,
       ]}
     >
       <BlurView
         intensity={80}
         tint="light"
-        style={{ height: TAB_BAR_HEIGHT, borderRadius: 999, overflow: "hidden", flexDirection: "row" }}
+        style={{
+          height: TAB_BAR_HEIGHT,
+          borderRadius: 999,
+          overflow: "hidden",
+          flexDirection: "row",
+        }}
       >
         {TABS.map((tab) => {
           const active = pathname === tab.matchPath;
@@ -56,10 +77,22 @@ export function CustomTabBar() {
             <Pressable
               key={tab.name}
               onPress={() => router.push(tab.href)}
-              style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 2 }}
+              style={{
+                flex: 1,
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 2,
+              }}
             >
-              <Icon size={22} color={active ? colors.primary : colors.textMuted} />
-              <Text size="xs" weight={active ? "semibold" : "regular"} color={active ? colors.primary : colors.textMuted}>
+              <Icon
+                size={22}
+                color={active ? colors.primary : colors.textMuted}
+              />
+              <Text
+                size="xs"
+                weight={active ? "semibold" : "regular"}
+                color={active ? colors.primary : colors.textMuted}
+              >
                 {tab.label}
               </Text>
             </Pressable>

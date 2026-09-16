@@ -6,7 +6,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import BottomSheet, { BottomSheetFlatList } from "@gorhom/bottom-sheet";
 import type { BottomSheetBackgroundProps } from "@gorhom/bottom-sheet";
 import { BlurView } from "expo-blur";
-import { POICard, Skeleton, Text, colors, spacing } from "@muslimspaces/ui";
+import {
+  POICard,
+  Skeleton,
+  Text,
+  colors,
+  radii,
+  spacing,
+} from "@muslimspaces/ui";
 import { MapView } from "@muslimspaces/ui/map";
 import type { MapBounds } from "@muslimspaces/ui/map";
 import type { Category, Poi } from "@muslimspaces/shared";
@@ -30,8 +37,41 @@ const FALLBACK_PEEK_HEIGHT = 64;
 // unlike the tab bar's own continuous slide (see CustomTabBar.tsx).
 const TAB_BAR_CLEARANCE = 90;
 
+// Rounded top corners + a shadow need to live on separate layers: the
+// BlurView needs `overflow: "hidden"` to clip its blur to the rounded
+// shape, but a clipped layer can't cast its own shadow (iOS/Android both
+// suppress shadows on views that clip their bounds). So the outer View
+// here owns the shadow (unclipped, offset upward so it reads as the sheet
+// lifting off the map behind it) and the inner BlurView owns the rounded,
+// clipped blur fill.
 function SheetBackground({ style }: BottomSheetBackgroundProps) {
-  return <BlurView intensity={80} tint="light" style={[style, { overflow: "hidden" }]} />;
+  return (
+    <View
+      style={[
+        style,
+        {
+          borderTopLeftRadius: radii.xl,
+          borderTopRightRadius: radii.xl,
+          shadowColor: "#000",
+          shadowOpacity: 0.15,
+          shadowRadius: 12,
+          shadowOffset: { width: 0, height: -4 },
+          elevation: 12,
+        },
+      ]}
+    >
+      <BlurView
+        intensity={80}
+        tint="extraLight"
+        style={{
+          flex: 1,
+          borderTopLeftRadius: radii.xl,
+          borderTopRightRadius: radii.xl,
+          overflow: "hidden",
+        }}
+      />
+    </View>
+  );
 }
 
 export default function ExploreScreen() {
@@ -43,7 +83,9 @@ export default function ExploreScreen() {
   const [pois, setPois] = useState<Poi[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+    null,
+  );
   const [openNow, setOpenNow] = useState(false);
   const [bounds, setBounds] = useState<MapBounds | null>(null);
   const [loading, setLoading] = useState(true);
@@ -57,7 +99,10 @@ export default function ExploreScreen() {
   // list card peeking below the title, since the library only clips content
   // past the handle's *measured* height, not any peek-height constant.
   const [handleHeight, setHandleHeight] = useState(FALLBACK_PEEK_HEIGHT);
-  const snapPoints = useMemo(() => [handleHeight, "55%", "92%"], [handleHeight]);
+  const snapPoints = useMemo(
+    () => [handleHeight, "55%", "92%"],
+    [handleHeight],
+  );
 
   // Memoized so its identity is stable across renders — handleComponent is
   // compared by reference, and a new one each render would remount the
@@ -67,10 +112,24 @@ export default function ExploreScreen() {
       function SheetHandle() {
         return (
           <View
-            onLayout={(event: LayoutChangeEvent) => setHandleHeight(Math.ceil(event.nativeEvent.layout.height))}
-            style={{ alignItems: "center", gap: spacing.sm, paddingTop: spacing.sm, paddingBottom: spacing.md }}
+            onLayout={(event: LayoutChangeEvent) =>
+              setHandleHeight(Math.ceil(event.nativeEvent.layout.height))
+            }
+            style={{
+              alignItems: "center",
+              gap: spacing.sm,
+              paddingTop: spacing.sm,
+              paddingBottom: spacing.md,
+            }}
           >
-            <View style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: colors.border }} />
+            <View
+              style={{
+                width: 36,
+                height: 4,
+                borderRadius: 2,
+                backgroundColor: colors.border,
+              }}
+            />
             <Text weight="bold" size="xl">
               Explore
             </Text>
@@ -185,7 +244,14 @@ export default function ExploreScreen() {
       </BlurView>
 
       {error && (
-        <View style={{ position: "absolute", top: insets.top + 64, left: spacing.md, right: spacing.md }}>
+        <View
+          style={{
+            position: "absolute",
+            top: insets.top + 64,
+            left: spacing.md,
+            right: spacing.md,
+          }}
+        >
           <Text size="sm" color={colors.danger} align="center">
             {error}
           </Text>
@@ -207,7 +273,8 @@ export default function ExploreScreen() {
           contentContainerStyle={{
             padding: spacing.lg,
             gap: spacing.md,
-            paddingBottom: snapIndex > 0 ? TAB_BAR_CLEARANCE + insets.bottom : spacing.lg,
+            paddingBottom:
+              snapIndex > 0 ? TAB_BAR_CLEARANCE + insets.bottom : spacing.lg,
           }}
           ListEmptyComponent={
             loading ? (
