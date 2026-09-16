@@ -1,17 +1,20 @@
-import type { SFSymbol } from "sf-symbols-typescript";
-import type { AndroidSymbol } from "expo-symbols";
+import { Compass, Heart, User } from "lucide-react-native";
+import type { LucideIcon } from "lucide-react-native";
 
-// Route name (matches the file under app/(tabs)/) + label + icon per platform.
-// NativeTabs.Trigger needs SF Symbol names (iOS) and Material Symbol names
-// (Android) — verified against each catalog's actual name list, since both
-// are strict literal-union types, not free-form strings.
-export const TABS: Array<{
+export interface TabConfig {
+  /** Route name, matches the file under app/(tabs)/ — registers the (now
+   * always-hidden) NativeTabs.Trigger that still drives actual navigation. */
   name: string;
+  /** Path passed to router.push from CustomTabBar. */
+  href: string;
+  /** Resolved pathname (no route-group prefix) — used to detect the active tab. */
+  matchPath: string;
   label: string;
-  sf: SFSymbol;
-  md: AndroidSymbol;
-}> = [
-  { name: "index", label: "Explore", sf: "map", md: "explore" },
-  { name: "favorites", label: "Favorites", sf: "heart", md: "favorite_border" },
-  { name: "profile", label: "Profile", sf: "person.crop.circle", md: "account_circle" },
+  Icon: LucideIcon;
+}
+
+export const TABS: TabConfig[] = [
+  { name: "index", href: "/(tabs)", matchPath: "/", label: "Explore", Icon: Compass },
+  { name: "favorites", href: "/(tabs)/favorites", matchPath: "/favorites", label: "Favorites", Icon: Heart },
+  { name: "profile", href: "/(tabs)/profile", matchPath: "/profile", label: "Profile", Icon: User },
 ];

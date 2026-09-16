@@ -1,15 +1,19 @@
 import { useState, type ReactNode } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Avatar, Button, Skeleton, Text, colors, spacing } from "@muslimspaces/ui";
 import { useAuth } from "../../src/auth/AuthContext";
 import { EditProfileForm } from "../../src/components/EditProfileForm";
 import { ChangePasswordForm } from "../../src/components/ChangePasswordForm";
+import { TAB_BAR_HEIGHT } from "../../src/components/CustomTabBar";
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, loading, logout, refreshUser } = useAuth();
   const [localUser, setLocalUser] = useState(user);
+  const insets = useSafeAreaInsets();
+  const tabBarClearance = TAB_BAR_HEIGHT + insets.bottom + spacing.xl;
 
   if (loading) {
     return (
@@ -42,7 +46,9 @@ export default function ProfileScreen() {
   }
 
   return (
-    <ScrollView contentContainerStyle={{ padding: spacing.lg, gap: spacing["2xl"] }}>
+    <ScrollView
+      contentContainerStyle={{ padding: spacing.lg, paddingBottom: tabBarClearance, gap: spacing["2xl"] }}
+    >
       <View style={{ alignItems: "center", gap: spacing.sm }}>
         <Avatar uri={current.avatarUrl} name={current.displayName ?? current.email} size={72} />
         <Text weight="semibold" size="lg">{current.displayName ?? current.email}</Text>

@@ -26,7 +26,6 @@
     "expo-router": "~57.0.21",
     "expo-secure-store": "~57.0.4",
     "expo-status-bar": "~57.0.1",
-    "expo-symbols": "^57.0.3",
     "lucide-react-native": "^1.46.0",
     "react": "19.2.3",
     "react-native": "0.86.3",
@@ -44,7 +43,6 @@
     "@react-native/metro-config": "0.86.3",
     "@types/react": "~19.2.18",
     "babel-preset-expo": "^57.0.11",
-    "sf-symbols-typescript": "^2.2.0",
     "typescript": "^6.0.3"
   }
 }

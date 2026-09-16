@@ -1,14 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
 import { FlatList, View } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button, POICard, Skeleton, Text, colors, spacing } from "@muslimspaces/ui";
 import type { Category, Poi } from "@muslimspaces/shared";
 import { api } from "../../src/lib/api-client";
 import { useAuth } from "../../src/auth/AuthContext";
+import { TAB_BAR_HEIGHT } from "../../src/components/CustomTabBar";
 
 export default function FavoritesScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const insets = useSafeAreaInsets();
+  const tabBarClearance = TAB_BAR_HEIGHT + insets.bottom + spacing.xl;
   const [favorites, setFavorites] = useState<Poi[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,7 +64,7 @@ export default function FavoritesScreen() {
     <FlatList
       data={favorites}
       keyExtractor={(item) => item.id}
-      contentContainerStyle={{ padding: spacing.lg, gap: spacing.md, flexGrow: 1 }}
+      contentContainerStyle={{ padding: spacing.lg, paddingBottom: tabBarClearance, gap: spacing.md, flexGrow: 1 }}
       ListEmptyComponent={
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
           <Text color={colors.textMuted} align="center">

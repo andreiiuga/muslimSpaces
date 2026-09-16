@@ -330,29 +330,38 @@ the same `readlink -f` single-instance check described below.) Reason:
   options — title, modal presentation — easy to see in one place rather
   than scattered per-screen). `main` in `package.json` is
   `"expo-router/entry"`, replacing the old bare `App.tsx`/`index.ts` pair.
-- **Bottom tab bar**: `app/(tabs)/_layout.tsx` uses `NativeTabs`/
-  `NativeTabs.Trigger` from `expo-router/unstable-native-tabs` — a *real*
-  native tab bar (`UITabBarController` on iOS, Material bottom nav on
-  Android), not a JS-rendered React Navigation bar. This is what gets iOS
-  26's Liquid Glass automatically, with zero custom styling code — the OS
-  draws it. Deliberately chosen over a hand-rolled blur-view approximation
-  bolted onto React Navigation's bottom-tabs. Two real consequences:
-  - The import path is still `unstable-native-tabs` even on the latest
-    stable Expo SDK (57) — Expo has not stabilized this API. Treat it as a
-    genuine preview API that may need updating on a future SDK bump, not a
-    typo.
-  - Icons can't be arbitrary React components (unlike the rest of the app,
-    which uses `lucide-react-native` everywhere else) — `NativeTabs.Trigger.Icon`
-    takes an SF Symbol name (`sf`, iOS) and a Material Symbol name (`md`,
-    Android), both **strict literal-union types** validated against each
-    platform's real icon catalog (`sf-symbols-typescript`, `expo-symbols`) —
-    a typo is a type error, not a runtime blank icon. Tab config (route
-    name, label, `sf`/`md` icon names) lives in
-    `src/navigation/tabs.ts` as a small typed array so `_layout.tsx` just
-    maps over it, rather than repeating the same JSX shape three times.
-    This isn't a `packages/ui` component — `NativeTabs`' compound API has
-    no web equivalent (same reasoning that keeps `Navbar` in `apps/web`
-    only, not shared).
+- **Bottom tab bar is a custom JS component, not `NativeTabs`' own chrome**
+  — `apps/mobile/src/components/CustomTabBar.tsx`, styled with the same
+  simple translucent `expo-blur` `BlurView` treatment used for the Explore
+  screen's floating filter bar and bottom sheet (deliberately *not* an
+  attempt at iOS 26 Liquid Glass). `app/(tabs)/_layout.tsx` still renders
+  `expo-router/unstable-native-tabs`' `NativeTabs`/`NativeTabs.Trigger` —
+  it's still the real navigator driving tab switches and each tab's own
+  navigation stack — but permanently passes it `hidden`, and `CustomTabBar`
+  renders as a sibling on top. This replaced an earlier version that let
+  `NativeTabs` render its own native chrome, for one specific reason:
+  the Explore screen's draggable bottom sheet needs the tab bar to slide
+  out of view when collapsed and back in when expanded (Airbnb "Trips"-tab
+  style — see `TabBarVisibility.tsx`/`useTabBarVisibility()`), and **iOS has
+  no way to trigger `NativeTabs`' own hide/show transition
+  programmatically for this** — confirmed two ways: (1) `react-native-screens`
+  hardcoded `setTabBarHidden:animated:`'s animation to instant/no-op until a
+  recent fix (see the nightly-pin note below, now moot for this reason but
+  kept for context); (2) iOS 26's `tabBarMinimizeBehavior` (the real native
+  scroll-driven minimize API) only responds to genuine scroll gestures on a
+  real `UIScrollView`, confirmed via Apple's own developer forums — a
+  Reanimated/gesture-handler-driven bottom sheet doesn't qualify, so it
+  can't be triggered from arbitrary app state either. Given neither native
+  path is controllable from JS, `CustomTabBar` drives a real
+  `react-native-reanimated` `translateY` slide itself instead.
+  - Tab config (route name, `href`, `matchPath` for active-tab detection,
+    label, `lucide-react-native` icon) lives in `src/navigation/tabs.ts` as
+    a small typed array — `CustomTabBar` maps over it for its own
+    pressable icons/labels, and `_layout.tsx` maps over the same array for
+    the (now invisible) `NativeTabs.Trigger`s.
+  - `CustomTabBar` isn't a `packages/ui` component — it's tied to this
+    app's specific screen/navigation structure (route hrefs, the
+    tab-visibility context), not a generic shareable primitive.
 - **`apps/mobile/tsconfig.json` also needs `"moduleResolution": "bundler"`**
   (overriding `expo/tsconfig.base`'s default `"node"`) — plain `"node"`
   resolution predates package.json `exports` subpaths and can't resolve
@@ -398,16 +407,21 @@ the same `readlink -f` single-instance check described below.) Reason:
   now also a *direct* dependency in practice: `@gorhom/bottom-sheet` (the
   Explore tab's draggable POI sheet) is built on it.
 - **`react-native-screens` is pinned to a nightly build**
-  (`4.29.0-nightly-20260915-8b2163ba5`), not a tagged release — temporarily,
-  and deliberately, not an oversight. `expo-router`'s `NativeTabs` renders
-  through `react-native-screens`' native tab host, which has a real bug:
+  (`4.29.0-nightly-20260915-8b2163ba5`), not a tagged release. This was
+  originally needed because `expo-router`'s `NativeTabs` renders through
+  `react-native-screens`' native tab host, which has a real bug:
   `setTabBarHidden:animated:` was hardcoded to `NO`
   ([react-native-screens#4627](https://github.com/software-mansion/react-native-screens/issues/4627)),
-  so toggling `NativeTabs`' `hidden` prop (see "Bottom tab bar" above) could
-  only ever snap instantly, never slide. The fix
+  so toggling `NativeTabs`' `hidden` prop could only ever snap instantly,
+  never slide — the fix
   ([#4632](https://github.com/software-mansion/react-native-screens/pull/4632),
   merged 2026-09-14, adds `ios.tabBarHiddenAnimationEnabled`, default
-  `true`) isn't in a stable release yet — confirmed absent from `4.28.0`,
-  confirmed present in the `4.29.0-nightly-20260915` build pinned here.
-  **Swap this pin for the first stable 4.x release that includes the fix**
-  (the PR is labeled `action:backport-to-v4`) and drop this note once done.
+  `true`) isn't in a stable release yet (confirmed absent from `4.28.0`,
+  present in this nightly). **This is no longer functionally required**:
+  `NativeTabs` is now permanently `hidden` and `CustomTabBar` (see "Bottom
+  tab bar" above) owns the slide animation instead, so the native
+  animated-hide bug doesn't affect this app anymore either way. Left
+  pinned rather than reverted to stable to avoid an unnecessary native
+  rebuild for a version bump with no behavior change we depend on — safe
+  to revert to the latest stable 4.x next time a native rebuild is already
+  needed for another reason.
