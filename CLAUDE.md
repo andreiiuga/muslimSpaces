@@ -354,6 +354,18 @@ the same `readlink -f` single-instance check described below.) Reason:
   can't be triggered from arbitrary app state either. Given neither native
   path is controllable from JS, `CustomTabBar` drives a real
   `react-native-reanimated` `translateY` slide itself instead.
+  - The slide is driven by the sheet's *continuous* position, not a
+    discrete open/closed toggle: `TabBarVisibility.tsx` holds a
+    `bottomSheetIndex: SharedValue<number>` (not the boolean it started as),
+    passed straight into Explore's `<BottomSheet animatedIndex={...}>` prop
+    — a real `@gorhom/bottom-sheet` API that the library keeps in sync every
+    frame, during drags and programmatic snaps alike, as a linear fraction
+    between adjacent snap-point indices (0 at the collapsed peek, 1 at the
+    "55%" half-open point). `CustomTabBar` reads the same shared value in
+    its own `useAnimatedStyle` and interpolates it directly to `translateY`
+    (clamped past index 1), so the bar tracks the sheet 1:1 — hidden at the
+    peek, fully shown by half-open, staying shown from there to "92%" —
+    rather than snapping in reaction to a JS-thread `onChange` callback.
   - Tab config (route name, `href`, `matchPath` for active-tab detection,
     label, `lucide-react-native` icon) lives in `src/navigation/tabs.ts` as
     a small typed array — `CustomTabBar` maps over it for its own

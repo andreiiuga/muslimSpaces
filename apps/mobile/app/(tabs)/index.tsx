@@ -22,11 +22,12 @@ import { useTabBarVisibility } from "../../src/navigation/TabBarVisibility";
 // content beyond the handle's *measured* height, not this constant).
 const FALLBACK_PEEK_HEIGHT = 64;
 
-// The native tab bar only reappears once the sheet is expanded past the
-// collapsed state (see onChange below) — this is how much bottom padding
-// the list then needs so its last cards clear the tab bar instead of
-// disappearing behind it. Calibrated, not measured: NativeTabs doesn't
-// expose its rendered height to JS (see CLAUDE.md).
+// CustomTabBar is fully shown by the time the sheet passes its "55%" snap
+// point (index 1) — this is how much bottom padding the list then needs so
+// its last cards clear the tab bar instead of disappearing behind it.
+// Calibrated, not measured: the bar's own height plus clearance, kept as a
+// constant here since the list's padding only needs a coarse on/off toggle,
+// unlike the tab bar's own continuous slide (see CustomTabBar.tsx).
 const TAB_BAR_CLEARANCE = 90;
 
 function SheetBackground({ style }: BottomSheetBackgroundProps) {
@@ -37,7 +38,7 @@ export default function ExploreScreen() {
   const router = useRouter();
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
-  const { setHidden: setTabBarHidden } = useTabBarVisibility();
+  const { bottomSheetIndex } = useTabBarVisibility();
 
   const [pois, setPois] = useState<Poi[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -47,9 +48,10 @@ export default function ExploreScreen() {
   const [bounds, setBounds] = useState<MapBounds | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // Collapsed (0) hides the tab bar and needs no extra list padding;
-  // expanded (1/2) shows it, so the list needs bottom clearance for it.
-  const [sheetIndex, setSheetIndex] = useState(0);
+  // Discrete snap index (for the list's own bottom padding, see below) —
+  // separate from `bottomSheetIndex`, which is the continuous animated
+  // value the tab bar tracks directly, not this JS-thread copy.
+  const [snapIndex, setSnapIndex] = useState(0);
   // Measured from SheetHandle's real onLayout height so the collapsed snap
   // point matches it exactly — a hardcoded guess left a sliver of the first
   // list card peeking below the title, since the library only clips content
@@ -194,13 +196,8 @@ export default function ExploreScreen() {
         snapPoints={snapPoints}
         index={0}
         enableDynamicSizing={false}
-        onChange={(index) => {
-          setSheetIndex(index);
-          // The tab bar slides into view once the sheet leaves its
-          // collapsed/lowest state, and slides back out when it returns —
-          // matches the Airbnb "Trips" sheet this is modeled on.
-          setTabBarHidden(index === 0);
-        }}
+        animatedIndex={bottomSheetIndex}
+        onChange={setSnapIndex}
         handleComponent={SheetHandle}
         backgroundComponent={SheetBackground}
       >
@@ -210,7 +207,7 @@ export default function ExploreScreen() {
           contentContainerStyle={{
             padding: spacing.lg,
             gap: spacing.md,
-            paddingBottom: sheetIndex > 0 ? TAB_BAR_CLEARANCE + insets.bottom : spacing.lg,
+            paddingBottom: snapIndex > 0 ? TAB_BAR_CLEARANCE + insets.bottom : spacing.lg,
           }}
           ListEmptyComponent={
             loading ? (
