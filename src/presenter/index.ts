@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { ResponseType } from '../constants.js';
 import type {
   AwliaResponse,
   HelpResponse,
@@ -89,25 +90,25 @@ function formatDateTime(date: Date): string {
 class Presenter implements PresenterInterface {
   async processResponse(response: DispatchResponse): Promise<string> {
     switch (response.type) {
-      case 'salawat':
+      case ResponseType.SALAWAT:
         return this.presentSalawat(response);
-      case 'me':
+      case ResponseType.ME:
         return this.presentMe(response);
-      case 'stats':
+      case ResponseType.STATS:
         return this.presentStats(response);
-      case 'help':
+      case ResponseType.HELP:
         return this.presentHelp(response);
-      case 'awlia':
+      case ResponseType.AWLIA:
         return this.presentAwlia(response);
-      case 'update-goal':
+      case ResponseType.UPDATE_GOAL:
         return this.presentUpdateGoal(response);
-      case 'welcome':
+      case ResponseType.WELCOME:
         return this.presentWelcome(response);
-      case 'subscribe':
+      case ResponseType.SUBSCRIBE:
         return this.presentSubscribe();
-      case 'unsubscribe':
+      case ResponseType.UNSUBSCRIBE:
         return this.presentUnsubscribe();
-      case 'weekly-digest':
+      case ResponseType.WEEKLY_DIGEST:
         return this.presentWeeklyDigest(response);
     }
   }

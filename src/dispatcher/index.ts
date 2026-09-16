@@ -1,4 +1,5 @@
 import prisma from '../db.js';
+import { ResponseType } from '../constants.js';
 import type { Command } from '../interpreter/types.js';
 import type { MessageSender } from '../messenger/types.js';
 import type { DayCount, DispatcherInterface, DispatchResponse, WeeklyDigestResponse } from './types.js';
@@ -51,21 +52,21 @@ function buildDistribution(submissions: { count: number; submittedAt: Date }[]):
 class Dispatcher implements DispatcherInterface {
   async processCommand(command: Command, sender: MessageSender): Promise<DispatchResponse> {
     switch (command.type) {
-      case 'salawat':
+      case ResponseType.SALAWAT:
         return this.handleSalawat(command.count, sender);
-      case 'me':
+      case ResponseType.ME:
         return this.handleMe(sender);
-      case 'stats':
+      case ResponseType.STATS:
         return this.handleStats();
-      case 'help':
+      case ResponseType.HELP:
         return this.handleHelp();
-      case 'awlia':
+      case ResponseType.AWLIA:
         return this.handleAwlia();
-      case 'update-goal':
+      case ResponseType.UPDATE_GOAL:
         return this.handleUpdateGoal(command.goal);
-      case 'subscribe':
+      case ResponseType.SUBSCRIBE:
         return this.handleSubscribe(sender);
-      case 'unsubscribe':
+      case ResponseType.UNSUBSCRIBE:
         return this.handleUnsubscribe(sender);
     }
   }
@@ -86,7 +87,7 @@ class Dispatcher implements DispatcherInterface {
     const { _sum } = await prisma.submission.aggregate({ _sum: { count: true } });
 
     return {
-      type: 'salawat',
+      type: ResponseType.SALAWAT,
       user: { id: user.id, name: user.name, phoneNumber: user.phoneNumber },
       count,
       total: _sum.count ?? count,
@@ -103,7 +104,7 @@ class Dispatcher implements DispatcherInterface {
     });
 
     return {
-      type: 'me',
+      type: ResponseType.ME,
       user: { id: user.id, name: user.name, phoneNumber: user.phoneNumber },
       submissions,
       total: submissions.reduce((sum, s) => sum + s.count, 0),
@@ -116,14 +117,14 @@ class Dispatcher implements DispatcherInterface {
     });
 
     return {
-      type: 'stats',
+      type: ResponseType.STATS,
       distribution: buildDistribution(submissions),
       total: submissions.reduce((sum, s) => sum + s.count, 0),
     };
   }
 
   private async handleHelp(): Promise<DispatchResponse> {
-    return { type: 'help', goal: await getGoal() };
+    return { type: ResponseType.HELP, goal: await getGoal() };
   }
 
   private async handleAwlia(): Promise<DispatchResponse> {
@@ -132,7 +133,7 @@ class Dispatcher implements DispatcherInterface {
       select: { name: true, phoneNumber: true },
     });
 
-    return { type: 'awlia', users: shuffle(users) };
+    return { type: ResponseType.AWLIA, users: shuffle(users) };
   }
 
   private async handleUpdateGoal(goal: number): Promise<DispatchResponse> {
@@ -142,19 +143,19 @@ class Dispatcher implements DispatcherInterface {
       create: { id: SETTINGS_ID, goal },
     });
 
-    return { type: 'update-goal', goal };
+    return { type: ResponseType.UPDATE_GOAL, goal };
   }
 
   private async handleSubscribe(sender: MessageSender): Promise<DispatchResponse> {
     const user = await this.findOrCreateUser(sender);
     await prisma.user.update({ where: { id: user.id }, data: { subscribed: true } });
-    return { type: 'subscribe' };
+    return { type: ResponseType.SUBSCRIBE };
   }
 
   private async handleUnsubscribe(sender: MessageSender): Promise<DispatchResponse> {
     const user = await this.findOrCreateUser(sender);
     await prisma.user.update({ where: { id: user.id }, data: { subscribed: false } });
-    return { type: 'unsubscribe' };
+    return { type: ResponseType.UNSUBSCRIBE };
   }
 
   async buildWeeklyDigests(): Promise<WeeklyDigestResponse[]> {
@@ -172,7 +173,7 @@ class Dispatcher implements DispatcherInterface {
     });
 
     return users.map((user) => ({
-      type: 'weekly-digest',
+      type: ResponseType.WEEKLY_DIGEST,
       user: { id: user.id, name: user.name, phoneNumber: user.phoneNumber },
       total: user.submissions.reduce((sum, s) => sum + s.count, 0),
       distribution: buildDistribution(user.submissions),
@@ -192,7 +193,7 @@ class Dispatcher implements DispatcherInterface {
     const existing = await prisma.user.findUnique({ where: { phoneNumber } });
 
     return {
-      type: 'welcome',
+      type: ResponseType.WELCOME,
       name: existing?.name ?? sender.name,
       total: await getTotal(),
       goal: await getGoal(),

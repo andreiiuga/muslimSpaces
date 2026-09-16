@@ -1,3 +1,4 @@
+import type { ResponseType } from '../constants.js';
 import type { Command } from '../interpreter/types.js';
 import type { MessageSender } from '../messenger/types.js';
 
@@ -16,7 +17,7 @@ export type DayCount = {
 
 /** A salawat count was recorded for the sender. */
 export type SalawatResponse = {
-  type: 'salawat';
+  type: typeof ResponseType.SALAWAT;
   user: DispatchedUser;
   count: number;
   /** Group-wide running total, summed from all submissions in the DB. */
@@ -26,7 +27,7 @@ export type SalawatResponse = {
 
 /** The sender's own submission history. */
 export type MeResponse = {
-  type: 'me';
+  type: typeof ResponseType.ME;
   user: DispatchedUser;
   submissions: { count: number; submittedAt: Date }[];
   total: number;
@@ -34,43 +35,43 @@ export type MeResponse = {
 
 /** The group's all-time submission distribution, broken down by day of week. */
 export type StatsResponse = {
-  type: 'stats';
+  type: typeof ResponseType.STATS;
   distribution: DayCount[];
   total: number;
 };
 
 /** The list of available commands plus a short explanation of how salawat counting works. */
 export type HelpResponse = {
-  type: 'help';
+  type: typeof ResponseType.HELP;
   /** The group's shared submission goal, mentioned in the "how it works" blurb. */
   goal: number;
 };
 
 /** A randomized (not ranked) roster of everyone who has submitted at least once. */
 export type AwliaResponse = {
-  type: 'awlia';
+  type: typeof ResponseType.AWLIA;
   users: { name: string | null; phoneNumber: string }[];
 };
 
 /** Confirms the group's shared submission goal was updated. Hidden - not listed in /help. */
 export type UpdateGoalResponse = {
-  type: 'update-goal';
+  type: typeof ResponseType.UPDATE_GOAL;
   goal: number;
 };
 
 /** Confirms the sender is opted in to the weekly salawat digest DM. */
 export type SubscribeResponse = {
-  type: 'subscribe';
+  type: typeof ResponseType.SUBSCRIBE;
 };
 
 /** Confirms the sender is opted out of the weekly salawat digest DM. */
 export type UnsubscribeResponse = {
-  type: 'unsubscribe';
+  type: typeof ResponseType.UNSUBSCRIBE;
 };
 
 /** One recipient's weekly salawat digest DM - their own count and day-of-week distribution, rolling last 7 days. */
 export type WeeklyDigestResponse = {
-  type: 'weekly-digest';
+  type: typeof ResponseType.WEEKLY_DIGEST;
   user: DispatchedUser;
   total: number;
   distribution: DayCount[];
@@ -78,7 +79,7 @@ export type WeeklyDigestResponse = {
 
 /** Greets a member who just joined the group. Not triggered by a Command - fired directly off a join event. */
 export type WelcomeResponse = {
-  type: 'welcome';
+  type: typeof ResponseType.WELCOME;
   /** The joiner's display name, if we already have one on file; null greets them generically. */
   name: string | null;
   /** Group-wide running total at the moment they joined. */

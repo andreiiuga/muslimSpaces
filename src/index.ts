@@ -1,9 +1,10 @@
 import 'dotenv/config';
+import { ResponseType } from './constants.js';
 import messenger from './messenger/index.js';
 import interpreter from './interpreter/index.js';
 import dispatcher from './dispatcher/index.js';
 import presenter from './presenter/index.js';
-import { startInternalServer } from './server/index.js';
+import internalListener from './internalListener/index.js';
 
 const GROUP_ID = process.env.GROUP_ID || null; // e.g. "1234567890-1234567890@g.us"
 const SEND_DELAY_MS = parseInt(process.env.SEND_DELAY_MS || '1500', 10);
@@ -24,7 +25,7 @@ async function start() {
 
     // /me is personal submission history - send it to the sender privately
     // instead of posting it in the group.
-    const target = response.type === 'me' ? sender.id : chatId;
+    const target = response.type === ResponseType.ME ? sender.id : chatId;
 
     messenger.sendMessage({
       text: reply,
@@ -48,15 +49,19 @@ async function start() {
     }
 
     // handleHelp() ignores the sender entirely, so any placeholder works here.
-    const helpResponse = await dispatcher.processCommand({ type: 'help' }, { id: groupId, name: null, phoneNumber: null });
+    const helpResponse = await dispatcher.processCommand(
+      { type: ResponseType.HELP },
+      { id: groupId, name: null, phoneNumber: null }
+    );
     const helpText = await presenter.processResponse(helpResponse);
     await messenger.sendMessage({ text: helpText, chatId: groupId });
   })
 
   // Only started when INTERNAL_API_SECRET is set, so the endpoint fails
   // closed rather than accidentally running unauthenticated.
+  internalListener.addWeeklyDigestHandler(sendWeeklyDigests);
   if (INTERNAL_API_SECRET) {
-    startInternalServer(INTERNAL_PORT, INTERNAL_API_SECRET, sendWeeklyDigests);
+    await internalListener.listen(INTERNAL_PORT, INTERNAL_API_SECRET);
   } else {
     console.warn('INTERNAL_API_SECRET not set - the internal /weekly-digest endpoint is disabled.');
   }

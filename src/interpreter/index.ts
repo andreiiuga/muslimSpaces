@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { ResponseType } from '../constants.js';
 import type { Command, InterpreterInterface } from './types.js';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -36,7 +37,7 @@ Rules:
 class Interpreter implements InterpreterInterface {
   async extractSalawatCount(text: string): Promise<number | null> {
     const command = await this.processMessage(text);
-    return command?.type === 'salawat' ? command.count : null;
+    return command?.type === ResponseType.SALAWAT ? command.count : null;
   }
 
   async processMessage(message: string): Promise<Command | null> {
@@ -45,23 +46,23 @@ class Interpreter implements InterpreterInterface {
 
     // Fast paths: obvious cases handled locally, no API call needed.
     const normalized = text.toLowerCase();
-    if (normalized === '/stats') return { type: 'stats' };
-    if (normalized === '/me') return { type: 'me' };
-    if (normalized === '/help') return { type: 'help' };
-    if (normalized === '/awlia') return { type: 'awlia' };
-    if (normalized === '/subscribe') return { type: 'subscribe' };
-    if (normalized === '/unsubscribe') return { type: 'unsubscribe' };
+    if (normalized === '/stats') return { type: ResponseType.STATS };
+    if (normalized === '/me') return { type: ResponseType.ME };
+    if (normalized === '/help') return { type: ResponseType.HELP };
+    if (normalized === '/awlia') return { type: ResponseType.AWLIA };
+    if (normalized === '/subscribe') return { type: ResponseType.SUBSCRIBE };
+    if (normalized === '/unsubscribe') return { type: ResponseType.UNSUBSCRIBE };
 
     // Hidden command: intentionally not in QUICK_SKIP_REGEX or the classifier
     // prompt below, so it's undiscoverable via /help or natural language.
     const updateGoalMatch = normalized.match(/^\/update-goal\s+(\d{1,9})$/);
     if (updateGoalMatch?.[1]) {
       const goal = parseInt(updateGoalMatch[1], 10);
-      if (goal > 0) return { type: 'update-goal', goal };
+      if (goal > 0) return { type: ResponseType.UPDATE_GOAL, goal };
     }
 
     const simpleMatch = text.match(/^\+?(\d{1,6})$/);
-    if (simpleMatch?.[1]) return { type: 'salawat', count: parseInt(simpleMatch[1], 10) };
+    if (simpleMatch?.[1]) return { type: ResponseType.SALAWAT, count: parseInt(simpleMatch[1], 10) };
 
     if (!QUICK_SKIP_REGEX.test(text)) return null;
 
@@ -77,14 +78,14 @@ class Interpreter implements InterpreterInterface {
       const cleaned = raw.replace(/```json|```/g, '').trim();
       const parsed = JSON.parse(cleaned);
 
-      if (parsed.intent === 'stats') return { type: 'stats' };
-      if (parsed.intent === 'me') return { type: 'me' };
-      if (parsed.intent === 'help') return { type: 'help' };
-      if (parsed.intent === 'awlia') return { type: 'awlia' };
-      if (parsed.intent === 'subscribe') return { type: 'subscribe' };
-      if (parsed.intent === 'unsubscribe') return { type: 'unsubscribe' };
-      if (parsed.intent === 'salawat' && Number.isInteger(parsed.count) && parsed.count > 0) {
-        return { type: 'salawat', count: parsed.count };
+      if (parsed.intent === ResponseType.STATS) return { type: ResponseType.STATS };
+      if (parsed.intent === ResponseType.ME) return { type: ResponseType.ME };
+      if (parsed.intent === ResponseType.HELP) return { type: ResponseType.HELP };
+      if (parsed.intent === ResponseType.AWLIA) return { type: ResponseType.AWLIA };
+      if (parsed.intent === ResponseType.SUBSCRIBE) return { type: ResponseType.SUBSCRIBE };
+      if (parsed.intent === ResponseType.UNSUBSCRIBE) return { type: ResponseType.UNSUBSCRIBE };
+      if (parsed.intent === ResponseType.SALAWAT && Number.isInteger(parsed.count) && parsed.count > 0) {
+        return { type: ResponseType.SALAWAT, count: parsed.count };
       }
       return null;
     } catch (err) {
@@ -92,7 +93,7 @@ class Interpreter implements InterpreterInterface {
       // Fallback to the quick regex if the API call fails; /stats, /me, /help
       // and /awlia are already handled above, so only salawat counts can be recovered.
       const fallback = text.match(QUICK_REGEX);
-      if (fallback?.[1]) return { type: 'salawat', count: parseInt(fallback[1], 10) };
+      if (fallback?.[1]) return { type: ResponseType.SALAWAT, count: parseInt(fallback[1], 10) };
       return null;
     }
   }
