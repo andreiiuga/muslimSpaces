@@ -20,6 +20,7 @@ export function MapView({
   initialZoom = DEFAULT_ZOOM,
   onBoundsChange,
   onMarkerPress,
+  padding,
 }: MapViewProps) {
   const handleRegionDidChange = useCallback(
     (event: NativeSyntheticEvent<ViewStateChangeEvent>) => {
@@ -36,6 +37,7 @@ export function MapView({
         initialViewState={{
           center: [initialCenter.lng, initialCenter.lat],
           zoom: initialZoom,
+          padding,
         }}
       />
       {pois.map((poi) => (

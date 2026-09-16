@@ -17,6 +17,12 @@ const MapView = dynamic(() => import("@muslimspaces/ui/map").then((m) => m.MapVi
   loading: () => <Skeleton height="100%" borderRadius={0} />,
 });
 
+// Shared between the floating panel's inline width and the map's camera
+// padding, so the two can never drift apart — matches the breakpoint
+// already used elsewhere in globals.css.
+const PANEL_WIDTH = 420;
+const DESKTOP_QUERY = "(min-width: 768px)";
+
 export function ExploreView({
   initialPois,
   categories,
@@ -36,6 +42,19 @@ export function ExploreView({
   const [bounds, setBounds] = useState<MapBounds | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Mobile-first default — SSR can't know the real viewport width; this
+  // corrects itself on mount once matchMedia can run client-side. Only
+  // affects the map's camera padding (a JS prop); the overlay-vs-stacked
+  // *layout* itself is driven purely by the CSS breakpoint in globals.css.
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const mql = window.matchMedia(DESKTOP_QUERY);
+    setIsDesktop(mql.matches);
+    const handleChange = (event: MediaQueryListEvent) => setIsDesktop(event.matches);
+    mql.addEventListener("change", handleChange);
+    return () => mql.removeEventListener("change", handleChange);
+  }, []);
 
   // Initial SSR list covers first paint (and SEO); once the map reports a
   // real viewport, subsequent fetches are viewport-driven so the list and
@@ -88,53 +107,58 @@ export function ExploreView({
   }
 
   return (
-    <div>
-      <FilterBar
-        categories={categories}
-        selectedCategoryId={selectedCategoryId}
-        onCategoryChange={setSelectedCategoryId}
-        openNow={openNow}
-        onOpenNowChange={setOpenNow}
-      />
+    <div className="explore-shell">
+      <div className="explore-map-fill">
+        <MapView
+          pois={pois}
+          onBoundsChange={setBounds}
+          onMarkerPress={(id) => router.push(`/pois/${id}`)}
+          padding={isDesktop ? { right: PANEL_WIDTH } : undefined}
+        />
+      </div>
 
-      <div className="explore-layout">
-        <div style={{ overflowY: "auto", padding: spacing.xl }}>
-          {error && <Text size="sm" color={colors.danger}>{error}</Text>}
-          {loading && pois.length === 0 ? (
+      <div className="explore-filterbar-float" style={isDesktop ? { right: PANEL_WIDTH + spacing.lg } : undefined}>
+        <FilterBar
+          categories={categories}
+          selectedCategoryId={selectedCategoryId}
+          onCategoryChange={setSelectedCategoryId}
+          openNow={openNow}
+          onOpenNowChange={setOpenNow}
+        />
+      </div>
+
+      <div className="explore-panel" style={isDesktop ? { width: PANEL_WIDTH } : undefined}>
+        {error && <Text size="sm" color={colors.danger}>{error}</Text>}
+        {loading && pois.length === 0 ? (
+          <div className="poi-grid" style={{ gap: spacing.lg }}>
+            {[0, 1, 2, 3].map((i) => (
+              <Skeleton key={i} height={220} borderRadius={16} />
+            ))}
+          </div>
+        ) : pois.length === 0 ? (
+          <Text color={colors.textMuted}>No POIs in this area yet.</Text>
+        ) : (
+          <>
+            {loading && <Text size="sm" color={colors.textMuted}>Updating…</Text>}
             <div className="poi-grid" style={{ gap: spacing.lg }}>
-              {[0, 1, 2, 3].map((i) => (
-                <Skeleton key={i} height={220} borderRadius={16} />
+              {pois.map((poi) => (
+                <div key={poi.id} style={{ position: "relative" }}>
+                  <Link
+                    href={`/pois/${poi.id}`}
+                    aria-label={poi.name.ro}
+                    style={{ position: "absolute", inset: 0, zIndex: 1 }}
+                  />
+                  <POICard
+                    poi={poi}
+                    categoryLabel={categoryLabel(poi)}
+                    isFavorite={favoriteIds.has(poi.id)}
+                    onToggleFavorite={() => toggleFavorite(poi.id)}
+                  />
+                </div>
               ))}
             </div>
-          ) : pois.length === 0 ? (
-            <Text color={colors.textMuted}>No POIs in this area yet.</Text>
-          ) : (
-            <>
-              {loading && <Text size="sm" color={colors.textMuted}>Updating…</Text>}
-              <div className="poi-grid" style={{ gap: spacing.lg }}>
-                {pois.map((poi) => (
-                  <div key={poi.id} style={{ position: "relative" }}>
-                    <Link
-                      href={`/pois/${poi.id}`}
-                      aria-label={poi.name.ro}
-                      style={{ position: "absolute", inset: 0, zIndex: 1 }}
-                    />
-                    <POICard
-                      poi={poi}
-                      categoryLabel={categoryLabel(poi)}
-                      isFavorite={favoriteIds.has(poi.id)}
-                      onToggleFavorite={() => toggleFavorite(poi.id)}
-                    />
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-
-        <div className="explore-map-pane">
-          <MapView pois={pois} onBoundsChange={setBounds} onMarkerPress={(id) => router.push(`/pois/${id}`)} />
-        </div>
+          </>
+        )}
       </div>
     </div>
   );

@@ -4,16 +4,50 @@
  * Keep it to layout-only responsive classes; anything else belongs inline.
  */
 
-.explore-layout {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  height: calc(100vh - 140px);
+/* Full-bleed map with floating overlays on top — the list panel sits on
+   the right so the map's true camera center (see ExploreView's `padding`
+   prop passed to MapView) lands in the middle of the visible left half. */
+.explore-shell {
+  position: relative;
+  height: calc(100vh - 65px);
+  overflow: hidden;
 }
 
-.explore-map-pane {
-  position: sticky;
+.explore-map-fill {
+  position: absolute;
+  inset: 0;
+}
+
+.explore-filterbar-float {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 5;
+  max-width: calc(100% - 32px);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 4px 16px rgba(28, 25, 23, 0.12);
+}
+
+.explore-panel {
+  position: absolute;
   top: 0;
-  height: 100%;
+  right: 0;
+  bottom: 0;
+  z-index: 4;
+  overflow-y: auto;
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: -4px 0 16px rgba(28, 25, 23, 0.08);
+}
+
+/* 420px isn't wide enough for the default 2-column grid used elsewhere. */
+.explore-panel .poi-grid {
+  grid-template-columns: 1fr;
 }
 
 .poi-grid {
@@ -52,18 +86,44 @@
     flex-wrap: wrap;
   }
 
-  /* Same stacked map-above-list layout as the native app on small
-     viewports, instead of the desktop side-by-side split. */
-  .explore-layout {
+  /* Below the breakpoint, drop the full-bleed overlay entirely — stacked
+     map-above-list, same as the native app's narrow layout, opaque (no
+     blur) since nothing overlaps here. */
+  .explore-shell {
     display: flex;
     flex-direction: column;
+    position: static;
     height: auto;
+    overflow: visible;
   }
 
-  .explore-map-pane {
+  .explore-map-fill {
     position: static;
     height: 280px;
+  }
+
+  .explore-filterbar-float {
     order: -1;
+    position: static;
+    max-width: none;
+    border-radius: 0;
+    background: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+  }
+
+  .explore-panel {
+    position: static;
+    width: 100% !important;
+    background: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+  }
+
+  .explore-panel .poi-grid {
+    grid-template-columns: 1fr;
   }
 
   .poi-grid {

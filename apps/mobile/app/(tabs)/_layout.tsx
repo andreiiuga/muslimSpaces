@@ -1,6 +1,7 @@
 import { NativeTabs } from "expo-router/unstable-native-tabs";
 import { colors } from "@muslimspaces/ui";
 import { TABS } from "../../src/navigation/tabs";
+import { TabBarVisibilityProvider, useTabBarVisibility } from "../../src/navigation/TabBarVisibility";
 
 // Real native tab bar (UITabBarController on iOS, Material bottom nav on
 // Android) via expo-router's NativeTabs — not a JS-rendered React Navigation
@@ -10,7 +11,20 @@ import { TABS } from "../../src/navigation/tabs";
 // a mistake) — see CLAUDE.md.
 export default function TabsLayout() {
   return (
-    <NativeTabs tintColor={colors.primary}>
+    <TabBarVisibilityProvider>
+      <Tabs />
+    </TabBarVisibilityProvider>
+  );
+}
+
+// Split out so `hidden` only re-renders the tab bar itself, not the whole
+// provider tree — Explore's bottom sheet toggles this on every collapse/
+// expand.
+function Tabs() {
+  const { hidden } = useTabBarVisibility();
+
+  return (
+    <NativeTabs tintColor={colors.primary} hidden={hidden}>
       {TABS.map((tab) => (
         <NativeTabs.Trigger key={tab.name} name={tab.name}>
           <NativeTabs.Trigger.Icon sf={tab.sf} md={tab.md} />
