@@ -16,6 +16,11 @@ model User {
   subscribed        Boolean      @default(true)
   /// When the weekly digest was last sent to this user - guards against re-sending within the same rolling week.
   lastDigestSentAt  DateTime?
+  /// The exact WhatsApp JID (sender.id) to DM this user at - captured from their messages, same identifier /me
+  /// already replies to successfully. phoneNumber alone isn't reliably reconstructible into a valid JID (e.g.
+  /// group senders using WhatsApp's privacy-preserving @lid identifiers instead of a real phone-number JID).
+  /// Null until their first message is seen after this field was introduced.
+  chatId            String?
 }
 
 model Submission {

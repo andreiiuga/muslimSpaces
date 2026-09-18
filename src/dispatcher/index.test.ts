@@ -41,7 +41,9 @@ describe('salawat submissions', () => {
 
     const response = await dispatcher.processCommand({ type: 'salawat', count: 50 }, sender);
 
-    expect(mockPrisma.user.create).toHaveBeenCalledWith({ data: { phoneNumber: '123', name: 'Amina' } });
+    expect(mockPrisma.user.create).toHaveBeenCalledWith({
+      data: { phoneNumber: '123', name: 'Amina', chatId: sender.id },
+    });
     expect(mockPrisma.submission.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ count: 50, authorId: 1 }),
     });
@@ -61,6 +63,29 @@ describe('salawat submissions', () => {
     await dispatcher.processCommand({ type: 'salawat', count: 20 }, sender);
 
     expect(mockPrisma.user.create).not.toHaveBeenCalled();
+  });
+
+  it("self-heals a stale chatId on an existing user to the sender's current JID", async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({
+      id: 7,
+      name: 'Amina',
+      phoneNumber: '123',
+      chatId: 'old-jid@s.whatsapp.net',
+    });
+    mockPrisma.submission.aggregate.mockResolvedValue({ _sum: { count: 20 } });
+
+    await dispatcher.processCommand({ type: 'salawat', count: 20 }, sender);
+
+    expect(mockPrisma.user.update).toHaveBeenCalledWith({ where: { id: 7 }, data: { chatId: sender.id } });
+  });
+
+  it('does not write to the DB when the stored chatId already matches the sender', async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({ id: 7, name: 'Amina', phoneNumber: '123', chatId: sender.id });
+    mockPrisma.submission.aggregate.mockResolvedValue({ _sum: { count: 20 } });
+
+    await dispatcher.processCommand({ type: 'salawat', count: 20 }, sender);
+
+    expect(mockPrisma.user.update).not.toHaveBeenCalled();
   });
 
   it('derives the phone number from the JID when the sender has none directly (e.g. group messages)', async () => {
@@ -253,7 +278,9 @@ describe('/subscribe and /unsubscribe', () => {
 
     await dispatcher.processCommand({ type: 'subscribe' }, sender);
 
-    expect(mockPrisma.user.create).toHaveBeenCalledWith({ data: { phoneNumber: '123', name: 'Amina' } });
+    expect(mockPrisma.user.create).toHaveBeenCalledWith({
+      data: { phoneNumber: '123', name: 'Amina', chatId: sender.id },
+    });
     expect(mockPrisma.user.update).toHaveBeenCalledWith({ where: { id: 8 }, data: { subscribed: true } });
   });
 
@@ -277,6 +304,7 @@ describe('weekly digest', () => {
       expect.objectContaining({
         where: expect.objectContaining({
           subscribed: true,
+          chatId: { not: null },
           OR: [{ lastDigestSentAt: null }, { lastDigestSentAt: { lt: expect.any(Date) } }],
           submissions: { some: { submittedAt: { gte: expect.any(Date) } } },
         }),
@@ -284,7 +312,7 @@ describe('weekly digest', () => {
     );
   });
 
-  it('builds one response per user with their own total and day-of-week distribution', async () => {
+  it('builds one response per user with their own total, day-of-week distribution, and chatId to DM', async () => {
     const dayA = new Date(2026, 8, 7); // Monday
     const dayB = new Date(dayA.getFullYear(), dayA.getMonth(), dayA.getDate() + 1); // Tuesday
 
@@ -293,6 +321,7 @@ describe('weekly digest', () => {
         id: 1,
         name: 'Amina',
         phoneNumber: '123',
+        chatId: '123@s.whatsapp.net',
         submissions: [
           { count: 10, submittedAt: dayA },
           { count: 5, submittedAt: dayB },
@@ -306,6 +335,7 @@ describe('weekly digest', () => {
     expect(digests[0]).toMatchObject({
       type: 'weekly-digest',
       user: { id: 1, name: 'Amina', phoneNumber: '123' },
+      chatId: '123@s.whatsapp.net',
       total: 15,
     });
     const byDay = Object.fromEntries(digests[0]!.distribution.map((d) => [d.day, d.count]));

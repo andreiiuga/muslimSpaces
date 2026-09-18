@@ -300,6 +300,7 @@ describe('weekly digest', () => {
     const response: WeeklyDigestResponse = {
       type: 'weekly-digest',
       user: { id: 1, name: 'Amina', phoneNumber: '123' },
+      chatId: '123@s.whatsapp.net',
       total,
       distribution,
     };
@@ -319,6 +320,7 @@ describe('weekly digest', () => {
     const response: WeeklyDigestResponse = {
       type: 'weekly-digest',
       user: { id: 1, name: null, phoneNumber: '123' },
+      chatId: '123@s.whatsapp.net',
       total,
       distribution,
     };

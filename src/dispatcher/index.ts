@@ -74,8 +74,16 @@ class Dispatcher implements DispatcherInterface {
   private async findOrCreateUser(sender: MessageSender) {
     const phoneNumber = resolvePhoneNumber(sender);
     const existing = await prisma.user.findUnique({ where: { phoneNumber } });
-    if (existing) return existing;
-    return prisma.user.create({ data: { phoneNumber, name: sender.name } });
+    if (existing) {
+      // Self-heal chatId as people message in - covers both users created
+      // before this field existed, and a JID that legitimately changes.
+      // Cheap no-op write skip on the (very common) unchanged case.
+      if (existing.chatId !== sender.id) {
+        await prisma.user.update({ where: { id: existing.id }, data: { chatId: sender.id } });
+      }
+      return { ...existing, chatId: sender.id };
+    }
+    return prisma.user.create({ data: { phoneNumber, name: sender.name, chatId: sender.id } });
   }
 
   private async handleSalawat(count: number, sender: MessageSender): Promise<DispatchResponse> {
@@ -164,6 +172,9 @@ class Dispatcher implements DispatcherInterface {
     const users = await prisma.user.findMany({
       where: {
         subscribed: true,
+        // Without a real chatId there's no valid JID to DM - phoneNumber
+        // alone isn't reliably reconstructible into one (see schema.prisma).
+        chatId: { not: null },
         OR: [{ lastDigestSentAt: null }, { lastDigestSentAt: { lt: sevenDaysAgo } }],
         submissions: { some: { submittedAt: { gte: sevenDaysAgo } } },
       },
@@ -175,6 +186,7 @@ class Dispatcher implements DispatcherInterface {
     return users.map((user) => ({
       type: ResponseType.WEEKLY_DIGEST,
       user: { id: user.id, name: user.name, phoneNumber: user.phoneNumber },
+      chatId: user.chatId as string, // filtered to non-null above
       total: user.submissions.reduce((sum, s) => sum + s.count, 0),
       distribution: buildDistribution(user.submissions),
     }));

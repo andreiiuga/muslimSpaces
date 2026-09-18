@@ -73,6 +73,8 @@ export type UnsubscribeResponse = {
 export type WeeklyDigestResponse = {
   type: typeof ResponseType.WEEKLY_DIGEST;
   user: DispatchedUser;
+  /** The WhatsApp JID to DM this digest to - not for display, only for Messenger.sendMessage. */
+  chatId: string;
   total: number;
   distribution: DayCount[];
 };

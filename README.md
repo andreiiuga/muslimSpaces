@@ -336,7 +336,9 @@ PostgreSQL — local via Docker in development, Railway-hosted in production. Sc
    cron script's own HTTP client timeout
 4. In the background, that handler calls **Dispatcher.buildWeeklyDigests()**
    — one result per eligible subscribed user (salawat in the last rolling 7
-   days, not already digested this window)
+   days, not already digested this window, **and a known `chatId`** - users
+   who haven't sent a message since that field was introduced are skipped
+   until they do, rather than guessing a JID from `phoneNumber`)
 5. For each result: **Presenter** formats the personal digest message,
    **Messenger** DMs it to that user, then **Dispatcher.markWeeklyDigestSent()**
    records it, waiting `DIGEST_SEND_DELAY_MS` (default 1 minute) between each
@@ -491,6 +493,11 @@ model User {
   subscribed        Boolean      @default(true)
   /// When the weekly digest was last sent to this user - guards against re-sending within the same rolling week.
   lastDigestSentAt  DateTime?
+  /// The exact WhatsApp JID (sender.id) to DM this user at - captured from their messages, same identifier /me
+  /// already replies to successfully. phoneNumber alone isn't reliably reconstructible into a valid JID (e.g.
+  /// group senders using WhatsApp's privacy-preserving @lid identifiers instead of a real phone-number JID).
+  /// Null until their first message is seen after this field was introduced.
+  chatId            String?
 }
 
 model Submission {

@@ -84,8 +84,7 @@ async function sendWeeklyDigests(): Promise<{ sent: number }> {
 
   for (const digest of digests) {
     const text = await presenter.processResponse(digest);
-    const chatId = `${digest.user.phoneNumber}@s.whatsapp.net`;
-    await messenger.sendMessage({ text, chatId });
+    await messenger.sendMessage({ text, chatId: digest.chatId });
     await dispatcher.markWeeklyDigestSent(digest.user.id);
     sent++;
     await sleep(DIGEST_SEND_DELAY_MS);
