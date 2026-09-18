@@ -1,6 +1,7 @@
 import makeWASocket, { useMultiFileAuthState, DisconnectReason } from '@whiskeysockets/baileys';
 import pino from 'pino';
 import qrcode from 'qrcode-terminal';
+import { rm } from 'node:fs/promises';
 
 
 import type { MessageUpsertType, WAMessage, WASocket } from '@whiskeysockets/baileys';
@@ -26,9 +27,20 @@ class BaileysMessenger implements Messenger {
   private handlers: IncomingMessageHandler[] = [];
   private joinHandlers: GroupJoinHandler[] = [];
   private restrictedToGroupId: string | null = null;
- 
+  private authResetDone = false;
+
   async connect(restrictedToGroupId: string | null): Promise<void> {
     this.restrictedToGroupId = restrictedToGroupId;
+
+    // One-time escape hatch for a logged-out/corrupted session: set
+    // RESET_AUTH=true, redeploy, scan the fresh QR, then unset it - leaving
+    // it set would wipe a good session again on every future restart.
+    if (process.env.RESET_AUTH === 'true' && !this.authResetDone) {
+      this.authResetDone = true;
+      await rm(AUTH_DIR, { recursive: true, force: true });
+      console.log(`RESET_AUTH set - cleared ${AUTH_DIR}, a fresh QR scan will be required.`);
+    }
+
     const { state, saveCreds } = await useMultiFileAuthState(AUTH_DIR);
     this.socket = makeWASocket({
         auth: state,

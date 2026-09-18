@@ -328,17 +328,24 @@ PostgreSQL — local via Docker in development, Railway-hosted in production. Sc
    07:00 UTC), runs `scripts/weekly-digest-cron.ts`, and exits
 2. That script `POST`s `/weekly-digest` to the bot's **InternalListener**
    over Railway's private network, with the shared secret header
-3. **InternalListener** authenticates the request and invokes the registered
-   handler (wired in `src/index.ts`)
-4. That handler calls **Dispatcher.buildWeeklyDigests()** — one result per
-   eligible subscribed user (salawat in the last rolling 7 days, not already
-   digested this window)
+3. **InternalListener** authenticates the request, invokes the registered
+   handler (wired in `src/index.ts`), and immediately responds `202
+   { "accepted": true }` — it does **not** wait for the fan-out to finish.
+   The whole run takes many minutes (one DM at a time, `DIGEST_SEND_DELAY_MS`
+   apart - deliberately slow, see below), which would otherwise exceed the
+   cron script's own HTTP client timeout
+4. In the background, that handler calls **Dispatcher.buildWeeklyDigests()**
+   — one result per eligible subscribed user (salawat in the last rolling 7
+   days, not already digested this window)
 5. For each result: **Presenter** formats the personal digest message,
    **Messenger** DMs it to that user, then **Dispatcher.markWeeklyDigestSent()**
-   records it (throttled by `SEND_DELAY_MS` between sends, same as the
-   group-join welcome batch)
-6. The handler resolves with a count; **InternalListener** responds `200`
-   with `{ "sent": <n> }` to the cron script, which logs it and exits
+   records it, waiting `DIGEST_SEND_DELAY_MS` (default 1 minute) between each
+   — much slower than the group-join welcome batch's `SEND_DELAY_MS`, since a
+   burst of individual DMs to many different people reads as spammy/bot-like
+   to WhatsApp's abuse detection and can get the account logged out
+6. The handler logs its final count (`Weekly digest: sent to <n> user(s).`)
+   in the bot service's own logs once done - the cron script never sees this
+   number, only the earlier `202` acknowledgement
 
 # Database Setup — salawat-bot
 

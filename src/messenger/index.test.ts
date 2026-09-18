@@ -1,16 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IncomingMessage } from './types.js';
 
-const { mockOn, mockSendMessage, mockEnd, mockMakeWASocket, mockUseMultiFileAuthState, mockQrGenerate } = vi.hoisted(
-  () => ({
+const { mockOn, mockSendMessage, mockEnd, mockMakeWASocket, mockUseMultiFileAuthState, mockQrGenerate, mockRm } =
+  vi.hoisted(() => ({
     mockOn: vi.fn(),
     mockSendMessage: vi.fn(),
     mockEnd: vi.fn(),
     mockMakeWASocket: vi.fn(),
     mockUseMultiFileAuthState: vi.fn(),
     mockQrGenerate: vi.fn(),
-  }),
-);
+    mockRm: vi.fn(),
+  }));
 
 vi.mock('@whiskeysockets/baileys', () => ({
   default: mockMakeWASocket,
@@ -21,6 +21,8 @@ vi.mock('@whiskeysockets/baileys', () => ({
 vi.mock('pino', () => ({ default: vi.fn(() => ({})) }));
 
 vi.mock('qrcode-terminal', () => ({ default: { generate: mockQrGenerate } }));
+
+vi.mock('node:fs/promises', () => ({ rm: mockRm }));
 
 type RawMessageOverrides = Partial<{
   remoteJid: string;
@@ -72,6 +74,8 @@ beforeEach(async () => {
   mockMakeWASocket.mockReturnValue({ ev: { on: mockOn }, sendMessage: mockSendMessage, end: mockEnd });
   mockUseMultiFileAuthState.mockResolvedValue({ state: {}, saveCreds: vi.fn() });
   mockSendMessage.mockResolvedValue(undefined);
+  mockRm.mockResolvedValue(undefined);
+  delete process.env.RESET_AUTH;
 
   // Fresh module registry per test so the BaileysMessenger singleton (and its
   // handler arrays) don't leak state between tests.
@@ -120,6 +124,37 @@ describe('connect', () => {
     await flushMicrotasks();
 
     expect(mockMakeWASocket).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('RESET_AUTH', () => {
+  it('clears the auth directory before connecting when RESET_AUTH=true', async () => {
+    process.env.RESET_AUTH = 'true';
+
+    await messenger.connect('group123@g.us');
+
+    expect(mockRm).toHaveBeenCalledWith(expect.stringContaining('auth'), { recursive: true, force: true });
+    expect(mockUseMultiFileAuthState).toHaveBeenCalled();
+  });
+
+  it('does not clear the auth directory when RESET_AUTH is unset', async () => {
+    await messenger.connect('group123@g.us');
+
+    expect(mockRm).not.toHaveBeenCalled();
+  });
+
+  it('only clears once per process, not on every reconnect', async () => {
+    process.env.RESET_AUTH = 'true';
+    await messenger.connect('group123@g.us');
+    expect(mockRm).toHaveBeenCalledTimes(1);
+
+    getHandler('connection.update')({
+      connection: 'close',
+      lastDisconnect: { error: { output: { statusCode: 500 } } },
+    });
+    await flushMicrotasks();
+
+    expect(mockRm).toHaveBeenCalledTimes(1);
   });
 });
 

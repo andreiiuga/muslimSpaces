@@ -24,7 +24,7 @@ class HttpInternalListener implements InternalListener {
   private weeklyDigestHandler: WeeklyDigestHandler | null = null;
 
   listen(port: number, secret: string): Promise<void> {
-    const server = createServer(async (req, res) => {
+    const server = createServer((req, res) => {
       if (req.method !== 'POST' || req.url !== '/weekly-digest') {
         res.writeHead(404).end();
         return;
@@ -40,13 +40,15 @@ class HttpInternalListener implements InternalListener {
         return;
       }
 
-      try {
-        const result = await this.weeklyDigestHandler();
-        res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify(result));
-      } catch (err) {
+      // Acknowledge immediately rather than waiting for the fan-out to
+      // finish: it deliberately sends one DM at a time, minutes apart, so a
+      // caller waiting for the HTTP response would time out long before the
+      // handler resolves. The result is only logged server-side now.
+      res.writeHead(202, { 'Content-Type': 'application/json' }).end(JSON.stringify({ accepted: true }));
+
+      this.weeklyDigestHandler().catch((err) => {
         console.error('weekly-digest trigger failed:', err instanceof Error ? err.message : err);
-        res.writeHead(500).end();
-      }
+      });
     });
 
     this.server = server;

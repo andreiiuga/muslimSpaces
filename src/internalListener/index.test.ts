@@ -3,6 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const SECRET = 'test-secret';
 const PORT = 8123; // fixed rather than ephemeral: listen() only exposes the InternalListener contract, not the raw Server
 
+const flushMicrotasks = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
+
 // Typed from the module's actual default export, mirroring messenger/index.test.ts.
 let internalListener: typeof import('./index.js')['default'];
 
@@ -43,8 +45,12 @@ describe('weekly-digest trigger', () => {
     expect(onTrigger).not.toHaveBeenCalled();
   });
 
-  it('triggers the registered handler and returns its count when the secret matches', async () => {
-    const onTrigger = vi.fn().mockResolvedValue({ sent: 4 });
+  it('triggers the registered handler and acknowledges with 202 immediately, without waiting for it to finish', async () => {
+    let resolveHandler!: () => void;
+    const handlerDone = new Promise<void>((resolve) => {
+      resolveHandler = resolve;
+    });
+    const onTrigger = vi.fn().mockImplementation(() => handlerDone.then(() => ({ sent: 4 })));
     internalListener.addWeeklyDigestHandler(onTrigger);
     await internalListener.listen(PORT, SECRET);
 
@@ -53,9 +59,13 @@ describe('weekly-digest trigger', () => {
       headers: { 'x-internal-secret': SECRET },
     });
 
-    expect(res.status).toBe(200);
-    await expect(res.json()).resolves.toEqual({ sent: 4 });
+    // The response already arrived even though the handler's own promise is
+    // still pending - proves it's not awaited before acknowledging.
+    expect(res.status).toBe(202);
+    await expect(res.json()).resolves.toEqual({ accepted: true });
     expect(onTrigger).toHaveBeenCalledTimes(1);
+
+    resolveHandler();
   });
 
   it('returns 503 when no handler has been registered yet', async () => {
@@ -83,7 +93,8 @@ describe('weekly-digest trigger', () => {
     expect(onTrigger).not.toHaveBeenCalled();
   });
 
-  it('returns 500 without leaking details when the handler throws', async () => {
+  it('still acknowledges with 202 and logs (rather than crashing) when the handler rejects', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const onTrigger = vi.fn().mockRejectedValue(new Error('db down'));
     internalListener.addWeeklyDigestHandler(onTrigger);
     await internalListener.listen(PORT, SECRET);
@@ -93,8 +104,10 @@ describe('weekly-digest trigger', () => {
       headers: { 'x-internal-secret': SECRET },
     });
 
-    expect(res.status).toBe(500);
-    const body = await res.text();
-    expect(body).not.toContain('db down');
+    expect(res.status).toBe(202);
+    await flushMicrotasks();
+
+    expect(consoleErrorSpy).toHaveBeenCalledWith('weekly-digest trigger failed:', 'db down');
+    consoleErrorSpy.mockRestore();
   });
 });

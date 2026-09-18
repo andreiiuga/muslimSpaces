@@ -8,6 +8,11 @@ import internalListener from './internalListener/index.js';
 
 const GROUP_ID = process.env.GROUP_ID || null; // e.g. "1234567890-1234567890@g.us"
 const SEND_DELAY_MS = parseInt(process.env.SEND_DELAY_MS || '1500', 10);
+// Much longer than SEND_DELAY_MS deliberately: these are individual DMs to
+// many different people in a row, which reads as spammy/bot-like to
+// WhatsApp's abuse detection at a fast pace. A tight loop here is what
+// preceded the account getting logged out on 2026-09-18.
+const DIGEST_SEND_DELAY_MS = parseInt(process.env.DIGEST_SEND_DELAY_MS || '60000', 10);
 const INTERNAL_PORT = parseInt(process.env.INTERNAL_PORT || '8080', 10);
 const INTERNAL_API_SECRET = process.env.INTERNAL_API_SECRET || null;
 
@@ -83,7 +88,7 @@ async function sendWeeklyDigests(): Promise<{ sent: number }> {
     await messenger.sendMessage({ text, chatId });
     await dispatcher.markWeeklyDigestSent(digest.user.id);
     sent++;
-    await sleep(SEND_DELAY_MS);
+    await sleep(DIGEST_SEND_DELAY_MS);
   }
 
   console.log(`Weekly digest: sent to ${sent} user(s).`);
