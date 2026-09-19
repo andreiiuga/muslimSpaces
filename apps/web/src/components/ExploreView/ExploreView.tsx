@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Square, SquareCheck, Map as MapIcon, Rows3 } from "lucide-react";
-import { POICard, Skeleton, Text, colors, radii, spacing } from "@muslimspaces/ui";
+import { POICard, Rating, Skeleton, Text, colors, radii, spacing } from "@muslimspaces/ui";
 import type { MapBounds } from "@muslimspaces/ui/map";
 import type { Category, Poi } from "@muslimspaces/shared";
 import dynamic from "next/dynamic";
@@ -44,6 +44,7 @@ export function ExploreView({
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [openNow, setOpenNow] = useState(false);
   const [bounds, setBounds] = useState<MapBounds | null>(null);
+  const [selectedPoiId, setSelectedPoiId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -100,7 +101,10 @@ export function ExploreView({
     return category ? pickLocalized(category.name, locale) : undefined;
   }
 
-  const featured = pois[0];
+  // No POI is selected until the user taps a marker — undefined here (not a
+  // pois[0] fallback) also covers the selected POI dropping out of the list
+  // after a refetch.
+  const selectedPoi = pois.find((poi) => poi.id === selectedPoiId);
 
   function poiCard(poi: Poi, layout: "row" | "grid" = "row") {
     return (
@@ -196,11 +200,17 @@ export function ExploreView({
           </div>
 
           <div className="explore-map-col">
-            <MapView pois={pois} onBoundsChange={setBounds} onMarkerPress={(id) => router.push(`/pois/${id}`)} />
+            <MapView
+              pois={pois}
+              categories={categories}
+              onBoundsChange={setBounds}
+              onMarkerPress={setSelectedPoiId}
+              selectedPoiId={selectedPoi?.id ?? null}
+            />
 
-            {featured && (
+            {selectedPoi && (
               <Link
-                href={`/pois/${featured.id}`}
+                href={`/pois/${selectedPoi.id}`}
                 style={{
                   position: "absolute",
                   insetInlineStart: 14,
@@ -219,13 +229,19 @@ export function ExploreView({
               >
                 <div style={{ width: 62, height: 62, flex: "none", borderRadius: 13, backgroundColor: colors.primaryLight }} />
                 <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
-                  {categoryLabel(featured) && (
+                  {categoryLabel(selectedPoi) && (
                     <Text size="xs" weight="medium" color={colors.primaryDark} letterSpacing={1.4}>
-                      {categoryLabel(featured)!.toUpperCase()}
+                      {categoryLabel(selectedPoi)!.toUpperCase()}
                     </Text>
                   )}
-                  <Text weight="semibold" numberOfLines={1}>{pickLocalized(featured.name, locale)}</Text>
-                  <Text size="xs" color={colors.textMuted} numberOfLines={1}>{featured.address}</Text>
+                  <Text weight="semibold" numberOfLines={1}>{pickLocalized(selectedPoi.name, locale)}</Text>
+                  <Text size="xs" color={colors.textMuted} numberOfLines={1}>{selectedPoi.address}</Text>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: spacing.xs }}>
+                    <Rating value={selectedPoi.ratingAvg ?? 0} size={13} />
+                    <Text size="xs" color={colors.textMuted}>
+                      {selectedPoi.ratingCount > 0 ? `(${selectedPoi.ratingCount})` : "New"}
+                    </Text>
+                  </div>
                 </div>
               </Link>
             )}

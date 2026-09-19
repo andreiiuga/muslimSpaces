@@ -6,6 +6,7 @@ import { Search, Square, SquareCheck, Map as MapIcon, Rows3 } from "lucide-react
 import { useTranslation } from "react-i18next";
 import {
   POICard,
+  Rating,
   Skeleton,
   Text,
   colors,
@@ -47,6 +48,7 @@ export default function ExploreScreen() {
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [bounds, setBounds] = useState<MapBounds | null>(null);
+  const [selectedPoiId, setSelectedPoiId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -132,7 +134,10 @@ export default function ExploreScreen() {
     return category ? pickLocalized(category.name, locale) : undefined;
   }
 
-  const featured = pois[0];
+  // No POI is selected until the user taps a marker — undefined here (not a
+  // pois[0] fallback) also covers the selected POI dropping out of the list
+  // after a refetch.
+  const selectedPoi = pois.find((poi) => poi.id === selectedPoiId);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -236,14 +241,16 @@ export default function ExploreScreen() {
         <View style={{ flex: 1, borderTopWidth: 1, borderTopColor: colors.border }}>
           <MapView
             pois={pois}
+            categories={categories}
             onBoundsChange={setBounds}
-            onMarkerPress={(id) => router.push(`/pois/${id}`)}
+            onMarkerPress={setSelectedPoiId}
+            selectedPoiId={selectedPoi?.id ?? null}
             padding={{ bottom: tabBarClearance }}
           />
 
-          {featured && (
+          {selectedPoi && (
             <Pressable
-              onPress={() => router.push(`/pois/${featured.id}`)}
+              onPress={() => router.push(`/pois/${selectedPoi.id}`)}
               style={{
                 position: "absolute",
                 left: spacing.md,
@@ -262,13 +269,19 @@ export default function ExploreScreen() {
             >
               <View style={{ width: 56, height: 56, flexShrink: 0, borderRadius: radii.md, backgroundColor: colors.primaryLight }} />
               <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
-                {categoryLabel(featured) && (
+                {categoryLabel(selectedPoi) && (
                   <Text size="xs" weight="medium" color={colors.primaryDark} letterSpacing={1.3}>
-                    {categoryLabel(featured)!.toUpperCase()}
+                    {categoryLabel(selectedPoi)!.toUpperCase()}
                   </Text>
                 )}
-                <Text weight="semibold" numberOfLines={1}>{pickLocalized(featured.name, locale)}</Text>
-                <Text size="xs" color={colors.textMuted} numberOfLines={1}>{featured.address}</Text>
+                <Text weight="semibold" numberOfLines={1}>{pickLocalized(selectedPoi.name, locale)}</Text>
+                <Text size="xs" color={colors.textMuted} numberOfLines={1}>{selectedPoi.address}</Text>
+                <View style={{ flexDirection: "row", alignItems: "baseline", gap: spacing.xs }}>
+                  <Rating value={selectedPoi.ratingAvg ?? 0} size={13} />
+                  <Text size="xs" color={colors.textMuted}>
+                    {selectedPoi.ratingCount > 0 ? `(${selectedPoi.ratingCount})` : "New"}
+                  </Text>
+                </View>
               </View>
             </Pressable>
           )}

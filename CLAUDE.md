@@ -89,6 +89,19 @@ dependency, check it's free/self-hostable within Railway before adding it.
   PMTiles archive on Railway for simplicity: zero tile infra to generate,
   update, or store ourselves. It's a third-party dependency, but a free one
   with no account/billing, so it doesn't violate the no-paid-services rule.
+- **Design reference**: the product's visual design (web + mobile) lives as a
+  Claude Design canvas project —
+  <https://claude.ai/design/p/816fea44-0f07-4bfe-ab39-55645128609c>, files
+  `MuslimSpaces Web.dc.html` and `MuslimSpaces Mobile v2.dc.html` (fetch via
+  the `DesignSync` MCP tool's `get_file`, not a browser — the page requires
+  claude.ai auth WebFetch doesn't have). Treat it as the source of truth for
+  anything visual — colors/type already match `packages/ui`'s tokens, but
+  check it before inventing new UI rather than guessing from the app alone.
+  Notably: the map's per-category pin icons and the `pinInk`/`shortName`
+  logic in `packages/ui/src/MapView/pin-utils.ts` + `MapView.tsx`/
+  `MapView.native.tsx` were ported from this canvas's `CAT_ICON` map — see
+  the "Map pins" reasoning in those files for the lucide-icon substitutions
+  (the design uses Phosphor icons, which this codebase doesn't depend on).
 
 ## Known scaling caveat — flag if touched
 

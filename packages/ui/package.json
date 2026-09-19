@@ -20,6 +20,7 @@
     "lucide-react": "*",
     "lucide-react-native": "*",
     "react": "*",
+    "react-dom": "*",
     "react-native": "*"
   },
   "peerDependenciesMeta": {
@@ -32,6 +33,9 @@
     "lucide-react-native": {
       "optional": true
     },
+    "react-dom": {
+      "optional": true
+    },
     "react-native": {
       "optional": true
     }
@@ -39,9 +43,11 @@
   "devDependencies": {
     "@maplibre/maplibre-react-native": "11.3.10",
     "@types/react": "~19.2.18",
+    "@types/react-dom": "~19.2.7",
     "lucide-react": "^1.46.0",
     "lucide-react-native": "^1.46.0",
     "react": "19.2.3",
+    "react-dom": "19.2.3",
     "react-native": "0.86.3",
     "react-native-svg": "15.15.4"
   }
