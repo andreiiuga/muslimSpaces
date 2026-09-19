@@ -1,32 +1,28 @@
 "use client";
 
-import { Chip, spacing } from "@muslimspaces/ui";
+import { Chip } from "@muslimspaces/ui";
 import type { Category } from "@muslimspaces/shared";
+import { useLocale } from "../../i18n/LocaleContext";
+import { pickLocalized } from "../../i18n/pick-localized";
 
+// Category chips only — Open Now is its own checkbox-style toggle next to
+// the map/list switch (see ExploreView), not a chip among these, matching
+// the split already applied on the mobile app's FilterBar.
 export function FilterBar({
   categories,
   selectedCategoryId,
   onCategoryChange,
-  openNow,
-  onOpenNowChange,
 }: {
   categories: Category[];
   selectedCategoryId: string | null;
   onCategoryChange: (categoryId: string | null) => void;
-  openNow: boolean;
-  onOpenNowChange: (value: boolean) => void;
 }) {
+  const { locale, t } = useLocale();
+
   return (
-    <div
-      style={{
-        display: "flex",
-        gap: spacing.sm,
-        overflowX: "auto",
-        padding: `${spacing.md}px ${spacing.xl}px`,
-      }}
-    >
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
       <Chip selected={selectedCategoryId === null} onPress={() => onCategoryChange(null)}>
-        All
+        {t("explore.all")}
       </Chip>
       {categories.map((category) => (
         <Chip
@@ -34,12 +30,9 @@ export function FilterBar({
           selected={selectedCategoryId === category.id}
           onPress={() => onCategoryChange(selectedCategoryId === category.id ? null : category.id)}
         >
-          {category.name.en}
+          {pickLocalized(category.name, locale)}
         </Chip>
       ))}
-      <Chip selected={openNow} onPress={() => onOpenNowChange(!openNow)}>
-        Open now
-      </Chip>
     </div>
   );
 }

@@ -3,10 +3,12 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Button, Card, Input, Text, colors, spacing } from "@muslimspaces/ui";
+import { Button, Input, Text, colors, radii, spacing } from "@muslimspaces/ui";
+import { useLocale } from "../../i18n/LocaleContext";
 
 export default function SignupPage() {
   const router = useRouter();
+  const { t } = useLocale();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +29,7 @@ export default function SignupPage() {
 
     if (!res.ok) {
       const body = await res.json().catch(() => undefined);
-      setError(body?.message ?? "Signup failed");
+      setError(body?.message ?? t("auth.signingUp"));
       return;
     }
 
@@ -36,25 +38,27 @@ export default function SignupPage() {
   }
 
   return (
-    <main style={{ maxWidth: 420, margin: "0 auto", padding: spacing.xl }}>
-      <Card>
-        <Text size="xl" weight="bold">Sign up</Text>
-        <form onSubmit={handleSubmit} style={{ marginTop: spacing.lg }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: spacing.md }}>
-            <Input label="Email" kind="email" value={email} onChangeText={setEmail} />
-            <Input label="Password (min. 8 characters)" kind="password" value={password} onChangeText={setPassword} />
-            {error && <Text size="sm" color={colors.danger}>{error}</Text>}
-            <Button type="submit" loading={submitting} fullWidth>
-              {submitting ? "Signing up…" : "Sign up"}
-            </Button>
+    <div style={{ display: "flex", justifyContent: "center", padding: "52px clamp(16px,4vw,28px) 70px" }}>
+      <div style={{ width: "100%", maxWidth: 460, background: colors.surface, borderRadius: radii.lg, boxShadow: "0 1px 3px rgba(28,25,23,.08),0 6px 18px rgba(28,25,23,.05)", padding: 28, display: "flex", flexDirection: "column", gap: spacing.lg }}>
+        <div>
+          <Text size="xs" weight="medium" color={colors.textMuted} letterSpacing={1.4}>{t("auth.signupKicker").toUpperCase()}</Text>
+          <div style={{ marginTop: 5 }}>
+            <Text size="2xl" weight="semibold">{t("auth.signupTitle")}</Text>
           </div>
-        </form>
-        <div style={{ marginTop: spacing.lg }}>
-          <Text size="sm" color={colors.textMuted}>
-            Already have an account? <Link href="/login" style={{ color: colors.primary }}>Log in</Link>
-          </Text>
         </div>
-      </Card>
-    </main>
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: spacing.md }}>
+          <Input label={t("auth.email")} kind="email" value={email} onChangeText={setEmail} placeholder="you@example.ro" />
+          <Input label={t("auth.password")} kind="password" value={password} onChangeText={setPassword} placeholder="••••••••" />
+          {error && <Text size="sm" color={colors.dangerDark}>{error}</Text>}
+          <Button type="submit" loading={submitting} fullWidth>
+            {submitting ? t("auth.signingUp") : t("common.signUp")}
+          </Button>
+        </form>
+        <Link href="/login" style={{ minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, color: colors.primary, textDecoration: "none" }}>
+          {t("auth.haveAccount")}
+        </Link>
+        <Text size="xs" color={colors.textMuted} align="center">{t("auth.note")}</Text>
+      </div>
+    </div>
   );
 }

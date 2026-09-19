@@ -2,9 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Heart } from "lucide-react";
-import { colors, fontSizes, fontWeights, radii, spacing } from "@muslimspaces/ui";
+import { Bookmark } from "lucide-react";
+import { colors } from "@muslimspaces/ui";
 
+// Circular icon-only button, floated over the hero image — matches the
+// design's `poi.favIcon`/`favInk` treatment (a plain white circle with a
+// bookmark glyph), not a labeled pill.
 export function FavoriteButton({
   poiId,
   initialIsFavorite,
@@ -34,22 +37,21 @@ export function FavoriteButton({
       type="button"
       onClick={toggle}
       disabled={pending}
+      aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
       style={{
-        display: "inline-flex",
+        width: 46,
+        height: 46,
+        display: "flex",
         alignItems: "center",
-        gap: spacing.xs,
-        padding: `${spacing.sm}px ${spacing.lg}px`,
-        borderRadius: radii.pill,
-        border: `1px solid ${colors.border}`,
+        justifyContent: "center",
+        border: "none",
+        borderRadius: 999,
         backgroundColor: colors.surface,
-        fontSize: fontSizes.sm,
-        fontWeight: fontWeights.medium,
-        color: isFavorite ? colors.danger : colors.text,
+        boxShadow: "0 2px 10px rgba(28,25,23,.18)",
         cursor: pending ? "not-allowed" : "pointer",
       }}
     >
-      <Heart size={16} fill={isFavorite ? colors.danger : "none"} color={isFavorite ? colors.danger : colors.text} />
-      {isFavorite ? "Saved" : "Save"}
+      <Bookmark size={21} fill={isFavorite ? colors.danger : "none"} color={isFavorite ? colors.danger : colors.textMuted} />
     </button>
   );
 }

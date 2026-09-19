@@ -4,55 +4,136 @@
  * Keep it to layout-only responsive classes; anything else belongs inline.
  */
 
-/* Full-bleed map with floating overlays on top — the list panel sits on
-   the right so the map's true camera center (see ExploreView's `padding`
-   prop passed to MapView) lands in the middle of the visible left half. */
-.explore-shell {
-  position: relative;
-  height: calc(100vh - 65px);
-  overflow: hidden;
+/* Global box-sizing reset — the design's own reference HTML has this same
+   reset; without it, any inline-styled element combining `width: "100%"`
+   with `padding` (a pattern used throughout packages/ui and apps/web,
+   e.g. Card.tsx) renders at 100% of its container's width *plus* its
+   padding on top, instead of the padding being included within that 100%.
+   That's what caused Explore's list-column cards to overflow their column
+   by exactly 2x their padding and force a horizontal scrollbar. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
-.explore-map-fill {
-  position: absolute;
-  inset: 0;
+/* ── Header ──────────────────────────────────────────────────────────
+   Design: nav links inline in the header row above 900px; below that they
+   move into a second sticky strip instead (HeaderBar.tsx always renders
+   both — .header-nav-links / .header-nav-strip — this just toggles which
+   one is visible, matching the design's own `showNavLinks`/`showNavStrip`
+   width-driven split, implemented here as a real CSS breakpoint instead of
+   a JS-measured width). */
+.header-nav-strip {
+  display: none;
+  background: #fffbf5;
+  border-bottom: 1px solid #e7e2d8;
 }
 
-.explore-filterbar-float {
-  position: absolute;
-  top: 16px;
-  left: 16px;
-  z-index: 5;
-  max-width: calc(100% - 32px);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 4px 16px rgba(28, 25, 23, 0.12);
+@media (max-width: 900px) {
+  .header-nav-links {
+    display: none !important;
+  }
+  .header-nav-strip {
+    display: block;
+    position: sticky;
+    top: 69px;
+    z-index: 25;
+  }
+  .header-nav-strip > div > a {
+    padding: 11px 0 !important;
+    font-size: 14.5px !important;
+  }
 }
 
-.explore-panel {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 4;
+/* Icon-only submit CTA below 620px — matches the design's own
+   `submitBtnLabel: w >= 620 ? label : ""`. */
+@media (max-width: 620px) {
+  .header-submit-label {
+    display: none;
+  }
+  .header-submit-cta {
+    padding: 0 !important;
+    width: 40px;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .header-row {
+    row-gap: 8px;
+  }
+}
+
+/* ── Explore ─────────────────────────────────────────────────────────
+   Plain, non-full-bleed layout — a bordered/rounded map sits side-by-side
+   with a scrollable list column inside the normal centered page column,
+   matching the design exactly (not a full-bleed map with a floating
+   glass panel, which is what this used to be). */
+.explore-columns {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  /* Same min-width:auto flex-item trap as elsewhere in this file/layout.tsx
+     — without this, this row (itself a flex item of ExploreView's column
+     wrapper) can refuse to shrink and push the page wider than the
+     viewport instead of wrapping its own children. */
+  min-width: 0;
+}
+
+.explore-list-col {
+  flex: 1 1 380px;
+  min-width: min(300px, 100%);
+  max-width: 460px;
+  max-height: calc(100vh - 250px);
   overflow-y: auto;
-  padding: 24px;
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: -4px 0 16px rgba(28, 25, 23, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-/* 420px isn't wide enough for the default 2-column grid used elsewhere. */
-.explore-panel .poi-grid {
-  grid-template-columns: 1fr;
+.explore-map-col {
+  flex: 2 1 460px;
+  min-width: min(300px, 100%);
+  height: calc(100vh - 250px);
+  min-height: 440px;
+  position: relative;
+  border: 1px solid #e7e2d8;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(28, 25, 23, 0.08);
+}
+
+@media (max-width: 860px) {
+  .explore-list-col {
+    max-width: none;
+    max-height: none;
+  }
+  .explore-map-col {
+    height: clamp(320px, 60vh, 480px);
+    min-height: 320px;
+  }
 }
 
 .poi-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 18px;
+}
+
+/* ── POI detail sidebar ──────────────────────────────────────────────
+   Sticky actions/contact/hours card above 900px, static (stacked) below
+   it — matches the design's own `sidePos: w < 900 ? "static" : "sticky"`. */
+.poi-detail-side {
+  position: sticky;
+  top: 98px;
+}
+
+@media (max-width: 900px) {
+  .poi-detail-side {
+    position: static;
+  }
 }
 
 @media (max-width: 640px) {
@@ -84,64 +165,5 @@
   .admin-sidebar-nav {
     flex-direction: row !important;
     flex-wrap: wrap;
-  }
-
-  /* Below the breakpoint, drop the full-bleed overlay entirely — stacked
-     map-above-list, same as the native app's narrow layout, opaque (no
-     blur) since nothing overlaps here. */
-  .explore-shell {
-    display: flex;
-    flex-direction: column;
-    position: static;
-    height: auto;
-    overflow: visible;
-  }
-
-  .explore-map-fill {
-    position: static;
-    height: 280px;
-  }
-
-  .explore-filterbar-float {
-    order: -1;
-    position: static;
-    max-width: none;
-    border-radius: 0;
-    background: none;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    box-shadow: none;
-  }
-
-  .explore-panel {
-    position: static;
-    width: 100% !important;
-    background: none;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    box-shadow: none;
-  }
-
-  .explore-panel .poi-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .poi-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 640px) {
-  /* Let the three navbar sections wrap onto their own rows instead of
-     overflowing/squeezing — nothing is hidden, just re-flowed. */
-  .navbar {
-    flex-wrap: wrap;
-    row-gap: 8px;
-  }
-
-  .navbar-links {
-    order: 3;
-    width: 100%;
-    justify-content: center;
   }
 }
