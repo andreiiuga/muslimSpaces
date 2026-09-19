@@ -1,23 +1,23 @@
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Avatar, Button, Skeleton, Text, colors, spacing } from "@muslimspaces/ui";
+import { useTranslation } from "react-i18next";
+import { ChevronRight, Info, KeyRound, MapPinPlus, Newspaper, Star, UserCircle } from "lucide-react-native";
+import { Avatar, Button, Skeleton, Text, colors, nativeShadows, radii, spacing } from "@muslimspaces/ui";
 import { useAuth } from "../../src/auth/AuthContext";
-import { EditProfileForm } from "../../src/components/EditProfileForm";
-import { ChangePasswordForm } from "../../src/components/ChangePasswordForm";
 import { TAB_BAR_HEIGHT } from "../../src/components/CustomTabBar";
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, loading, logout, refreshUser } = useAuth();
-  const [localUser, setLocalUser] = useState(user);
+  const { user, loading, logout } = useAuth();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const tabBarClearance = TAB_BAR_HEIGHT + insets.bottom + spacing.xl;
 
   if (loading) {
     return (
-      <View style={{ padding: spacing.xl, gap: spacing.lg, alignItems: "center" }}>
+      <View style={{ padding: spacing.xl, paddingTop: insets.top + spacing.xl, gap: spacing.lg, alignItems: "center" }}>
         <Skeleton width={72} height={72} circle />
         <Skeleton width="50%" height={20} />
       </View>
@@ -26,74 +26,118 @@ export default function ProfileScreen() {
 
   if (!user) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: spacing.xl, gap: spacing.md }}>
-        <Text weight="semibold" size="lg">Welcome to MuslimSpaces</Text>
-        <Text color={colors.textMuted} align="center">Log in to save favorites and leave reviews.</Text>
-        <View style={{ flexDirection: "row", gap: spacing.sm }}>
-          <Button onPress={() => router.push("/login")}>Log in</Button>
-          <Button variant="secondary" onPress={() => router.push("/signup")}>Sign up</Button>
+      <View style={{ flex: 1, padding: spacing.xl, justifyContent: "center", gap: spacing.md }}>
+        <Text size="xs" weight="medium" color={colors.textMuted}>{t("profile.welcomeKicker").toUpperCase()}</Text>
+        <Text size="2xl" weight="semibold">{t("profile.welcomeHead")}</Text>
+        <Text color={colors.textMuted}>{t("profile.welcomeBody")}</Text>
+        <View style={{ gap: spacing.sm, marginTop: spacing.sm }}>
+          <Button onPress={() => router.push("/login")} fullWidth>{t("common.logIn")}</Button>
+          <Button variant="secondary" onPress={() => router.push("/signup")} fullWidth>{t("profile.createAccount")}</Button>
         </View>
         <FooterLinks />
       </View>
     );
   }
 
-  const current = localUser ?? user;
-
   async function handleLogout() {
     await logout();
     router.replace("/");
   }
 
+  const rows: Array<{ icon: ReactNode; label: string; note: string; onPress: () => void }> = [
+    {
+      icon: <UserCircle size={21} color={colors.primary} />,
+      label: t("profile.editProfile"),
+      note: user.displayName ?? user.email,
+      onPress: () => router.push("/profile/edit"),
+    },
+    {
+      icon: <KeyRound size={21} color={colors.primary} />,
+      label: t("profile.changePassword"),
+      note: t("profile.changePasswordNote"),
+      onPress: () => router.push("/profile/password"),
+    },
+    {
+      icon: <Star size={21} color={colors.primary} />,
+      label: t("profile.myReviews"),
+      note: "",
+      onPress: () => router.push("/profile/reviews"),
+    },
+    {
+      icon: <MapPinPlus size={21} color={colors.primary} />,
+      label: t("submit.entryLabel"),
+      note: t("submit.entryNote"),
+      onPress: () => router.push("/pois/submit"),
+    },
+    {
+      icon: <Newspaper size={21} color={colors.primary} />,
+      label: t("common.blog"),
+      note: t("profile.blogNote"),
+      onPress: () => router.push("/(tabs)/blog"),
+    },
+    {
+      icon: <Info size={21} color={colors.primary} />,
+      label: t("common.about"),
+      note: t("profile.aboutNote"),
+      onPress: () => router.push("/about"),
+    },
+  ];
+
   return (
-    <ScrollView
-      contentContainerStyle={{ padding: spacing.lg, paddingBottom: tabBarClearance, gap: spacing["2xl"] }}
-    >
+    <ScrollView contentContainerStyle={{ padding: spacing.lg, paddingTop: insets.top + spacing.lg, paddingBottom: tabBarClearance, gap: spacing.xl }}>
       <View style={{ alignItems: "center", gap: spacing.sm }}>
-        <Avatar uri={current.avatarUrl} name={current.displayName ?? current.email} size={72} />
-        <Text weight="semibold" size="lg">{current.displayName ?? current.email}</Text>
-        {current.displayName && <Text size="sm" color={colors.textMuted}>{current.email}</Text>}
+        <Avatar uri={user.avatarUrl} name={user.displayName ?? user.email} size={72} />
+        <Text weight="semibold" size="lg">{user.displayName ?? user.email}</Text>
+        <Text size="sm" color={colors.textMuted}>
+          {user.email}
+          {user.role !== "user" ? ` · ${t("profile.moderator")}` : ""}
+        </Text>
       </View>
 
-      <Section title="Profile">
-        <EditProfileForm
-          user={current}
-          onUpdated={(updated) => {
-            setLocalUser(updated);
-            refreshUser();
-          }}
-        />
-      </Section>
+      <View style={{ gap: 6 }}>
+        <Text size="xs" weight="medium" color={colors.textMuted}>{t("profile.account").toUpperCase()}</Text>
+        {rows.map((row) => (
+          <Pressable
+            key={row.label}
+            onPress={row.onPress}
+            style={{
+              minHeight: 60,
+              flexDirection: "row",
+              alignItems: "center",
+              gap: spacing.md,
+              paddingHorizontal: spacing.md,
+              backgroundColor: colors.surface,
+              borderRadius: radii.lg,
+              ...nativeShadows.card,
+            }}
+          >
+            {row.icon}
+            <View style={{ flex: 1 }}>
+              <Text size="md">{row.label}</Text>
+              {row.note ? <Text size="xs" color={colors.textMuted}>{row.note}</Text> : null}
+            </View>
+            <ChevronRight size={16} color={colors.textFaint} />
+          </Pressable>
+        ))}
+      </View>
 
-      <Section title="Password">
-        <ChangePasswordForm />
-      </Section>
-
-      <FooterLinks />
-
-      <Button variant="danger" onPress={handleLogout}>Log out</Button>
+      <Button variant="danger" onPress={handleLogout} fullWidth>
+        {t("profile.logOut")}
+      </Button>
     </ScrollView>
-  );
-}
-
-function Section({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <View style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingTop: spacing.lg, gap: spacing.md }}>
-      <Text weight="semibold">{title}</Text>
-      {children}
-    </View>
   );
 }
 
 function FooterLinks() {
   const router = useRouter();
+  const { t } = useTranslation();
   return (
     <View style={{ flexDirection: "row", justifyContent: "center", gap: spacing.xl }}>
-      <Pressable onPress={() => router.push("/blog")}>
-        <Text size="sm" color={colors.primary}>Blog</Text>
+      <Pressable onPress={() => router.push("/(tabs)/blog")}>
+        <Text size="sm" color={colors.primary}>{t("common.blog")}</Text>
       </Pressable>
       <Pressable onPress={() => router.push("/about")}>
-        <Text size="sm" color={colors.primary}>About</Text>
+        <Text size="sm" color={colors.primary}>{t("common.about")}</Text>
       </Pressable>
     </View>
   );

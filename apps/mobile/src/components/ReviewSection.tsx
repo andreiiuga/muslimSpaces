@@ -1,10 +1,8 @@
-import { useState } from "react";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 import { useRouter } from "expo-router";
-import { ApiError } from "@muslimspaces/shared";
+import { useTranslation } from "react-i18next";
 import type { Review } from "@muslimspaces/shared";
-import { Button, Rating, Text, Textarea, colors, spacing } from "@muslimspaces/ui";
-import { api } from "../lib/api-client";
+import { Rating, Text, colors, nativeShadows, radii, spacing } from "@muslimspaces/ui";
 
 export function ReviewSection({
   poiId,
@@ -18,66 +16,46 @@ export function ReviewSection({
   isLoggedIn: boolean;
 }) {
   const router = useRouter();
+  const { t } = useTranslation();
   const myReview = currentUserId ? initialReviews.find((r) => r.userId === currentUserId) : undefined;
-
-  const [reviews, setReviews] = useState(initialReviews);
-  const [rating, setRating] = useState(myReview?.rating ?? 0);
-  const [comment, setComment] = useState(myReview?.comment ?? "");
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function handleSubmit() {
-    if (!isLoggedIn) {
-      router.push("/login");
-      return;
-    }
-    if (rating === 0) {
-      setError("Pick a star rating first.");
-      return;
-    }
-    setSubmitting(true);
-    setError(null);
-
-    try {
-      const updated = await api.pois.reviews.submit(poiId, { rating, comment: comment || undefined });
-      setReviews((prev) => [updated, ...prev.filter((r) => r.id !== updated.id)]);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Couldn't submit your review.");
-    } finally {
-      setSubmitting(false);
-    }
-  }
+  const published = initialReviews.filter((r) => r.status === "published");
 
   return (
-    <View style={{ gap: spacing.lg }}>
-      <Text size="lg" weight="semibold">Reviews</Text>
-
-      <View style={{ gap: spacing.sm }}>
-        <Rating value={rating} onChange={setRating} size={24} />
-        <Textarea value={comment} onChangeText={setComment} placeholder="Share what you thought (optional)" rows={3} />
-        {error && <Text size="sm" color={colors.danger}>{error}</Text>}
-        <View>
-          <Button onPress={handleSubmit} disabled={submitting} size="sm">
-            {myReview ? "Update review" : "Post review"}
-          </Button>
-        </View>
+    <View style={{ gap: spacing.md }}>
+      <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" }}>
+        <Text size="xl" weight="semibold">{t("poi.reviews")}</Text>
+        <Pressable
+          onPress={() => (isLoggedIn ? router.push(`/pois/${poiId}/review`) : router.push("/login"))}
+          hitSlop={8}
+        >
+          <Text size="sm" color={colors.primary}>{myReview ? t("review.update") : t("poi.writeOne")}</Text>
+        </Pressable>
       </View>
 
-      {reviews.length === 0 ? (
-        <Text size="sm" color={colors.textMuted}>No reviews yet — be the first.</Text>
+      {published.length === 0 ? (
+        <Text size="sm" color={colors.textMuted}>{t("poi.noReviewsYet")}</Text>
       ) : (
-        <View style={{ gap: spacing.md }}>
-          {reviews
-            .filter((r) => r.status === "published")
-            .map((review) => (
-              <View key={review.id} style={{ borderBottomWidth: 1, borderBottomColor: colors.border, paddingBottom: spacing.md, gap: spacing.xs }}>
+        <View style={{ gap: spacing.sm }}>
+          {published.map((review) => (
+            <View
+              key={review.id}
+              style={{
+                padding: spacing.md,
+                backgroundColor: colors.surface,
+                borderRadius: radii.lg,
+                gap: spacing.xs,
+                ...nativeShadows.card,
+              }}
+            >
+              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "baseline" }}>
                 <Rating value={review.rating} size={14} />
-                {review.comment && <Text size="sm">{review.comment}</Text>}
                 <Text size="xs" color={colors.textMuted}>
                   {new Date(review.createdAt).toLocaleDateString()}
                 </Text>
               </View>
-            ))}
+              {review.comment && <Text size="sm" color={colors.textBody}>{review.comment}</Text>}
+            </View>
+          ))}
         </View>
       )}
     </View>

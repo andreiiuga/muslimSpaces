@@ -1,26 +1,31 @@
-import { ScrollView } from "react-native";
-import { Text, colors, spacing } from "@muslimspaces/ui";
+import { Linking, Pressable, ScrollView, View } from "react-native";
+import { useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
+import { Button, Text, colors, spacing } from "@muslimspaces/ui";
 
 export default function AboutScreen() {
+  const router = useRouter();
+  const { t } = useTranslation();
+  const body = t("about.body", { returnObjects: true }) as string[];
+
   return (
     <ScrollView contentContainerStyle={{ padding: spacing.xl, gap: spacing.lg }}>
-      <Text size="2xl" weight="bold">About MuslimSpaces</Text>
-      <Text>
-        MuslimSpaces helps Muslims in Romania find mosques, halal restaurants, Islamic learning
-        centers, and other services near them — on a map, with real reviews from the community.
-      </Text>
-      <Text>
-        Every place on MuslimSpaces is submitted by someone in the community and checked by a
-        moderator before it goes live, so listings stay accurate and trustworthy.
-      </Text>
-      <Text>
-        Know a place that should be listed? Sign up and add it — it&apos;ll be reviewed and
-        published as soon as a moderator approves it.
-      </Text>
-      <Text size="sm" color={colors.textMuted}>
-        Have a question or found something wrong on the site? Reach out — we&apos;re a small,
-        community-run project.
-      </Text>
+      <View style={{ gap: 4 }}>
+        <Text size="xs" weight="medium" color={colors.textMuted}>{t("about.kicker").toUpperCase()}</Text>
+        <Text size="2xl" weight="semibold">{t("about.title")}</Text>
+      </View>
+
+      {body.map((paragraph, i) => (
+        <Text key={i} color={colors.textBody}>{paragraph}</Text>
+      ))}
+
+      <Button onPress={() => router.push("/pois/submit")} fullWidth>{t("submit.entryLabel")}</Button>
+
+      <View style={{ borderTopWidth: 1, borderTopColor: colors.divider, paddingTop: spacing.md }}>
+        <Pressable onPress={() => Linking.openURL("mailto:hello@muslimspaces.ro")}>
+          <Text size="xs" color={colors.textMuted}>{t("about.footer")} · hello@muslimspaces.ro</Text>
+        </Pressable>
+      </View>
     </ScrollView>
   );
 }

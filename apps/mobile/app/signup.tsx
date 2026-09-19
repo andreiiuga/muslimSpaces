@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Pressable, View } from "react-native";
+import { Pressable, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { ApiError } from "@muslimspaces/shared";
 import { Button, Input, Text, colors, spacing } from "@muslimspaces/ui";
 import { useAuth } from "../src/auth/AuthContext";
@@ -8,6 +9,7 @@ import { useAuth } from "../src/auth/AuthContext";
 export default function SignupScreen() {
   const router = useRouter();
   const { signup } = useAuth();
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -20,26 +22,28 @@ export default function SignupScreen() {
       await signup(email, password);
       router.replace("/(tabs)/profile");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Signup failed");
+      setError(err instanceof ApiError ? err.message : t("auth.signingUp"));
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <View style={{ flex: 1, justifyContent: "center", padding: spacing.xl, gap: spacing.md }}>
-      <Text size="xl" weight="bold">Sign up</Text>
-      <Input label="Email" kind="email" value={email} onChangeText={setEmail} />
-      <Input label="Password (min. 8 characters)" kind="password" value={password} onChangeText={setPassword} />
-      {error && <Text size="sm" color={colors.danger}>{error}</Text>}
+    <ScrollView contentContainerStyle={{ padding: spacing.xl, paddingTop: spacing["2xl"], gap: spacing.md }}>
+      <Text size="xs" weight="medium" color={colors.textMuted}>{t("auth.signupKicker").toUpperCase()}</Text>
+      <Text size="3xl" weight="semibold">{t("auth.signupTitle")}</Text>
+      <Input label={t("auth.email")} kind="email" value={email} onChangeText={setEmail} />
+      <Input label={t("auth.password")} kind="password" value={password} onChangeText={setPassword} />
+      {error && <Text size="sm" color={colors.dangerDark}>{error}</Text>}
       <Button onPress={handleSubmit} loading={submitting} fullWidth>
-        {submitting ? "Signing up…" : "Sign up"}
+        {submitting ? t("auth.signingUp") : t("common.signUp")}
       </Button>
-      <Pressable onPress={() => router.replace("/login")}>
+      <Pressable onPress={() => router.replace("/login")} style={{ minHeight: 44, alignItems: "center", justifyContent: "center" }}>
         <Text size="sm" color={colors.textMuted} align="center">
-          Already have an account? <Text size="sm" color={colors.primary}>Log in</Text>
+          {t("auth.haveAccount")} <Text size="sm" color={colors.primary}>{t("common.logIn")}</Text>
         </Text>
       </Pressable>
-    </View>
+      <Text size="xs" color={colors.textMuted} align="center">{t("auth.note")}</Text>
+    </ScrollView>
   );
 }

@@ -1,28 +1,33 @@
 import { ScrollView } from "react-native";
+import { useTranslation } from "react-i18next";
 import { Chip, spacing } from "@muslimspaces/ui";
 import type { Category } from "@muslimspaces/shared";
+import { pickLocalized } from "../i18n/pick-localized";
+import type { LocaleCode } from "../i18n";
 
+// Category chips only — Open Now is its own checkbox-style toggle next to
+// the map/list switch (see Explore screen), not a chip among these, per the
+// v2 design.
 export function FilterBar({
   categories,
   selectedCategoryId,
   onCategoryChange,
-  openNow,
-  onOpenNowChange,
 }: {
   categories: Category[];
   selectedCategoryId: string | null;
   onCategoryChange: (categoryId: string | null) => void;
-  openNow: boolean;
-  onOpenNowChange: (value: boolean) => void;
 }) {
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language as LocaleCode;
+
   return (
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      contentContainerStyle={{ gap: spacing.sm, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm }}
+      contentContainerStyle={{ gap: spacing.sm }}
     >
       <Chip selected={selectedCategoryId === null} onPress={() => onCategoryChange(null)}>
-        All
+        {t("explore.all")}
       </Chip>
       {categories.map((category) => (
         <Chip
@@ -30,12 +35,9 @@ export function FilterBar({
           selected={selectedCategoryId === category.id}
           onPress={() => onCategoryChange(selectedCategoryId === category.id ? null : category.id)}
         >
-          {category.name.en}
+          {pickLocalized(category.name, locale)}
         </Chip>
       ))}
-      <Chip selected={openNow} onPress={() => onOpenNowChange(!openNow)}>
-        Open now
-      </Chip>
     </ScrollView>
   );
 }

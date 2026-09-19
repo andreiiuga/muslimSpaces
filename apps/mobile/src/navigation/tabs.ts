@@ -1,4 +1,4 @@
-import { Compass, Heart, User } from "lucide-react-native";
+import { Compass, Heart, Newspaper, User } from "lucide-react-native";
 import type { LucideIcon } from "lucide-react-native";
 
 export interface TabConfig {
@@ -9,12 +9,14 @@ export interface TabConfig {
   href: string;
   /** Resolved pathname (no route-group prefix) — used to detect the active tab. */
   matchPath: string;
-  label: string;
+  /** i18n key under "tabs." — CustomTabBar resolves it via useTranslation. */
+  labelKey: string;
   Icon: LucideIcon;
 }
 
 export const TABS: TabConfig[] = [
-  { name: "index", href: "/(tabs)", matchPath: "/", label: "Explore", Icon: Compass },
-  { name: "favorites", href: "/(tabs)/favorites", matchPath: "/favorites", label: "Favorites", Icon: Heart },
-  { name: "profile", href: "/(tabs)/profile", matchPath: "/profile", label: "Profile", Icon: User },
+  { name: "index", href: "/(tabs)", matchPath: "/", labelKey: "tabs.explore", Icon: Compass },
+  { name: "favorites", href: "/(tabs)/favorites", matchPath: "/favorites", labelKey: "tabs.favorites", Icon: Heart },
+  { name: "blog", href: "/(tabs)/blog", matchPath: "/blog", labelKey: "tabs.blog", Icon: Newspaper },
+  { name: "profile", href: "/(tabs)/profile", matchPath: "/profile", labelKey: "tabs.profile", Icon: User },
 ];
