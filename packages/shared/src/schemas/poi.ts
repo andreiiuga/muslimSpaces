@@ -59,5 +59,8 @@ export const listPoisQuerySchema = paginationQuerySchema.extend({
   categoryId: z.string().uuid().optional(),
   cityId: z.string().uuid().optional(),
   openNow: z.coerce.boolean().optional(),
+  // Matched against name (both locales) and address — see
+  // PoisService.applySearchFilter for the actual ILIKE query.
+  search: z.string().min(1).max(200).optional(),
 });
 export type ListPoisQuery = z.infer<typeof listPoisQuerySchema>;

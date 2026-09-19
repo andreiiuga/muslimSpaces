@@ -30,6 +30,7 @@ export const bboxQuerySchema = z
     maxLng: z.coerce.number().min(-180).max(180),
     categoryId: z.string().uuid().optional(),
     openNow: z.coerce.boolean().optional(),
+    search: z.string().min(1).max(200).optional(),
     limit: z.coerce.number().int().positive().max(500).default(100),
   })
   .refine((v) => v.minLat <= v.maxLat && v.minLng <= v.maxLng, {

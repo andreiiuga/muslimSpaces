@@ -54,6 +54,7 @@ export class PoisService {
       .where("poi.status = :status", { status: PoiStatus.APPROVED });
 
     this.applyCategoryFilter(qb, query.categoryId);
+    this.applySearchFilter(qb, query.search);
     if (query.cityId) qb.andWhere("poi.city_id = :cityId", { cityId: query.cityId });
     if (query.openNow) qb.andWhere(OPEN_NOW_SQL);
 
@@ -242,6 +243,7 @@ export class PoisService {
       );
 
     this.applyCategoryFilter(qb, query.categoryId);
+    this.applySearchFilter(qb, query.search);
     if (query.openNow) qb.andWhere(OPEN_NOW_SQL);
 
     const pois = await qb.limit(query.limit).getMany();
@@ -256,6 +258,17 @@ export class PoisService {
     qb.andWhere(
       "EXISTS (SELECT 1 FROM poi_categories pc WHERE pc.poi_id = poi.id AND pc.category_id = :categoryId)",
       { categoryId },
+    );
+  }
+
+  // name is jsonb ({ro, en, ...}) — ->> pulls each locale out as text so a
+  // search for either language's spelling matches regardless of which
+  // locale the searcher's UI is currently in.
+  private applySearchFilter(qb: import("typeorm").SelectQueryBuilder<PoiEntity>, search: string | undefined): void {
+    if (!search) return;
+    qb.andWhere(
+      "(poi.name->>'en' ILIKE :search OR poi.name->>'ro' ILIKE :search OR poi.address ILIKE :search)",
+      { search: `%${search}%` },
     );
   }
 
