@@ -5,10 +5,12 @@ import { colors, fontSizes, fontWeights, radii, spacing } from "../tokens";
 import type { ButtonProps, ButtonVariant, ButtonSize } from "./Button.types";
 
 const VARIANT_STYLES: Record<ButtonVariant, CSSProperties> = {
-  primary: { backgroundColor: colors.primary, color: colors.textOnPrimary },
+  primary: { backgroundColor: colors.primary, color: colors.textOnPrimary, boxShadow: "0 4px 14px rgba(15,118,110,.28)" },
   secondary: { backgroundColor: colors.primaryLight, color: colors.primaryDark },
   ghost: { backgroundColor: "transparent", color: colors.text, border: `1px solid ${colors.border}` },
-  danger: { backgroundColor: colors.danger, color: colors.textOnPrimary },
+  // Outline treatment, not solid red — matches the design's logout pill
+  // (and Button.native.tsx's same variant, restyled for the mobile pass).
+  danger: { backgroundColor: colors.dangerBg, color: colors.dangerDark, border: `1px solid ${colors.dangerBorder}` },
 };
 
 const SIZE_STYLES: Record<ButtonSize, CSSProperties> = {

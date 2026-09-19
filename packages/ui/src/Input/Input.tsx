@@ -16,7 +16,7 @@ export function Input({ value, onChangeText, placeholder, label, error, disabled
         disabled={disabled}
         style={{
           padding: `${spacing.sm}px ${spacing.md}px`,
-          borderRadius: radii.md,
+          borderRadius: radii.input,
           border: `1px solid ${error ? colors.danger : colors.border}`,
           fontSize: fontSizes.md,
           backgroundColor: disabled ? colors.background : colors.surface,

@@ -12,4 +12,6 @@ export interface TextProps {
   align?: "left" | "center" | "right";
   /** Truncates to N lines with an ellipsis on both platforms. */
   numberOfLines?: number;
+  /** Overrides the size-based default tracking (see DEFAULT_LETTER_SPACING). */
+  letterSpacing?: number;
 }

@@ -1,5 +1,5 @@
 import { Pressable } from "react-native";
-import { colors, radii } from "../tokens";
+import { colors, nativeShadows, radii } from "../tokens";
 import type { IconButtonProps, IconButtonSize } from "./IconButton.types";
 
 const SIZE_PX: Record<IconButtonSize, number> = { sm: 32, md: 40, lg: 48 };
@@ -18,18 +18,12 @@ export function IconButton({ icon, onPress, variant = "ghost", size = "md", disa
         height: px,
         borderRadius: radii.pill,
         backgroundColor: variant === "solid" ? colors.surface : "transparent",
+        borderWidth: variant === "solid" ? 1 : 0,
+        borderColor: colors.border,
         alignItems: "center",
         justifyContent: "center",
         opacity: disabled ? 0.5 : 1,
-        ...(variant === "solid"
-          ? {
-              shadowColor: "#000",
-              shadowOpacity: 0.15,
-              shadowRadius: 4,
-              shadowOffset: { width: 0, height: 1 },
-              elevation: 2,
-            }
-          : null),
+        ...(variant === "solid" ? nativeShadows.iconSolid : null),
       }}
     >
       {icon}

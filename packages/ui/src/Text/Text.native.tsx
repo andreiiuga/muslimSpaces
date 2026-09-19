@@ -1,5 +1,6 @@
 import { Text as RNText } from "react-native";
-import { colors, fontSizes, fontWeights } from "../tokens";
+import { colors, fontSizes, letterSpacings } from "../tokens";
+import { fontFamily } from "../fonts";
 import type { TextProps } from "./Text.types";
 
 export function Text({
@@ -9,13 +10,15 @@ export function Text({
   color = colors.text,
   align,
   numberOfLines,
+  letterSpacing,
 }: TextProps) {
   return (
     <RNText
       numberOfLines={numberOfLines}
       style={{
         fontSize: fontSizes[size],
-        fontWeight: fontWeights[weight],
+        fontFamily: fontFamily(weight),
+        letterSpacing: letterSpacing ?? letterSpacings[size],
         color,
         textAlign: align,
       }}

@@ -1,4 +1,5 @@
 export * from "./tokens";
+export * from "./fonts";
 export * from "./Box";
 export * from "./Text";
 export * from "./Button";

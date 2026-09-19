@@ -1,5 +1,6 @@
 import { Pressable, Text } from "react-native";
-import { colors, fontSizes, fontWeights, radii, spacing } from "../tokens";
+import { colors, fontSizes, radii, spacing } from "../tokens";
+import { fontFamily } from "../fonts";
 import type { ChipProps } from "./Chip.types";
 
 export function Chip({ children, selected, onPress, icon }: ChipProps) {
@@ -24,7 +25,7 @@ export function Chip({ children, selected, onPress, icon }: ChipProps) {
         style={{
           color: selected ? colors.textOnPrimary : colors.text,
           fontSize: fontSizes.sm,
-          fontWeight: fontWeights.medium,
+          fontFamily: fontFamily("medium"),
         }}
       >
         {children}

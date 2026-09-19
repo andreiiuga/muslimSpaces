@@ -16,7 +16,7 @@ export function Textarea({ value, onChangeText, placeholder, label, error, disab
         rows={rows}
         style={{
           padding: `${spacing.sm}px ${spacing.md}px`,
-          borderRadius: radii.md,
+          borderRadius: radii.input,
           border: `1px solid ${error ? colors.danger : colors.border}`,
           fontSize: fontSizes.md,
           fontFamily: "inherit",

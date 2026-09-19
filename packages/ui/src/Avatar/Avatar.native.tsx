@@ -1,5 +1,6 @@
 import { Image, Text, View } from "react-native";
-import { colors, fontWeights } from "../tokens";
+import { colors } from "../tokens";
+import { fontFamily } from "../fonts";
 import { getInitials, type AvatarProps } from "./Avatar.types";
 
 export function Avatar({ uri, name, size = 40 }: AvatarProps) {
@@ -19,7 +20,7 @@ export function Avatar({ uri, name, size = 40 }: AvatarProps) {
 
   return (
     <View style={style}>
-      <Text style={{ color: colors.primaryDark, fontWeight: fontWeights.semibold, fontSize: size * 0.4 }}>
+      <Text style={{ color: colors.primaryDark, fontFamily: fontFamily("semibold"), fontSize: size * 0.4 }}>
         {getInitials(name)}
       </Text>
     </View>
