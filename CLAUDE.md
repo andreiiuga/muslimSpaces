@@ -322,58 +322,52 @@ the same `readlink -f` single-instance check described below.) Reason:
 
 - **Routing**: Expo Router (file-based, `app/` directory), not React
   Navigation configured by hand — keeps routing philosophy consistent with
-  Next's App Router on web. `(tabs)/` holds the three bottom tabs (Explore,
-  Favorites, Profile); `pois/[id]`, `blog/index`, `blog/[slug]`, `about`,
-  `login`, `signup` are pushed/modal screens outside the tab group, declared
-  explicitly in the root `app/_layout.tsx`'s `<Stack>` (Expo Router doesn't
-  require this, but explicit `<Stack.Screen>` entries make header
-  options — title, modal presentation — easy to see in one place rather
-  than scattered per-screen). `main` in `package.json` is
+  Next's App Router on web. `(tabs)/` holds the four bottom tabs (Explore,
+  Favorites, Blog, Profile); `pois/[id]/index`, `pois/[id]/review`,
+  `pois/submit`, `profile/edit`, `profile/password`, `profile/reviews`,
+  `blog/[slug]`, `about`, `login`, `signup` are pushed/modal screens outside
+  the tab group, declared explicitly in the root `app/_layout.tsx`'s
+  `<Stack>` (Expo Router doesn't require this, but explicit `<Stack.Screen>`
+  entries make header options — title, modal presentation — easy to see in
+  one place rather than scattered per-screen). `main` in `package.json` is
   `"expo-router/entry"`, replacing the old bare `App.tsx`/`index.ts` pair.
+  `pois/[id].tsx` is `pois/[id]/index.tsx`, not a flat file — Expo Router
+  (like Next.js) doesn't allow a `[id].tsx` file and a `[id]/` directory to
+  coexist at the same level, and the POI detail screen needed a same-`[id]`
+  child route (`review`) once the review composer became its own screen.
+  Blog moved from a pushed `blog/index` route into the tab group (`(tabs)/
+  blog.tsx`) when the v2 redesign added it as a 4th tab; `blog/[slug]`
+  stayed a pushed detail route outside the tab group, same pattern as
+  `pois/[id]`.
 - **Bottom tab bar is a custom JS component, not `NativeTabs`' own chrome**
-  — `apps/mobile/src/components/CustomTabBar.tsx`, styled with the same
-  simple translucent `expo-blur` `BlurView` treatment used for the Explore
-  screen's floating filter bar and bottom sheet (deliberately *not* an
-  attempt at iOS 26 Liquid Glass). `app/(tabs)/_layout.tsx` still renders
-  `expo-router/unstable-native-tabs`' `NativeTabs`/`NativeTabs.Trigger` —
-  it's still the real navigator driving tab switches and each tab's own
-  navigation stack — but permanently passes it `hidden`, and `CustomTabBar`
-  renders as a sibling on top. This replaced an earlier version that let
-  `NativeTabs` render its own native chrome, for one specific reason:
-  the Explore screen's draggable bottom sheet needs the tab bar to slide
-  out of view when collapsed and back in when expanded (Airbnb "Trips"-tab
-  style — see `TabBarVisibility.tsx`/`useTabBarVisibility()`), and **iOS has
-  no way to trigger `NativeTabs`' own hide/show transition
-  programmatically for this** — confirmed two ways: (1) `react-native-screens`
-  hardcoded `setTabBarHidden:animated:`'s animation to instant/no-op until a
-  recent fix (see the nightly-pin note below, now moot for this reason but
-  kept for context); (2) iOS 26's `tabBarMinimizeBehavior` (the real native
-  scroll-driven minimize API) only responds to genuine scroll gestures on a
-  real `UIScrollView`, confirmed via Apple's own developer forums — a
-  Reanimated/gesture-handler-driven bottom sheet doesn't qualify, so it
-  can't be triggered from arbitrary app state either. Given neither native
-  path is controllable from JS, `CustomTabBar` drives a real
-  `react-native-reanimated` `translateY` slide itself instead.
-  - The slide is driven by the sheet's *continuous* position, not a
-    discrete open/closed toggle: `TabBarVisibility.tsx` holds a
-    `bottomSheetIndex: SharedValue<number>` (not the boolean it started as),
-    passed straight into Explore's `<BottomSheet animatedIndex={...}>` prop
-    — a real `@gorhom/bottom-sheet` API that the library keeps in sync every
-    frame, during drags and programmatic snaps alike, as a linear fraction
-    between adjacent snap-point indices (0 at the collapsed peek, 1 at the
-    "55%" half-open point). `CustomTabBar` reads the same shared value in
-    its own `useAnimatedStyle` and interpolates it directly to `translateY`
-    (clamped past index 1), so the bar tracks the sheet 1:1 — hidden at the
-    peek, fully shown by half-open, staying shown from there to "92%" —
-    rather than snapping in reaction to a JS-thread `onChange` callback.
-  - Tab config (route name, `href`, `matchPath` for active-tab detection,
-    label, `lucide-react-native` icon) lives in `src/navigation/tabs.ts` as
-    a small typed array — `CustomTabBar` maps over it for its own
-    pressable icons/labels, and `_layout.tsx` maps over the same array for
-    the (now invisible) `NativeTabs.Trigger`s.
-  - `CustomTabBar` isn't a `packages/ui` component — it's tied to this
-    app's specific screen/navigation structure (route hrefs, the
-    tab-visibility context), not a generic shareable primitive.
+  — `apps/mobile/src/components/CustomTabBar.tsx`, a fixed, always-visible,
+  full-width white bar (top hairline + shadow, teal top-rule under the
+  active tab) matching the v2 design exactly — colors/font/the top-rule
+  indicator aren't reproducible via native tab bar chrome. `app/(tabs)/
+  _layout.tsx` still renders `expo-router/unstable-native-tabs`'
+  `NativeTabs`/`NativeTabs.Trigger` — it's still the real navigator driving
+  tab switches and each tab's own navigation stack — but permanently passes
+  it `hidden`, and `CustomTabBar` renders as an absolutely-positioned
+  sibling on top (NativeTabs' screens render edge-to-edge regardless of
+  container flex, hidden or not, so a normal flex-column sibling wouldn't
+  make room for it — every tab screen adds its own bottom padding via
+  `TAB_BAR_HEIGHT` instead). Tab config (route name, `href`, `matchPath` for
+  active-tab detection, label, `lucide-react-native` icon) lives in
+  `src/navigation/tabs.ts` as a small typed array — `CustomTabBar` maps over
+  it for its own pressable icons/labels, and `_layout.tsx` maps over the
+  same array for the (now invisible) `NativeTabs.Trigger`s. `CustomTabBar`
+  isn't a `packages/ui` component — it's tied to this app's specific
+  screen/navigation structure (route hrefs), not a generic shareable
+  primitive.
+  - Earlier versions of this bar had to slide out of view when Explore's
+    draggable bottom sheet expanded (Airbnb "Trips"-tab style, driven by a
+    `TabBarVisibility` React context wrapping a Reanimated shared value).
+    The v2 redesign replaced Explore's map+draggable-sheet layout with the
+    design's own structure — a fixed top panel (search/filters/open-now/
+    map-list toggle) above a mutually exclusive map **or** list surface, no
+    sheet — so that whole slide-on-sheet-position mechanic, the
+    `TabBarVisibility` context, and the `@gorhom/bottom-sheet` dependency it
+    was built on are gone; the tab bar is now simply always shown.
 - **`apps/mobile/tsconfig.json` also needs `"moduleResolution": "bundler"`**
   (overriding `expo/tsconfig.base`'s default `"node"`) — plain `"node"`
   resolution predates package.json `exports` subpaths and can't resolve
@@ -397,14 +391,30 @@ the same `readlink -f` single-instance check described below.) Reason:
   `src/auth/AuthContext.tsx` is the single source of truth for the current
   user across all screens (login/signup/logout mutate it, `useAuth()` reads
   it) — don't call `SecureStore` directly from screen components.
-- **Media uploads from mobile** (avatar photo) pass a
-  `{ uri, name, type }` object (from `expo-image-picker`) to
-  `packages/shared`'s `media.upload(file: Blob, filename)`, cast through
-  `as unknown as Blob` — React Native's `FormData.append` accepts that
-  object shape as a file part at runtime (it has no real `Blob`/DOM
-  environment), even though it doesn't structurally satisfy TypeScript's
-  DOM `Blob` interface. This is the standard RN pattern for file uploads,
-  not a hack specific to this codebase.
+- **Media uploads from mobile** (avatar photo, POI submission photo) go
+  through `src/lib/local-file.ts`'s `localFileToUpload(uri): Promise<Blob>`
+  before calling `packages/shared`'s `media.upload(file: Blob, filename)` —
+  **not** the classic `{ uri, name, type }` object cast `as unknown as
+  Blob`. That classic RN pattern relied on React Native's own `fetch`
+  reading a blob-like object's `uri` directly; since Expo SDK 57,
+  `global.fetch` is Expo's own "winter" fetch runtime instead, whose
+  multipart encoder requires each FormData part to be a real `Blob` — a
+  plain `{ uri, name, type }` object throws `Unsupported FormDataPart
+  implementation` at upload time instead of working.
+  `localFileToUpload` fetches the local `uri` (still resolved through React
+  Native's own Blob machinery — `globalThis.Blob` remains RN's polyfill,
+  independent of Expo's fetch swap) into a plain `Blob`, with `.type`
+  inferred from the response's Content-Type header — **deliberately not**
+  wrapped in a `File`: `client.ts`'s `uploadFile` calls `form.append("file",
+  file, filename)`, and Expo's global `FormData.append` patch always tries
+  to set `value.name = filename` on anything `instanceof Blob` to honor
+  that 3rd argument, which throws ("Cannot assign to property 'name' which
+  has only a getter") against a real RN `File` — `File.name` is a read-only
+  accessor on its prototype, but plain `Blob` has no `.name` at all, so the
+  same assignment just creates the property instead of colliding with an
+  existing getter. If a future Expo SDK bump moves `globalThis.Blob` to
+  `expo-blob` (flagged as planned in `expo/src/winter/fetch/
+  createBlob.ts`), re-check this still works.
 - **Expo SDK 57 / React Native 0.86 / New Architecture is mandatory** —
   RN 0.82 removed the legacy bridge entirely, so every native module in the
   dependency tree must be New-Architecture-compatible; there is no
@@ -415,9 +425,12 @@ the same `readlink -f` single-instance check described below.) Reason:
   added as transitive peer dependencies of `expo-router` 57 (pulled in by an
   internal drawer-navigator dependency, not anything this app used at the
   time) and of `expo-modules-core` respectively — `pnpm install` will flag
-  the missing peers again if you remove them. `react-native-reanimated` is
-  now also a *direct* dependency in practice: `@gorhom/bottom-sheet` (the
-  Explore tab's draggable POI sheet) is built on it.
+  the missing peers again if you remove them. (An earlier version of
+  Explore's map screen used `@gorhom/bottom-sheet`, built on
+  `react-native-reanimated`, for a draggable POI sheet — removed in the v2
+  redesign, see "Bottom tab bar" above — so `react-native-reanimated` is
+  back to being purely a transitive peer dependency again, not something
+  this app's own code calls directly.)
 - **`react-native-screens` is pinned to a nightly build**
   (`4.29.0-nightly-20260915-8b2163ba5`), not a tagged release. This was
   originally needed because `expo-router`'s `NativeTabs` renders through
@@ -437,3 +450,47 @@ the same `readlink -f` single-instance check described below.) Reason:
   rebuild for a version bump with no behavior change we depend on — safe
   to revert to the latest stable 4.x next time a native rebuild is already
   needed for another reason.
+- **i18n**: `i18next` + `react-i18next`, mobile-only (web has no EN/RO/AR
+  switch yet) — resource dictionaries live in `src/i18n/resources/{en,ro,ar}.ts`,
+  keyed by screen. `en.ts` is the source of truth for the `TranslationSchema`
+  type (plain object, deliberately *not* `as const` — a literal-typed schema
+  would force `ro.ts`/`ar.ts` to match English's exact string values, not
+  just its shape); `ro.ts`/`ar.ts` implement that type so a missing
+  translation is a compile error, not a silent English fallback at runtime.
+  `src/i18n/pick-localized.ts`'s `pickLocalized(text, locale)` is how screens
+  read `LocalizedText` fields (POI/category/blog content, which only ever
+  carry `ro`+`en` — see Data model) — Arabic UI mode reads the `en` value
+  there rather than showing untranslated placeholder text, since nothing
+  writes an `ar` key into that jsonb yet. `useLocale()`
+  (`src/i18n/useLocale.ts`) is how a screen changes language; it does NOT
+  persist to the account by itself — Edit profile's Save button persists
+  `preferredLocale` explicitly, so a guest can preview a language without
+  one. `AuthContext.login`/`.signup` apply the account's saved
+  `preferredLocale` immediately (see `applyAccountLocale`), since a user
+  who set Arabic on another device expects to see it here too — but that
+  only fires right after login/signup, not on every `refreshUser`, so it
+  can't fight a mid-session language change that hasn't reached the server
+  yet.
+  - **RTL (Arabic)**: `src/i18n/rtl.ts`'s `applyLocaleDirection` calls
+    `I18nManager.forceRTL`, but that's a native flag read once at process
+    launch — it doesn't re-flow already-mounted views. Android picks up the
+    new direction on a JS reload; **iOS does not** — there's no supported
+    JS-callable way to kill and relaunch the native process, so on iOS the
+    layout only actually flips once the user force-quits and reopens the
+    app by hand. Rather than working on Android and silently failing on
+    iOS, this always shows an alert asking the user to restart, and best-
+    effort tries `expo-updates`' `Updates.reloadAsync()` first (harmless
+    even where it can't fix the direction itself).
+  - **`expo-updates` and `expo-localization` are native modules** — like
+    `@maplibre/maplibre-react-native` above, they only exist in a dev
+    client/build prebuilt *after* they were added as dependencies. Both are
+    therefore imported dynamically (`await import(...)`, not a top-level
+    `import`) and wrapped in `try/catch` in `rtl.ts`/`locale-storage.ts`:
+    a top-level import throws `Cannot find native module '...'` at
+    module-eval time on any dev client that predates the rebuild, which
+    takes down *every* route (they're all reachable from the root
+    `_layout.tsx`, which imports these files) — not just the language
+    switch. The dynamic-import guard means the app still boots and
+    everything except the Arabic-direction auto-reload works before that
+    rebuild; run `npx expo run:ios` / `npx expo run:android` again to pick
+    up the new native modules properly.
