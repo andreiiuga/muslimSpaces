@@ -20,8 +20,10 @@ export function PoiForm({ categories, initialPoi }: { categories: Category[]; in
   const [lng, setLng] = useState(initialPoi ? String(initialPoi.location.lng) : "");
   const [categoryIds, setCategoryIds] = useState<string[]>(initialPoi?.categoryIds ?? []);
   const [primaryCategoryId, setPrimaryCategoryId] = useState(initialPoi?.primaryCategoryId ?? "");
+  const [visibility, setVisibility] = useState(initialPoi?.visibility ?? "visible");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [actionPending, setActionPending] = useState(false);
 
   function toggleCategory(id: string) {
     setCategoryIds((prev) => {
@@ -74,6 +76,32 @@ export function PoiForm({ categories, initialPoi }: { categories: Category[]; in
     router.refresh();
   }
 
+  async function toggleVisibility() {
+    const nextVisibility = visibility === "visible" ? "hidden" : "visible";
+    setActionPending(true);
+    const res = await fetch(`/api/admin/pois/${initialPoi!.id}/visibility`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ visibility: nextVisibility }),
+    });
+    setActionPending(false);
+    if (res.ok) {
+      setVisibility(nextVisibility);
+      router.refresh();
+    }
+  }
+
+  async function handleDelete() {
+    if (!confirm("Delete this POI? This cannot be undone.")) return;
+    setActionPending(true);
+    const res = await fetch(`/api/admin/pois/${initialPoi!.id}`, { method: "DELETE" });
+    setActionPending(false);
+    if (res.ok) {
+      router.push("/admin/pois");
+      router.refresh();
+    }
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: spacing.md, maxWidth: 480 }}>
       <Input label="Name (Romanian)" value={nameRo} onChangeText={setNameRo} />
@@ -121,6 +149,23 @@ export function PoiForm({ categories, initialPoi }: { categories: Category[]; in
           {isEdit ? "Save changes" : "Create POI"}
         </Button>
       </div>
+
+      {isEdit && (
+        <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: spacing.md, marginTop: spacing.sm }}>
+          <Text size="sm" weight="medium">Visibility: {visibility}</Text>
+          <Text size="xs" color={colors.textMuted}>
+            Hidden POIs stay approved but never appear to visitors — only here in the admin panel.
+          </Text>
+          <div style={{ display: "flex", gap: spacing.sm, marginTop: spacing.sm }}>
+            <Button size="sm" variant="secondary" disabled={actionPending} onPress={toggleVisibility}>
+              {visibility === "visible" ? "Hide" : "Show"}
+            </Button>
+            <Button size="sm" variant="danger" disabled={actionPending} onPress={handleDelete}>
+              Delete POI
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
