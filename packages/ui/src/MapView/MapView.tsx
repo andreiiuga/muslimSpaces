@@ -1,13 +1,10 @@
 "use client";
 
-import { createElement, useEffect, useRef } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
+import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { Beef, Cookie, MapPin, Mosque, Scale, Shirt, Store, Stethoscope, Utensils } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
-import { colors } from "../tokens";
-import { LABEL_MIN_ZOOM, pinIconKeyForSlug, pinLabel } from "./pin-utils";
+import { colors, shadows } from "../tokens";
+import { LABEL_MIN_ZOOM, PIN_EMOJI, pinIconKeyForSlug, pinLabel } from "./pin-utils";
 import type { PinIconKey } from "./pin-utils";
 import type { MapPadding, MapViewProps } from "./MapView.types";
 
@@ -25,40 +22,21 @@ const OPENFREEMAP_STYLE = "https://tiles.openfreemap.org/styles/liberty";
 const DEFAULT_CENTER = { lat: 45.9432, lng: 24.9668 };
 const DEFAULT_ZOOM = 6;
 
-// Per-category pin glyphs — matches the mobile app's MapView.native.tsx
-// (same lucide-react-native icon set) and the Claude Design canvas's Phosphor
-// CAT_ICON map (see CLAUDE.md's "Design reference" entry) as closely as lucide's
-// icon set allows.
-const PIN_ICON_COMPONENTS: Record<PinIconKey, LucideIcon> = {
-  mosque: Mosque,
-  restaurant: Utensils,
-  meat: Beef,
-  sweets: Cookie,
-  store: Store,
-  clothing: Shirt,
-  doctors: Stethoscope,
-  lawyers: Scale,
-  generic: MapPin,
-};
-const PIN_ICON_SIZE = 22;
-
-// Marker elements are handed to maplibre-gl as plain HTMLElements (its own
-// API, not a React tree) — renderToStaticMarkup is the least-effort way to
-// reuse the exact same lucide-react glyphs as the rest of the app instead of
-// hand-copying SVG path data per icon.
-function iconMarkup(key: PinIconKey, color: string): string {
-  return renderToStaticMarkup(createElement(PIN_ICON_COMPONENTS[key], { size: PIN_ICON_SIZE, color, strokeWidth: 2.25 }));
-}
+const PIN_EMOJI_SIZE = 22;
 
 // Icon with a name-label pill above it, anchored (via maplibregl.Marker's
 // `anchor: "bottom"`) at the icon's own bottom edge — matches the design's
 // pins exactly. The label starts hidden; a single 'zoom' listener on the map
 // (see the effect below) toggles every label's visibility together instead
-// of each marker tracking zoom itself.
+// of each marker tracking zoom itself. The emoji itself is plain by default;
+// selecting it (a marker tap) adds a white circular badge + elevation
+// shadow behind it, since an emoji can't be recolored the way an icon can
+// to show selection state.
 function createMarkerElement(
   iconKey: PinIconKey,
   label: string,
   color: string,
+  selected: boolean,
 ): { el: HTMLDivElement; labelEl: HTMLDivElement } {
   const el = document.createElement("div");
   el.style.display = "flex";
@@ -81,8 +59,18 @@ function createMarkerElement(
   labelEl.style.boxShadow = "0 2px 6px rgba(28,25,23,.14)";
 
   const iconEl = document.createElement("div");
-  iconEl.style.lineHeight = "0";
-  iconEl.innerHTML = iconMarkup(iconKey, color);
+  iconEl.textContent = PIN_EMOJI[iconKey];
+  iconEl.style.fontSize = `${PIN_EMOJI_SIZE}px`;
+  iconEl.style.lineHeight = "1";
+  iconEl.style.display = "flex";
+  iconEl.style.alignItems = "center";
+  iconEl.style.justifyContent = "center";
+  if (selected) {
+    iconEl.style.background = colors.surface;
+    iconEl.style.borderRadius = "999px";
+    iconEl.style.padding = "6px";
+    iconEl.style.boxShadow = shadows.elevated;
+  }
 
   el.appendChild(labelEl);
   el.appendChild(iconEl);
@@ -168,8 +156,9 @@ export function MapView({
     markersRef.current = pois.map((poi) => {
       const category = categories?.find((c) => c.id === poi.primaryCategoryId);
       const iconKey = pinIconKeyForSlug(category?.slug);
-      const color = poi.id === selectedPoiId ? colors.danger : colors.primary;
-      const { el, labelEl } = createMarkerElement(iconKey, pinLabel(poi.name.en), color);
+      const selected = poi.id === selectedPoiId;
+      const color = selected ? colors.danger : colors.primary;
+      const { el, labelEl } = createMarkerElement(iconKey, pinLabel(poi.name.en), color, selected);
       labelElsRef.current.push(labelEl);
 
       const marker = new maplibregl.Marker({ element: el, anchor: "bottom" })

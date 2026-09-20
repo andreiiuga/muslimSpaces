@@ -1,10 +1,16 @@
 /**
  * Platform-agnostic pin logic shared by MapView.tsx (web) and
- * MapView.native.tsx — the icon *components* differ per platform
- * (lucide-react vs lucide-react-native), but which icon key a category maps
- * to, the label-visibility zoom threshold, and the label text derivation are
- * identical, per the MuslimSpaces Web/Mobile v2 Claude Design canvas
- * (see CLAUDE.md's "Design reference" entry).
+ * MapView.native.tsx — which emoji a category maps to, the label-visibility
+ * zoom threshold, and the label text derivation are identical between them.
+ *
+ * Emoji instead of an icon library: tried lucide's own "mosque" icon (drawn
+ * as disconnected line-art — filling it solid left a visible gap) and a
+ * hand-drawn solid silhouette after that (still didn't read as a mosque at
+ * pin size) before landing here. Emoji render as recognizable full-color
+ * pictograms with zero drawing effort, at the cost of not being tintable —
+ * selection state is now shown via a white circle badge behind the emoji
+ * instead of a color change (see createMarkerElement in MapView.tsx /
+ * the Marker render in MapView.native.tsx).
  */
 
 export type PinIconKey =
@@ -40,6 +46,18 @@ const CATEGORY_ICON_KEY: Record<string, PinIconKey> = {
 export function pinIconKeyForSlug(slug: string | undefined): PinIconKey {
   return (slug && CATEGORY_ICON_KEY[slug]) || "generic";
 }
+
+export const PIN_EMOJI: Record<PinIconKey, string> = {
+  mosque: "🕌",
+  restaurant: "🍽️",
+  meat: "🥩",
+  sweets: "🍬",
+  store: "🏪",
+  clothing: "👕",
+  doctors: "🩺",
+  lawyers: "⚖️",
+  generic: "📍",
+};
 
 // Below this zoom, pins show icon-only — the name label only earns its
 // screen space once individual buildings are distinguishable (roughly
