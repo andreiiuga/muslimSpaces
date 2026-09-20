@@ -36,6 +36,7 @@ export const ar: TranslationSchema = {
     reviews: "المراجعات",
     writeOne: "اكتب واحدة",
     directions: "الاتجاهات",
+    chooseDirectionsApp: "فتح الاتجاهات باستخدام",
     noReviewsYet: "لا مراجعات بعد",
     notFound: "هذا المكان غير متاح.",
     loadError: "تعذّر تحميل هذا المكان. حاول لاحقاً.",

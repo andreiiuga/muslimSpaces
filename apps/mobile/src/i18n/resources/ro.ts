@@ -39,6 +39,7 @@ export const ro: TranslationSchema = {
     reviews: "Recenzii",
     writeOne: "Scrie una",
     directions: "Direcții",
+    chooseDirectionsApp: "Deschide direcțiile cu",
     noReviewsYet: "Fără recenzii încă",
     notFound: "Acest loc nu este disponibil.",
     loadError: "Nu am putut încărca acest loc. Încearcă mai târziu.",

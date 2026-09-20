@@ -35,6 +35,7 @@ export const en = {
     reviews: "Reviews",
     writeOne: "Write one",
     directions: "Directions",
+    chooseDirectionsApp: "Get directions with",
     noReviewsYet: "No reviews yet",
     notFound: "This place isn't available.",
     loadError: "Couldn't load this place. Try again later.",
