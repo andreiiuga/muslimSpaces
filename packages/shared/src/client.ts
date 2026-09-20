@@ -14,6 +14,7 @@ import {
   type CreatePoiPayload,
   type ListPoisQuery,
   type ModeratePoiPayload,
+  type SetPoiVisibilityPayload,
   type UpdatePoiPayload,
 } from "./schemas/poi";
 import { poiHourSchema, type SetPoiHoursPayload } from "./schemas/poi-hours";
@@ -185,6 +186,11 @@ export function createApiClient({ baseUrl, getToken }: ApiClientOptions) {
         }),
       moderate: (id: string, payload: ModeratePoiPayload) =>
         request(`/pois/${id}/moderate`, poiSchema, {
+          method: "PATCH",
+          body: JSON.stringify(payload),
+        }),
+      setVisibility: (id: string, payload: SetPoiVisibilityPayload) =>
+        request(`/pois/${id}/visibility`, poiSchema, {
           method: "PATCH",
           body: JSON.stringify(payload),
         }),

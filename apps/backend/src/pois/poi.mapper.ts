@@ -22,6 +22,7 @@ export function toPoiDto(entity: PoiEntity, categories: PoiCategoryInfo): Poi {
     ratingAvg: entity.ratingAvg !== null ? Number(entity.ratingAvg) : null,
     ratingCount: entity.ratingCount,
     status: entity.status,
+    visibility: entity.visibility,
     submittedBy: entity.submittedById,
     createdAt: entity.createdAt.toISOString(),
     updatedAt: entity.updatedAt.toISOString(),

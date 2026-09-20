@@ -6,6 +6,7 @@ import {
   moderatePoiSchema,
   nearestQuerySchema,
   radiusQuerySchema,
+  setPoiVisibilitySchema,
   updatePoiSchema,
 } from "@muslimspaces/shared";
 import type {
@@ -15,6 +16,7 @@ import type {
   ModeratePoiPayload,
   NearestQuery,
   RadiusQuery,
+  SetPoiVisibilityPayload,
   UpdatePoiPayload,
 } from "@muslimspaces/shared";
 import { ZodValidationPipe } from "../common/pipes/zod-validation.pipe";
@@ -99,6 +101,16 @@ export class PoisController {
     @Body(new ZodValidationPipe(moderatePoiSchema)) body: ModeratePoiPayload,
   ) {
     return this.poisService.moderate(id, body);
+  }
+
+  @Patch(":id/visibility")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles("moderator", "admin")
+  setVisibility(
+    @Param("id") id: string,
+    @Body(new ZodValidationPipe(setPoiVisibilitySchema)) body: SetPoiVisibilityPayload,
+  ) {
+    return this.poisService.setVisibility(id, body);
   }
 
   @Delete(":id")

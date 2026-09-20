@@ -30,6 +30,21 @@ export function PoiAdminTable({ pois: initialPois, categories }: { pois: Poi[]; 
     }
   }
 
+  async function toggleVisibility(poi: Poi) {
+    const nextVisibility = poi.visibility === "visible" ? "hidden" : "visible";
+    setPendingAction(poi.id);
+    const res = await fetch(`/api/admin/pois/${poi.id}/visibility`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ visibility: nextVisibility }),
+    });
+    setPendingAction(null);
+    if (res.ok) {
+      const updated: Poi = await res.json();
+      setPois((prev) => prev.map((p) => (p.id === poi.id ? updated : p)));
+    }
+  }
+
   async function remove(id: string) {
     if (!confirm("Delete this POI? This cannot be undone.")) return;
     setPendingAction(id);
@@ -49,7 +64,7 @@ export function PoiAdminTable({ pois: initialPois, categories }: { pois: Poi[]; 
     <table style={{ width: "100%", borderCollapse: "collapse" }}>
       <thead>
         <tr style={{ textAlign: "left", borderBottom: `1px solid ${colors.border}` }}>
-          {["Name", "Category", "Status", "Address", ""].map((h) => (
+          {["Name", "Category", "Status", "Visibility", "Address", ""].map((h) => (
             <th key={h} style={{ padding: spacing.sm, fontSize: 12, color: colors.textMuted }}>{h}</th>
           ))}
         </tr>
@@ -67,9 +82,22 @@ export function PoiAdminTable({ pois: initialPois, categories }: { pois: Poi[]; 
               <Text size="sm" color={STATUS_COLORS[poi.status]} weight="medium">{poi.status}</Text>
             </td>
             <td style={{ padding: spacing.sm }}>
+              <Text size="sm" color={poi.visibility === "hidden" ? colors.danger : colors.success} weight="medium">
+                {poi.visibility}
+              </Text>
+            </td>
+            <td style={{ padding: spacing.sm }}>
               <Text size="sm" color={colors.textMuted}>{poi.address}</Text>
             </td>
             <td style={{ padding: spacing.sm, display: "flex", gap: spacing.xs, flexWrap: "wrap" }}>
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={pendingAction === poi.id}
+                onPress={() => toggleVisibility(poi)}
+              >
+                {poi.visibility === "visible" ? "Hide" : "Show"}
+              </Button>
               {poi.status === "pending" && (
                 <>
                   <Button

@@ -19,6 +19,16 @@ export enum PoiStatus {
   REJECTED = "rejected",
 }
 
+// Independent of PoiStatus (the moderation pipeline) — an admin/moderator
+// kill-switch for temporarily hiding an already-approved POI (e.g. a place
+// that's closed down) without running it back through moderation. Public
+// queries filter on both; PoisService.getAny/listPending (admin-only) don't,
+// so admins can always see and re-enable a hidden POI.
+export enum PoiVisibility {
+  VISIBLE = "visible",
+  HIDDEN = "hidden",
+}
+
 @Entity("pois")
 export class PoiEntity {
   @PrimaryGeneratedColumn("uuid")
@@ -72,6 +82,10 @@ export class PoiEntity {
   @Index()
   @Column({ type: "enum", enum: PoiStatus, default: PoiStatus.PENDING })
   status: PoiStatus;
+
+  @Index()
+  @Column({ type: "enum", enum: PoiVisibility, default: PoiVisibility.VISIBLE })
+  visibility: PoiVisibility;
 
   @Column({ name: "submitted_by" })
   submittedById: string;

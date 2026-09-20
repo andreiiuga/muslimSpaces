@@ -9,11 +9,12 @@ import type {
   NearestQuery,
   Poi,
   RadiusQuery,
+  SetPoiVisibilityPayload,
   UpdatePoiPayload,
 } from "@muslimspaces/shared";
 import { toGeoPoint } from "../common/geo-point";
 import type { RequestUser } from "../auth/decorators/current-user.decorator";
-import { PoiEntity, PoiStatus } from "./entities/poi.entity";
+import { PoiEntity, PoiStatus, PoiVisibility } from "./entities/poi.entity";
 import { PoiCategoryAssignmentEntity } from "./entities/poi-category-assignment.entity";
 import { toPoiDto, PoiCategoryInfo } from "./poi.mapper";
 
@@ -51,7 +52,8 @@ export class PoisService {
   async listApproved(query: ListPoisQuery): Promise<Poi[]> {
     const qb = this.poisRepository
       .createQueryBuilder("poi")
-      .where("poi.status = :status", { status: PoiStatus.APPROVED });
+      .where("poi.status = :status", { status: PoiStatus.APPROVED })
+      .andWhere("poi.visibility = :visibility", { visibility: PoiVisibility.VISIBLE });
 
     this.applyCategoryFilter(qb, query.categoryId);
     this.applySearchFilter(qb, query.search);
@@ -74,14 +76,20 @@ export class PoisService {
     return this.toDtoList(pois);
   }
 
+  // Used by GET /favorites/mine — a hidden POI shouldn't reappear there
+  // either, even though the favorite row itself still exists.
   async getManyByIds(ids: string[]): Promise<Poi[]> {
     if (ids.length === 0) return [];
-    const pois = await this.poisRepository.find({ where: { id: In(ids) } });
+    const pois = await this.poisRepository.find({
+      where: { id: In(ids), visibility: PoiVisibility.VISIBLE },
+    });
     return this.toDtoList(pois);
   }
 
   async getApproved(id: string): Promise<Poi> {
-    const poi = await this.poisRepository.findOne({ where: { id, status: PoiStatus.APPROVED } });
+    const poi = await this.poisRepository.findOne({
+      where: { id, status: PoiStatus.APPROVED, visibility: PoiVisibility.VISIBLE },
+    });
     if (!poi) throw new NotFoundException("POI not found");
     return this.toDto(poi);
   }
@@ -190,6 +198,17 @@ export class PoisService {
     return this.toDto(poi);
   }
 
+  // Independent of moderate() — hides/shows an already-approved POI without
+  // touching its moderation status, so re-enabling it doesn't require
+  // re-approval.
+  async setVisibility(id: string, payload: SetPoiVisibilityPayload): Promise<Poi> {
+    const poi = await this.poisRepository.findOne({ where: { id } });
+    if (!poi) throw new NotFoundException("POI not found");
+    poi.visibility = payload.visibility === "hidden" ? PoiVisibility.HIDDEN : PoiVisibility.VISIBLE;
+    await this.poisRepository.save(poi);
+    return this.toDto(poi);
+  }
+
   async remove(id: string): Promise<void> {
     const result = await this.poisRepository.delete({ id });
     if (result.affected === 0) throw new NotFoundException("POI not found");
@@ -200,6 +219,7 @@ export class PoisService {
     const qb = this.poisRepository
       .createQueryBuilder("poi")
       .where("poi.status = :status", { status: PoiStatus.APPROVED })
+      .andWhere("poi.visibility = :visibility", { visibility: PoiVisibility.VISIBLE })
       .andWhere(
         "ST_DWithin(poi.location, ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography, :radius)",
         { lng: query.lng, lat: query.lat, radius: query.radiusMeters },
@@ -220,6 +240,7 @@ export class PoisService {
     const qb = this.poisRepository
       .createQueryBuilder("poi")
       .where("poi.status = :status", { status: PoiStatus.APPROVED })
+      .andWhere("poi.visibility = :visibility", { visibility: PoiVisibility.VISIBLE })
       .setParameters({ lng: query.lng, lat: query.lat });
 
     this.applyCategoryFilter(qb, query.categoryId);
@@ -237,6 +258,7 @@ export class PoisService {
     const qb = this.poisRepository
       .createQueryBuilder("poi")
       .where("poi.status = :status", { status: PoiStatus.APPROVED })
+      .andWhere("poi.visibility = :visibility", { visibility: PoiVisibility.VISIBLE })
       .andWhere(
         "ST_Intersects(poi.location::geometry, ST_MakeEnvelope(:minLng, :minLat, :maxLng, :maxLat, 4326))",
         { minLng: query.minLng, minLat: query.minLat, maxLng: query.maxLng, maxLat: query.maxLat },

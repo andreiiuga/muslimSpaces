@@ -4,6 +4,13 @@ import { coordinatesSchema, localizedTextSchema, paginationQuerySchema } from ".
 export const poiStatusSchema = z.enum(["pending", "approved", "rejected"]);
 export type PoiStatus = z.infer<typeof poiStatusSchema>;
 
+// Independent of poiStatusSchema (the moderation pipeline) — an admin/
+// moderator kill-switch for temporarily hiding an already-approved POI
+// without running it back through moderation. See PoiVisibility in the
+// backend's poi.entity.ts for the full reasoning.
+export const poiVisibilitySchema = z.enum(["visible", "hidden"]);
+export type PoiVisibility = z.infer<typeof poiVisibilitySchema>;
+
 const poiWritableFields = {
   name: localizedTextSchema,
   description: localizedTextSchema.optional(),
@@ -28,6 +35,7 @@ export const poiSchema = z.object({
   ratingAvg: z.number().min(0).max(5).nullable(),
   ratingCount: z.number().int().nonnegative(),
   status: poiStatusSchema,
+  visibility: poiVisibilitySchema,
   submittedBy: z.string().uuid(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
@@ -51,6 +59,11 @@ export const moderatePoiSchema = z.object({
   status: z.enum(["approved", "rejected"]),
 });
 export type ModeratePoiPayload = z.infer<typeof moderatePoiSchema>;
+
+export const setPoiVisibilitySchema = z.object({
+  visibility: poiVisibilitySchema,
+});
+export type SetPoiVisibilityPayload = z.infer<typeof setPoiVisibilitySchema>;
 
 // .extend (not .partial) on purpose: paginationQuerySchema's fields already
 // carry defaults via z.default(...), and wrapping a defaulted field in
