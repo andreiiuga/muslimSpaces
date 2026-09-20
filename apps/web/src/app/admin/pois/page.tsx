@@ -1,20 +1,38 @@
-import { Button, spacing, Text } from "@muslimspaces/ui";
+import Link from "next/link";
+import { colors, spacing, Text } from "@muslimspaces/ui";
 import { getApiClient } from "../../../lib/api-client";
 import { getCurrentToken } from "../../../lib/current-user";
 import { PoiAdminTable } from "../../../components/admin/PoiAdminTable/PoiAdminTable";
 import { NewPoiButton } from "./NewPoiButton";
 
-export default async function AdminPoisPage() {
+const PAGE_SIZE = 50;
+
+export default async function AdminPoisPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const { page: pageParam } = await searchParams;
+  const page = Math.max(1, Number(pageParam) || 1);
+  const offset = (page - 1) * PAGE_SIZE;
+
   const token = await getCurrentToken();
   const api = getApiClient(token);
 
-  const [pending, approved, categories] = await Promise.all([
+  // Fetch one extra row to know whether a next page exists without a
+  // separate count endpoint (none of the /pois list variants return one —
+  // see packages/shared/src/client.ts).
+  const [pending, approvedPage, categories] = await Promise.all([
     api.pois.pending(),
-    api.pois.list({ limit: 100 }),
+    api.pois.list({ limit: PAGE_SIZE + 1, offset }),
     api.categories.list(),
   ]);
 
-  // Pending first — that's the queue that actually needs action.
+  const hasNextPage = approvedPage.length > PAGE_SIZE;
+  const approved = approvedPage.slice(0, PAGE_SIZE);
+
+  // Pending shown in full on every page — it's a moderation queue that
+  // needs to stay fully actionable, not something to page through.
   const pois = [...pending, ...approved];
 
   return (
@@ -30,6 +48,25 @@ export default async function AdminPoisPage() {
           <PoiAdminTable pois={pois} categories={categories} />
         )}
       </div>
+      {(page > 1 || hasNextPage) && (
+        <div style={{ display: "flex", alignItems: "center", gap: spacing.md, marginTop: spacing.lg }}>
+          {page > 1 ? (
+            <Link href={`/admin/pois?page=${page - 1}`} style={{ color: colors.primary, fontSize: 14 }}>
+              ← Previous
+            </Link>
+          ) : (
+            <Text size="sm" color={colors.textFaint}>← Previous</Text>
+          )}
+          <Text size="sm" color={colors.textMuted}>Page {page}</Text>
+          {hasNextPage ? (
+            <Link href={`/admin/pois?page=${page + 1}`} style={{ color: colors.primary, fontSize: 14 }}>
+              Next →
+            </Link>
+          ) : (
+            <Text size="sm" color={colors.textFaint}>Next →</Text>
+          )}
+        </div>
+      )}
     </div>
   );
 }
