@@ -61,7 +61,12 @@ export class PoisService {
     if (query.openNow) qb.andWhere(OPEN_NOW_SQL);
 
     const pois = await qb
+      // id as a tiebreaker — created_at alone isn't unique (e.g. the seed
+      // migration inserted every mosque in one transaction, so `now()` gave
+      // them all an identical timestamp), and LIMIT/OFFSET over ties has no
+      // stable order across separate queries, which breaks pagination.
       .orderBy("poi.created_at", "DESC")
+      .addOrderBy("poi.id", "ASC")
       .limit(query.limit)
       .offset(query.offset)
       .getMany();
@@ -71,7 +76,8 @@ export class PoisService {
   async listPending(): Promise<Poi[]> {
     const pois = await this.poisRepository.find({
       where: { status: PoiStatus.PENDING },
-      order: { createdAt: "ASC" },
+      // id as a tiebreaker — see the comment in listApproved.
+      order: { createdAt: "ASC", id: "ASC" },
     });
     return this.toDtoList(pois);
   }
