@@ -19,21 +19,23 @@ export default async function AdminPoisPage({
   const token = await getCurrentToken();
   const api = getApiClient(token);
 
+  // listAllForAdmin (not the public list()) so hidden/rejected POIs stay
+  // findable here — list() filters both out on purpose for the public feed.
   // Fetch one extra row to know whether a next page exists without a
   // separate count endpoint (none of the /pois list variants return one —
   // see packages/shared/src/client.ts).
-  const [pending, approvedPage, categories] = await Promise.all([
+  const [pending, restPage, categories] = await Promise.all([
     api.pois.pending(),
-    api.pois.list({ limit: PAGE_SIZE + 1, offset }),
+    api.pois.listAllForAdmin({ limit: PAGE_SIZE + 1, offset }),
     api.categories.list(),
   ]);
 
-  const hasNextPage = approvedPage.length > PAGE_SIZE;
-  const approved = approvedPage.slice(0, PAGE_SIZE);
+  const hasNextPage = restPage.length > PAGE_SIZE;
+  const rest = restPage.slice(0, PAGE_SIZE);
 
   // Pending shown in full on every page — it's a moderation queue that
   // needs to stay fully actionable, not something to page through.
-  const pois = [...pending, ...approved];
+  const pois = [...pending, ...rest];
 
   return (
     <div>

@@ -7,6 +7,7 @@ import {
   type SignupPayload,
   type UpdateProfilePayload,
 } from "./schemas/auth";
+import type { PaginationQuery } from "./schemas/common";
 import { categorySchema, type CreateCategoryPayload, type UpdateCategoryPayload } from "./schemas/category";
 import { citySchema, type CreateCityPayload } from "./schemas/city";
 import {
@@ -197,6 +198,10 @@ export function createApiClient({ baseUrl, getToken }: ApiClientOptions) {
       remove: (id: string) => request(`/pois/${id}`, z.void(), { method: "DELETE" }),
       // Admin moderation queue — moderator/admin only.
       pending: () => request("/pois/pending", z.array(poiSchema)),
+      // Admin table's paginated "everything else" — includes hidden and
+      // rejected POIs, which list() (the public feed) excludes on purpose.
+      listAllForAdmin: (query?: Partial<PaginationQuery>) =>
+        request(`/pois/admin/list${toQueryString(query)}`, z.array(poiSchema)),
       nearby: (query: RadiusQuery) =>
         request(`/pois/nearby${toQueryString(query)}`, z.array(poiSchema)),
       nearest: (query: NearestQuery) =>

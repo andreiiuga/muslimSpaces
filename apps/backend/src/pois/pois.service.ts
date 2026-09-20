@@ -7,6 +7,7 @@ import type {
   ListPoisQuery,
   ModeratePoiPayload,
   NearestQuery,
+  PaginationQuery,
   Poi,
   RadiusQuery,
   SetPoiVisibilityPayload,
@@ -79,6 +80,23 @@ export class PoisService {
       // id as a tiebreaker — see the comment in listApproved.
       order: { createdAt: "ASC", id: "ASC" },
     });
+    return this.toDtoList(pois);
+  }
+
+  // Admin table's paginated "everything else" section — unlike
+  // listApproved, no status/visibility filter at all, so rejected and
+  // hidden POIs (otherwise invisible everywhere) stay findable and
+  // manageable. Excludes PENDING since that's shown in full separately
+  // (see listPending) and admins already page through this section.
+  async listAllForAdmin(query: PaginationQuery): Promise<Poi[]> {
+    const pois = await this.poisRepository
+      .createQueryBuilder("poi")
+      .where("poi.status != :pending", { pending: PoiStatus.PENDING })
+      .orderBy("poi.created_at", "DESC")
+      .addOrderBy("poi.id", "ASC")
+      .limit(query.limit)
+      .offset(query.offset)
+      .getMany();
     return this.toDtoList(pois);
   }
 

@@ -5,6 +5,7 @@ import {
   listPoisQuerySchema,
   moderatePoiSchema,
   nearestQuerySchema,
+  paginationQuerySchema,
   radiusQuerySchema,
   setPoiVisibilitySchema,
   updatePoiSchema,
@@ -15,6 +16,7 @@ import type {
   ListPoisQuery,
   ModeratePoiPayload,
   NearestQuery,
+  PaginationQuery,
   RadiusQuery,
   SetPoiVisibilityPayload,
   UpdatePoiPayload,
@@ -58,6 +60,16 @@ export class PoisController {
   @Roles("moderator", "admin")
   pending() {
     return this.poisService.listPending();
+  }
+
+  // Admin table's paginated "everything else" — unlike the public list()
+  // above, no status/visibility filter, so hidden and rejected POIs (which
+  // list() excludes on purpose) stay findable and manageable here.
+  @Get("admin/list")
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles("moderator", "admin")
+  listAllForAdmin(@Query(new ZodValidationPipe(paginationQuerySchema)) query: PaginationQuery) {
+    return this.poisService.listAllForAdmin(query);
   }
 
   @Get(":id")
