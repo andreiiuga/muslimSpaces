@@ -3,7 +3,9 @@
 import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { ArrowLeft } from "lucide-react";
 import { colors, shadows } from "../tokens";
+import { IconButton } from "../IconButton";
 import { LABEL_MIN_ZOOM, PIN_EMOJI, buildClusterIndex, getMapPoints, pinIconKeyForSlug, pinLabel } from "./pin-utils";
 import type { PinIconKey } from "./pin-utils";
 import type { MapPadding, MapViewProps } from "./MapView.types";
@@ -23,6 +25,24 @@ const DEFAULT_CENTER = { lat: 45.9432, lng: 24.9668 };
 const DEFAULT_ZOOM = 6;
 
 const PIN_EMOJI_SIZE = 22;
+
+// Selecting a POI flies the camera in close and tilted; deselecting levels
+// it back out to top-down.
+const SELECT_FLY_ZOOM = 17.5;
+const SELECT_PITCH = 55;
+// The post-fly-in "look around" orbit: chained easeTo legs (linearly
+// eased, so the rotation speed is constant, not ease-in/out per leg)
+// rather than one fixed-length animation — see startOrbit below for why
+// chaining beats either a single short easeTo (fires 'moveend', which
+// rebuilds every marker, on every tick) or one very long one (eventually
+// just stops). Deliberately NOT a multiple of 360: maplibre-gl computes the
+// shortest angular delta between current and target bearing, so
+// `current + 360` normalizes to a delta of exactly 0 — a silent no-op, not
+// a full turn. 170 keeps every leg's shortest path unambiguous (always
+// "forward", never flipping direction) while still being a big, sweeping
+// turn per leg.
+const ORBIT_DEGREES_PER_LEG = 170;
+const ORBIT_LEG_DURATION_MS = 17_000;
 
 // Icon with a name-label pill above it, anchored (via maplibregl.Marker's
 // `anchor: "bottom"`) at the icon's own bottom edge — matches the design's
@@ -100,6 +120,27 @@ function createClusterElement(count: number, label: string): HTMLDivElement {
   return el;
 }
 
+// Chains ORBIT_DEGREES_PER_LEG-sized legs indefinitely, as long as
+// `isCurrent()` still says so when each leg finishes — checked both before
+// scheduling a leg and inside its 'moveend' callback, since `isCurrent` can
+// go stale while a leg is in flight (the selection changed, or the user
+// panned/zoomed away).
+// `event.originalEvent` is truthy only for user-caused moves (mouse/touch),
+// never for our own programmatic easeTo — used here so a manual pan away
+// from the orbit doesn't get immediately fought by the next leg starting.
+function startOrbit(map: maplibregl.Map, isCurrent: () => boolean): void {
+  if (!isCurrent()) return;
+  map.easeTo({
+    bearing: map.getBearing() + ORBIT_DEGREES_PER_LEG,
+    duration: ORBIT_LEG_DURATION_MS,
+    easing: (t) => t,
+  });
+  map.once("moveend", (event) => {
+    if (event.originalEvent || !isCurrent()) return;
+    startOrbit(map, isCurrent);
+  });
+}
+
 export function MapView({
   pois,
   categories,
@@ -108,11 +149,17 @@ export function MapView({
   onBoundsChange,
   onMarkerPress,
   selectedPoiId,
+  onDeselect,
   padding,
 }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
+  // Bumped on every selection change — guards the orbit's `once('moveend')`
+  // callback against starting for a POI that's no longer the current one
+  // (the user selected something else, or deselected, before the fly-in
+  // finished).
+  const selectionTokenRef = useRef(0);
   // Rebuilt (by the effect below) whenever pois/categories/selection change;
   // invoked imperatively from map event listeners registered once at mount,
   // so panning/zooming re-renders markers without recreating the map.
@@ -234,22 +281,59 @@ export function MapView({
     map.easeTo({ padding: toPaddingOptions(padding), duration: 250 });
   }, [padding?.top, padding?.right, padding?.bottom, padding?.left]);
 
-  // Centers on the selected POI (e.g. a marker tap) without changing zoom —
+  // Selecting a POI (e.g. a marker tap) flies the camera into it at an
+  // angle and, once that settles, starts the slow orbit. Deselecting stops
+  // whatever camera animation is in flight and levels the view back out.
   // `pois` is a dep too since the selected id's coordinates are looked up
-  // from it, and a bbox refetch can swap in a new array containing the same
-  // POI at the same id.
+  // from it, and a filter change can swap in a new array containing the
+  // same POI at the same id.
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !selectedPoiId) return;
+    if (!map) return;
+
+    if (!selectedPoiId) {
+      // Invalidates any orbit leg's pending `once('moveend', ...)` — without
+      // this, map.stop() below fires that pending moveend immediately, and
+      // since isCurrent() would still read true, startOrbit restarts right
+      // back up instead of actually stopping.
+      selectionTokenRef.current += 1;
+      map.stop();
+      map.easeTo({ pitch: 0, bearing: 0, duration: 600 });
+      return;
+    }
+
     const selected = pois.find((poi) => poi.id === selectedPoiId);
     if (!selected) return;
-    map.easeTo({
+
+    const token = ++selectionTokenRef.current;
+    map.flyTo({
       center: [selected.location.lng, selected.location.lat],
+      zoom: SELECT_FLY_ZOOM,
+      pitch: SELECT_PITCH,
       padding: toPaddingOptions(padding),
-      duration: 400,
+      duration: 1800,
+    });
+    map.once("moveend", () => {
+      // Bail if the selection moved on (or was cleared) before the fly-in
+      // finished — don't start orbiting a POI that's no longer selected.
+      startOrbit(map, () => selectionTokenRef.current === token);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPoiId]);
 
-  return <div ref={containerRef} style={{ width: "100%", height: "100%" }} />;
+  return (
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
+      {selectedPoiId && (
+        <div style={{ position: "absolute", top: 14, left: 14 }}>
+          <IconButton
+            icon={<ArrowLeft size={20} color={colors.text} />}
+            onPress={() => onDeselect?.()}
+            variant="solid"
+            label="Back"
+          />
+        </div>
+      )}
+    </div>
+  );
 }

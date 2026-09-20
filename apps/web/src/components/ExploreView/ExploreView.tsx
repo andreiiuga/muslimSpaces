@@ -201,6 +201,7 @@ export function ExploreView({
               pois={pois}
               categories={categories}
               onMarkerPress={setSelectedPoiId}
+              onDeselect={() => setSelectedPoiId(null)}
               selectedPoiId={selectedPoi?.id ?? null}
             />
 

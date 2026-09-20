@@ -233,6 +233,7 @@ export default function ExploreScreen() {
             pois={pois}
             categories={categories}
             onMarkerPress={setSelectedPoiId}
+            onDeselect={() => setSelectedPoiId(null)}
             selectedPoiId={selectedPoi?.id ?? null}
             padding={{ bottom: tabBarClearance }}
           />

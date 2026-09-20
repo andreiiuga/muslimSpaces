@@ -3,7 +3,9 @@ import { View } from "react-native";
 import type { NativeSyntheticEvent } from "react-native";
 import { Camera, Map, Marker } from "@maplibre/maplibre-react-native";
 import type { CameraRef, ViewStateChangeEvent } from "@maplibre/maplibre-react-native";
+import { ArrowLeft } from "lucide-react-native";
 import { colors, nativeShadows, radii, spacing } from "../tokens";
+import { IconButton } from "../IconButton";
 import { Text } from "../Text";
 import { LABEL_MIN_ZOOM, PIN_EMOJI, buildClusterIndex, getMapPoints, pinIconKeyForSlug, pinLabel } from "./pin-utils";
 import type { MapViewProps } from "./MapView.types";
@@ -22,6 +24,24 @@ const DEFAULT_ZOOM = 6;
 // fires (rather than rendering nothing until then).
 const WORLD_BOUNDS: [number, number, number, number] = [-180, -85, 180, 85];
 
+// Selecting a POI flies the camera in close and tilted; deselecting levels
+// it back out to top-down.
+const SELECT_FLY_ZOOM = 17.5;
+const SELECT_PITCH = 55;
+// The post-fly-in "look around" orbit: chained easeTo legs. Each leg's
+// bearing target is tracked in a ref (orbitBearingRef) rather than read
+// back from the camera — CameraRef has no bearing getter, so this
+// component is the only thing that ever sets bearing, kept in sync by
+// always resetting it (both the real camera's and the ref's) to 0 whenever
+// a new selection's fly-in starts. Deliberately NOT a multiple of 360:
+// MapLibre computes the shortest angular delta between current and target
+// bearing, so a +360 step normalizes to a delta of exactly 0 — a silent
+// no-op, not a full turn. 170 keeps every leg's shortest path unambiguous
+// (always "forward", never flipping direction) while still being a big,
+// sweeping turn per leg.
+const ORBIT_DEGREES_PER_LEG = 170;
+const ORBIT_LEG_DURATION_MS = 17_000;
+
 export function MapView({
   pois,
   categories,
@@ -30,6 +50,7 @@ export function MapView({
   onBoundsChange,
   onMarkerPress,
   selectedPoiId,
+  onDeselect,
   padding,
 }: MapViewProps) {
   const cameraRef = useRef<CameraRef>(null);
@@ -39,16 +60,49 @@ export function MapView({
   // Drives clustering — starts as WORLD_BOUNDS so there's something to
   // cluster against before the map's first onRegionDidChange fires.
   const [bounds, setBounds] = useState<[number, number, number, number]>(WORLD_BOUNDS);
+  // Bumped on every selection change — an orbit leg only reschedules the
+  // next one if it's still the current selection by the time it settles.
+  const selectionTokenRef = useRef(0);
+  // Non-null while "the next settle should continue the orbit" — armed
+  // right after the fly-in starts, re-armed after each leg. Cleared (without
+  // forcing a deselect) if that settle turns out to be user-driven, so a
+  // manual pan/zoom away isn't immediately fought by the next leg.
+  const orbitArmedTokenRef = useRef<number | null>(null);
+  const orbitBearingRef = useRef(0);
+  // easeTo requires a `center` on native (unlike web's maplibre-gl, where
+  // it's optional) — tracked here since CameraRef has no center getter to
+  // read it back from, for the deselect reset and each orbit leg, both of
+  // which just change pitch/bearing around the same point.
+  const lastCenterRef = useRef<[number, number] | null>(null);
 
-  // Centers on the selected POI (e.g. a marker tap) without changing zoom —
-  // only reacts to selectedPoiId itself changing, not every `pois` refetch.
+  // Selecting a POI (e.g. a marker tap) flies the camera into it at an
+  // angle; handleRegionDidChange below starts and continues the orbit once
+  // that settles. Deselecting levels the view back out to top-down.
+  // `pois` is a dep too since the selected id's coordinates are looked up
+  // from it, and a filter change can swap in a new array containing the
+  // same POI at the same id.
   useEffect(() => {
-    if (!selectedPoiId) return;
+    if (!selectedPoiId) {
+      selectionTokenRef.current += 1;
+      orbitArmedTokenRef.current = null;
+      if (lastCenterRef.current) {
+        cameraRef.current?.easeTo({ center: lastCenterRef.current, pitch: 0, bearing: 0, duration: 600 });
+      }
+      return;
+    }
     const selected = pois.find((poi) => poi.id === selectedPoiId);
     if (!selected) return;
-    cameraRef.current?.easeTo({
+
+    const token = ++selectionTokenRef.current;
+    orbitArmedTokenRef.current = token;
+    orbitBearingRef.current = 0;
+    lastCenterRef.current = [selected.location.lng, selected.location.lat];
+    cameraRef.current?.flyTo({
       center: [selected.location.lng, selected.location.lat],
-      duration: 400,
+      zoom: SELECT_FLY_ZOOM,
+      pitch: SELECT_PITCH,
+      bearing: 0,
+      duration: 1800,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPoiId]);
@@ -59,9 +113,30 @@ export function MapView({
       // Already [minLng, minLat, maxLng, maxLat] — same order supercluster
       // and MapBounds both want, just named differently per caller.
       setBounds(event.nativeEvent.bounds);
-      if (!onBoundsChange) return;
-      const [minLng, minLat, maxLng, maxLat] = event.nativeEvent.bounds;
-      onBoundsChange({ minLat, minLng, maxLat, maxLng });
+      if (onBoundsChange) {
+        const [minLng, minLat, maxLng, maxLat] = event.nativeEvent.bounds;
+        onBoundsChange({ minLat, minLng, maxLat, maxLng });
+      }
+
+      // Continues the post-selection orbit (see the effect above): any
+      // settle while armed — the fly-in finishing, or a previous leg
+      // finishing — issues the next leg, unless the user is the one
+      // driving the camera right now.
+      if (
+        orbitArmedTokenRef.current === selectionTokenRef.current &&
+        !event.nativeEvent.userInteraction &&
+        lastCenterRef.current
+      ) {
+        orbitBearingRef.current += ORBIT_DEGREES_PER_LEG;
+        cameraRef.current?.easeTo({
+          center: lastCenterRef.current,
+          bearing: orbitBearingRef.current,
+          duration: ORBIT_LEG_DURATION_MS,
+          easing: "linear",
+        });
+      } else {
+        orbitArmedTokenRef.current = null;
+      }
     },
     [onBoundsChange],
   );
@@ -78,110 +153,122 @@ export function MapView({
   );
 
   return (
-    <Map
-      style={{ flex: 1 }}
-      mapStyle={OPENFREEMAP_STYLE}
-      onRegionDidChange={handleRegionDidChange}
-    >
-      <Camera
-        ref={cameraRef}
-        initialViewState={{
-          center: [initialCenter.lng, initialCenter.lat],
-          zoom: initialZoom,
-          padding,
-        }}
-      />
-      {points.map((point) => {
-        if (point.kind === "cluster") {
-          // Bubble size bands with the point count — a 4-place cluster and
-          // a 400-place one shouldn't read as the same size.
-          const size = point.count < 10 ? 36 : point.count < 100 ? 44 : 52;
-          return (
-            <Marker
-              key={`cluster-${point.clusterId}`}
-              id={`cluster-${point.clusterId}`}
-              lngLat={[point.lng, point.lat]}
-              anchor="center"
-              onPress={() => {
-                const targetZoom = clusterIndex.getClusterExpansionZoom(point.clusterId);
-                cameraRef.current?.easeTo({ center: [point.lng, point.lat], zoom: targetZoom, duration: 400 });
-              }}
-            >
-              <View
-                style={{
-                  width: size,
-                  height: size,
-                  borderRadius: radii.pill,
-                  backgroundColor: colors.primary,
-                  borderWidth: 2,
-                  borderColor: colors.surface,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  ...nativeShadows.elevated,
+    <View style={{ flex: 1 }}>
+      <Map
+        style={{ flex: 1 }}
+        mapStyle={OPENFREEMAP_STYLE}
+        onRegionDidChange={handleRegionDidChange}
+      >
+        <Camera
+          ref={cameraRef}
+          initialViewState={{
+            center: [initialCenter.lng, initialCenter.lat],
+            zoom: initialZoom,
+            padding,
+          }}
+        />
+        {points.map((point) => {
+          if (point.kind === "cluster") {
+            // Bubble size bands with the point count — a 4-place cluster and
+            // a 400-place one shouldn't read as the same size.
+            const size = point.count < 10 ? 36 : point.count < 100 ? 44 : 52;
+            return (
+              <Marker
+                key={`cluster-${point.clusterId}`}
+                id={`cluster-${point.clusterId}`}
+                lngLat={[point.lng, point.lat]}
+                anchor="center"
+                onPress={() => {
+                  const targetZoom = clusterIndex.getClusterExpansionZoom(point.clusterId);
+                  cameraRef.current?.easeTo({ center: [point.lng, point.lat], zoom: targetZoom, duration: 400 });
                 }}
               >
-                <Text size={point.count < 100 ? "sm" : "xs"} weight="bold" color={colors.textOnPrimary} letterSpacing={0}>
-                  {point.label}
-                </Text>
+                <View
+                  style={{
+                    width: size,
+                    height: size,
+                    borderRadius: radii.pill,
+                    backgroundColor: colors.primary,
+                    borderWidth: 2,
+                    borderColor: colors.surface,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    ...nativeShadows.elevated,
+                  }}
+                >
+                  <Text size={point.count < 100 ? "sm" : "xs"} weight="bold" color={colors.textOnPrimary} letterSpacing={0}>
+                    {point.label}
+                  </Text>
+                </View>
+              </Marker>
+            );
+          }
+
+          const poi = point.poi;
+          const category = categories?.find((c) => c.id === poi.primaryCategoryId);
+          const iconKey = pinIconKeyForSlug(category?.slug);
+          const selected = poi.id === selectedPoiId;
+          const color = selected ? colors.danger : colors.primary;
+
+          return (
+            <Marker
+              key={poi.id}
+              id={poi.id}
+              lngLat={[poi.location.lng, poi.location.lat]}
+              anchor="bottom"
+              onPress={() => onMarkerPress?.(poi.id)}
+            >
+              <View style={{ alignItems: "center", gap: 2 }}>
+                {showLabels && (
+                  <View
+                    style={{
+                      backgroundColor: colors.background,
+                      borderWidth: 1,
+                      borderColor: color,
+                      borderRadius: radii.pill,
+                      paddingHorizontal: 10,
+                      paddingVertical: 3,
+                      ...nativeShadows.iconSolid,
+                    }}
+                  >
+                    <Text size="xs" weight="semibold" color={color} letterSpacing={0}>
+                      {pinLabel(poi.name.en)}
+                    </Text>
+                  </View>
+                )}
+                {/* The emoji is plain by default; selecting it (a marker tap)
+                    adds a white circular badge + elevation shadow, since an
+                    emoji can't be recolored the way an icon can to show
+                    selection state. */}
+                <View
+                  style={
+                    selected
+                      ? {
+                          backgroundColor: colors.surface,
+                          borderRadius: radii.pill,
+                          padding: spacing.xs + 2,
+                          ...nativeShadows.elevated,
+                        }
+                      : undefined
+                  }
+                >
+                  <Text size="xl">{PIN_EMOJI[iconKey]}</Text>
+                </View>
               </View>
             </Marker>
           );
-        }
-
-        const poi = point.poi;
-        const category = categories?.find((c) => c.id === poi.primaryCategoryId);
-        const iconKey = pinIconKeyForSlug(category?.slug);
-        const selected = poi.id === selectedPoiId;
-        const color = selected ? colors.danger : colors.primary;
-
-        return (
-          <Marker
-            key={poi.id}
-            id={poi.id}
-            lngLat={[poi.location.lng, poi.location.lat]}
-            anchor="bottom"
-            onPress={() => onMarkerPress?.(poi.id)}
-          >
-            <View style={{ alignItems: "center", gap: 2 }}>
-              {showLabels && (
-                <View
-                  style={{
-                    backgroundColor: colors.background,
-                    borderWidth: 1,
-                    borderColor: color,
-                    borderRadius: radii.pill,
-                    paddingHorizontal: 10,
-                    paddingVertical: 3,
-                    ...nativeShadows.iconSolid,
-                  }}
-                >
-                  <Text size="xs" weight="semibold" color={color} letterSpacing={0}>
-                    {pinLabel(poi.name.en)}
-                  </Text>
-                </View>
-              )}
-              {/* The emoji is plain by default; selecting it (a marker tap)
-                  adds a white circular badge + elevation shadow, since an
-                  emoji can't be recolored the way an icon can to show
-                  selection state. */}
-              <View
-                style={
-                  selected
-                    ? {
-                        backgroundColor: colors.surface,
-                        borderRadius: radii.pill,
-                        padding: spacing.xs + 2,
-                        ...nativeShadows.elevated,
-                      }
-                    : undefined
-                }
-              >
-                <Text size="xl">{PIN_EMOJI[iconKey]}</Text>
-              </View>
-            </View>
-          </Marker>
-        );
-      })}
-    </Map>
+        })}
+      </Map>
+      {selectedPoiId && (
+        <View style={{ position: "absolute", top: 14, left: 14 }}>
+          <IconButton
+            icon={<ArrowLeft size={20} color={colors.text} />}
+            onPress={() => onDeselect?.()}
+            variant="solid"
+            label="Back"
+          />
+        </View>
+      )}
+    </View>
   );
 }

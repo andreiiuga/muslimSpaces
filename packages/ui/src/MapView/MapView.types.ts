@@ -28,9 +28,18 @@ export interface MapViewProps {
   onMarkerPress?: (poiId: string) => void;
   /**
    * The currently-selected POI (e.g. from a marker tap) — when this changes
-   * to a POI present in `pois`, the map centers on it without changing zoom.
+   * to a POI present in `pois`, the map flies into it at an angle and then
+   * orbits slowly around it. Going back to `null`/`undefined` levels the
+   * camera back out to top-down. See `onDeselect`.
    */
   selectedPoiId?: string | null;
+  /**
+   * Called when the back button (shown over the map while a POI is
+   * selected) is pressed. The caller is expected to clear its own
+   * selection state (e.g. `setSelectedPoiId(null)`) — MapView doesn't own
+   * that state, only reacts to it via `selectedPoiId`.
+   */
+  onDeselect?: () => void;
   /**
    * Shifts the camera's true center away from the container's geometric
    * center by this many px per side — for full-bleed maps with floating UI
