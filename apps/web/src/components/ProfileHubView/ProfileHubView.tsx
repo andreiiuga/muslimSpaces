@@ -57,7 +57,8 @@ export function ProfileHubView({ user }: { user: AuthUser | null }) {
               <div style={{ marginTop: 3 }}>
                 <Text size="sm" color={colors.textMuted}>
                   {user.email}
-                  {user.role !== "user" ? ` · ${t("profile.moderator")}` : ""}
+                  {user.role === "admin" && ` · ${t("profile.admin")}`}
+                  {user.role === "moderator" && ` · ${t("profile.moderator")}`}
                 </Text>
               </div>
             </div>

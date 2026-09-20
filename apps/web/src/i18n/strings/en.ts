@@ -106,6 +106,7 @@ export const en = {
     account: "Account",
     logOut: "Log out",
     moderator: "Moderator",
+    admin: "Admin",
     editProfile: "Edit profile",
     changePassword: "Change password",
     changePasswordNote: "Keep your account secure",

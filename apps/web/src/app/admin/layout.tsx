@@ -30,6 +30,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <AdminLink href="/admin/pois">POIs</AdminLink>
           <AdminLink href="/admin/blog">Blog</AdminLink>
           <AdminLink href="/admin/reviews">Reviews</AdminLink>
+          {user.role === "admin" && (
+            <>
+              <AdminLink href="/admin/categories">Categories</AdminLink>
+              <AdminLink href="/admin/cities">Cities</AdminLink>
+            </>
+          )}
         </nav>
       </aside>
       <div style={{ flex: 1, padding: spacing.xl, minWidth: 0 }}>{children}</div>

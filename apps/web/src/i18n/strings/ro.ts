@@ -104,6 +104,7 @@ export const ro: TranslationSchema = {
     account: "Cont",
     logOut: "Deconectare",
     moderator: "Moderator",
+    admin: "Admin",
     editProfile: "Editează profilul",
     changePassword: "Schimbă parola",
     changePasswordNote: "Păstrează-ți contul în siguranță",

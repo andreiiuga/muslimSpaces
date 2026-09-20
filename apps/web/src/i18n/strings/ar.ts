@@ -104,6 +104,7 @@ export const ar: TranslationSchema = {
     account: "الحساب",
     logOut: "تسجيل الخروج",
     moderator: "مشرف",
+    admin: "مدير",
     editProfile: "تعديل الملف",
     changePassword: "تغيير كلمة المرور",
     changePasswordNote: "حافظ على أمان حسابك",

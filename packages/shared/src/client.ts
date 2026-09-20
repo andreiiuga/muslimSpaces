@@ -7,7 +7,8 @@ import {
   type SignupPayload,
   type UpdateProfilePayload,
 } from "./schemas/auth";
-import { categorySchema, type CreateCategoryPayload } from "./schemas/category";
+import { categorySchema, type CreateCategoryPayload, type UpdateCategoryPayload } from "./schemas/category";
+import { citySchema, type CreateCityPayload } from "./schemas/city";
 import {
   poiSchema,
   type CreatePoiPayload,
@@ -149,6 +150,19 @@ export function createApiClient({ baseUrl, getToken }: ApiClientOptions) {
       list: () => request("/categories", z.array(categorySchema)),
       create: (payload: CreateCategoryPayload) =>
         request("/categories", categorySchema, {
+          method: "POST",
+          body: JSON.stringify(payload),
+        }),
+      update: (id: string, payload: UpdateCategoryPayload) =>
+        request(`/categories/${id}`, categorySchema, {
+          method: "PATCH",
+          body: JSON.stringify(payload),
+        }),
+    },
+    cities: {
+      list: () => request("/cities", z.array(citySchema)),
+      create: (payload: CreateCityPayload) =>
+        request("/cities", citySchema, {
           method: "POST",
           body: JSON.stringify(payload),
         }),
