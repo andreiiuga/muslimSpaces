@@ -13,7 +13,8 @@
   },
   "dependencies": {
     "@muslimspaces/shared": "workspace:*",
-    "maplibre-gl": "^4.7.1"
+    "maplibre-gl": "^4.7.1",
+    "supercluster": "^9.1.0"
   },
   "peerDependencies": {
     "@maplibre/maplibre-react-native": "*",

@@ -56,6 +56,11 @@ export type ModeratePoiPayload = z.infer<typeof moderatePoiSchema>;
 // carry defaults via z.default(...), and wrapping a defaulted field in
 // .partial()'s implicit .optional() would short-circuit that default.
 export const listPoisQuerySchema = paginationQuerySchema.extend({
+  // Overrides paginationQuerySchema's own max(100) — the map view loads
+  // every matching POI at once (for client-side clustering, not paged
+  // display), which easily exceeds 100 nationwide. Default stays 20 so
+  // every other /pois list consumer is unaffected.
+  limit: z.coerce.number().int().positive().max(2000).default(20),
   categoryId: z.string().uuid().optional(),
   cityId: z.string().uuid().optional(),
   openNow: z.coerce.boolean().optional(),

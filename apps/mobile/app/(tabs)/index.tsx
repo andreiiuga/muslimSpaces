@@ -16,7 +16,6 @@ import {
   spacing,
 } from "@muslimspaces/ui";
 import { MapView } from "@muslimspaces/ui/map";
-import type { MapBounds } from "@muslimspaces/ui/map";
 import type { Category, Poi } from "@muslimspaces/shared";
 import { api } from "../../src/lib/api-client";
 import { useAuth } from "../../src/auth/AuthContext";
@@ -47,7 +46,6 @@ export default function ExploreScreen() {
   const [openNow, setOpenNow] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
-  const [bounds, setBounds] = useState<MapBounds | null>(null);
   const [selectedPoiId, setSelectedPoiId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -74,30 +72,22 @@ export default function ExploreScreen() {
       .catch(() => {});
   }, [user]);
 
-  // Initial load covers first paint; once the map reports a real viewport,
-  // subsequent fetches are viewport-driven — same pattern as the web
-  // ExploreView.
+  // Not viewport-bounded — the map loads every matching POI at once and
+  // clusters them client-side (see packages/ui/src/MapView/pin-utils.ts),
+  // so panning/zooming never needs a new fetch, and List mode always shows
+  // the same full set as Map mode.
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError(null);
 
-    const query = bounds
-      ? api.pois.bbox({
-          ...bounds,
-          categoryId: selectedCategoryId ?? undefined,
-          openNow: openNow || undefined,
-          search: search || undefined,
-          limit: 100,
-        })
-      : api.pois.list({
-          limit: 40,
-          categoryId: selectedCategoryId ?? undefined,
-          openNow: openNow || undefined,
-          search: search || undefined,
-        });
-
-    query
+    api.pois
+      .list({
+        limit: 2000,
+        categoryId: selectedCategoryId ?? undefined,
+        openNow: openNow || undefined,
+        search: search || undefined,
+      })
       .then((result) => {
         if (!cancelled) setPois(result);
       })
@@ -111,7 +101,7 @@ export default function ExploreScreen() {
     return () => {
       cancelled = true;
     };
-  }, [bounds, selectedCategoryId, openNow, search, t]);
+  }, [selectedCategoryId, openNow, search, t]);
 
   async function toggleFavorite(poiId: string) {
     if (!user) {
@@ -242,7 +232,6 @@ export default function ExploreScreen() {
           <MapView
             pois={pois}
             categories={categories}
-            onBoundsChange={setBounds}
             onMarkerPress={setSelectedPoiId}
             selectedPoiId={selectedPoi?.id ?? null}
             padding={{ bottom: tabBarClearance }}

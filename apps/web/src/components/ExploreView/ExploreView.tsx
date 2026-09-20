@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Square, SquareCheck, Map as MapIcon, Rows3 } from "lucide-react";
 import { POICard, Rating, Skeleton, Text, colors, radii, spacing } from "@muslimspaces/ui";
-import type { MapBounds } from "@muslimspaces/ui/map";
 import type { Category, Poi } from "@muslimspaces/shared";
 import dynamic from "next/dynamic";
 import { getBrowserApiClient } from "../../lib/api-client";
@@ -43,28 +42,26 @@ export function ExploreView({
   const [favoriteIds, setFavoriteIds] = useState(() => new Set(initialFavoriteIds));
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [openNow, setOpenNow] = useState(false);
-  const [bounds, setBounds] = useState<MapBounds | null>(null);
   const [selectedPoiId, setSelectedPoiId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Initial SSR list covers first paint (and SEO); once the map reports a
-  // real viewport, subsequent fetches are viewport-driven so the list and
-  // pins always agree on what's actually visible. Also refetches on a
-  // header search change even without a new bounds event.
+  // Initial SSR list covers first paint (and SEO); this refetches on mount
+  // and on any filter change. Not viewport-bounded — the map now loads
+  // every matching POI at once and clusters them client-side (see
+  // packages/ui/src/MapView/pin-utils.ts), so panning/zooming never needs a
+  // new fetch, and List mode always shows the same full set as Map mode.
   useEffect(() => {
-    if (!bounds) return;
     let cancelled = false;
     setLoading(true);
     setError(null);
 
     getBrowserApiClient()
-      .pois.bbox({
-        ...bounds,
+      .pois.list({
         categoryId: selectedCategoryId ?? undefined,
         openNow: openNow || undefined,
         search: search || undefined,
-        limit: 100,
+        limit: 2000,
       })
       .then((result) => {
         if (!cancelled) setPois(result);
@@ -79,7 +76,7 @@ export function ExploreView({
     return () => {
       cancelled = true;
     };
-  }, [bounds, selectedCategoryId, openNow, search, t]);
+  }, [selectedCategoryId, openNow, search, t]);
 
   async function toggleFavorite(poiId: string) {
     if (!isLoggedIn) {
@@ -203,7 +200,6 @@ export function ExploreView({
             <MapView
               pois={pois}
               categories={categories}
-              onBoundsChange={setBounds}
               onMarkerPress={setSelectedPoiId}
               selectedPoiId={selectedPoi?.id ?? null}
             />

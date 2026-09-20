@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { colors, shadows } from "../tokens";
-import { LABEL_MIN_ZOOM, PIN_EMOJI, pinIconKeyForSlug, pinLabel } from "./pin-utils";
+import { LABEL_MIN_ZOOM, PIN_EMOJI, buildClusterIndex, getMapPoints, pinIconKeyForSlug, pinLabel } from "./pin-utils";
 import type { PinIconKey } from "./pin-utils";
 import type { MapPadding, MapViewProps } from "./MapView.types";
 
@@ -26,12 +26,12 @@ const PIN_EMOJI_SIZE = 22;
 
 // Icon with a name-label pill above it, anchored (via maplibregl.Marker's
 // `anchor: "bottom"`) at the icon's own bottom edge — matches the design's
-// pins exactly. The label starts hidden; a single 'zoom' listener on the map
-// (see the effect below) toggles every label's visibility together instead
-// of each marker tracking zoom itself. The emoji itself is plain by default;
-// selecting it (a marker tap) adds a white circular badge + elevation
-// shadow behind it, since an emoji can't be recolored the way an icon can
-// to show selection state.
+// pins exactly. Markers are fully rebuilt on every render pass (see
+// renderMarkersRef below), so the label's visibility is just decided fresh
+// each time rather than toggled after the fact. The emoji itself is plain
+// by default; selecting it (a marker tap) adds a white circular badge +
+// elevation shadow behind it, since an emoji can't be recolored the way an
+// icon can to show selection state.
 function createMarkerElement(
   iconKey: PinIconKey,
   label: string,
@@ -77,6 +77,29 @@ function createMarkerElement(
   return { el, labelEl };
 }
 
+// Bubble size bands with the point count — a 4-place cluster and a
+// 400-place one shouldn't read as the same size. `label` is supercluster's
+// own abbreviation (e.g. "1.3k"), not re-derived here.
+function createClusterElement(count: number, label: string): HTMLDivElement {
+  const size = count < 10 ? 36 : count < 100 ? 44 : 52;
+  const el = document.createElement("div");
+  el.textContent = label;
+  el.style.width = `${size}px`;
+  el.style.height = `${size}px`;
+  el.style.display = "flex";
+  el.style.alignItems = "center";
+  el.style.justifyContent = "center";
+  el.style.borderRadius = "999px";
+  el.style.background = colors.primary;
+  el.style.color = colors.textOnPrimary;
+  el.style.border = `2px solid ${colors.surface}`;
+  el.style.fontSize = count < 100 ? "14px" : "13px";
+  el.style.fontWeight = "700";
+  el.style.cursor = "pointer";
+  el.style.boxShadow = shadows.elevated;
+  return el;
+}
+
 export function MapView({
   pois,
   categories,
@@ -90,7 +113,10 @@ export function MapView({
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
-  const labelElsRef = useRef<HTMLDivElement[]>([]);
+  // Rebuilt (by the effect below) whenever pois/categories/selection change;
+  // invoked imperatively from map event listeners registered once at mount,
+  // so panning/zooming re-renders markers without recreating the map.
+  const renderMarkersRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -115,24 +141,18 @@ export function MapView({
       });
     }
 
-    if (onBoundsChange) {
-      map.on("moveend", () => {
-        const bounds = map.getBounds();
-        onBoundsChange({
-          minLat: bounds.getSouth(),
-          minLng: bounds.getWest(),
-          maxLat: bounds.getNorth(),
-          maxLng: bounds.getEast(),
-        });
-      });
-    }
-
-    // One shared listener drives every marker's label visibility, instead
-    // of each marker wiring its own — a lot cheaper on every zoom tick.
-    map.on("zoom", () => {
-      const visible = map.getZoom() >= LABEL_MIN_ZOOM;
-      labelElsRef.current.forEach((labelEl) => {
-        labelEl.style.display = visible ? "block" : "none";
+    // 'moveend' covers pans AND zooms (it fires once any camera change
+    // settles) — one listener re-clusters/re-places markers for the new
+    // viewport and reports the new bounds upward.
+    map.on("moveend", () => {
+      renderMarkersRef.current();
+      if (!onBoundsChange) return;
+      const bounds = map.getBounds();
+      onBoundsChange({
+        minLat: bounds.getSouth(),
+        minLng: bounds.getWest(),
+        maxLat: bounds.getNorth(),
+        maxLng: bounds.getEast(),
       });
     });
 
@@ -150,32 +170,54 @@ export function MapView({
     const map = mapRef.current;
     if (!map) return;
 
-    markersRef.current.forEach((marker) => marker.remove());
-    labelElsRef.current = [];
+    const clusterIndex = buildClusterIndex(pois);
+    const poisById = new Map(pois.map((poi) => [poi.id, poi]));
 
-    markersRef.current = pois.map((poi) => {
-      const category = categories?.find((c) => c.id === poi.primaryCategoryId);
-      const iconKey = pinIconKeyForSlug(category?.slug);
-      const selected = poi.id === selectedPoiId;
-      const color = selected ? colors.danger : colors.primary;
-      const { el, labelEl } = createMarkerElement(iconKey, pinLabel(poi.name.en), color, selected);
-      labelElsRef.current.push(labelEl);
+    renderMarkersRef.current = () => {
+      markersRef.current.forEach((marker) => marker.remove());
 
-      const marker = new maplibregl.Marker({ element: el, anchor: "bottom" })
-        .setLngLat([poi.location.lng, poi.location.lat])
-        .addTo(map);
-      if (onMarkerPress) {
-        el.addEventListener("click", () => onMarkerPress(poi.id));
-      }
-      return marker;
-    });
+      const bounds = map.getBounds();
+      const zoom = map.getZoom();
+      const points = getMapPoints(
+        clusterIndex,
+        poisById,
+        [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()],
+        zoom,
+      );
+      const showLabels = zoom >= LABEL_MIN_ZOOM;
 
-    // Labels were just rebuilt hidden — sync them to the current zoom right
-    // away rather than waiting for the next 'zoom' event.
-    const visible = map.getZoom() >= LABEL_MIN_ZOOM;
-    labelElsRef.current.forEach((labelEl) => {
-      labelEl.style.display = visible ? "block" : "none";
-    });
+      markersRef.current = points.map((point) => {
+        if (point.kind === "cluster") {
+          const el = createClusterElement(point.count, point.label);
+          const marker = new maplibregl.Marker({ element: el, anchor: "center" })
+            .setLngLat([point.lng, point.lat])
+            .addTo(map);
+          el.addEventListener("click", () => {
+            const targetZoom = clusterIndex.getClusterExpansionZoom(point.clusterId);
+            map.easeTo({ center: [point.lng, point.lat], zoom: targetZoom, duration: 400 });
+          });
+          return marker;
+        }
+
+        const poi = point.poi;
+        const category = categories?.find((c) => c.id === poi.primaryCategoryId);
+        const iconKey = pinIconKeyForSlug(category?.slug);
+        const selected = poi.id === selectedPoiId;
+        const color = selected ? colors.danger : colors.primary;
+        const { el, labelEl } = createMarkerElement(iconKey, pinLabel(poi.name.en), color, selected);
+        labelEl.style.display = showLabels ? "block" : "none";
+
+        const marker = new maplibregl.Marker({ element: el, anchor: "bottom" })
+          .setLngLat([poi.location.lng, poi.location.lat])
+          .addTo(map);
+        if (onMarkerPress) {
+          el.addEventListener("click", () => onMarkerPress(poi.id));
+        }
+        return marker;
+      });
+    };
+
+    renderMarkersRef.current();
 
     return () => {
       markersRef.current.forEach((marker) => marker.remove());

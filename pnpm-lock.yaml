@@ -285,6 +285,9 @@ importers:
       maplibre-gl:
         specifier: ^4.7.1
         version: 4.7.1
+      supercluster:
+        specifier: ^9.1.0
+        version: 9.1.0
     devDependencies:
       '@maplibre/maplibre-react-native':
         specifier: 11.3.10
@@ -6080,6 +6083,9 @@ packages:
 
   supercluster@8.0.1:
     resolution: {integrity: sha512-IiOea5kJ9iqzD2t7QJq/cREyLHTtSmUT6gQsweojg9WH2sYJqZK9SswTu6jrscO6D1G5v5vYZ9ru/eq85lXeZQ==}
+
+  supercluster@9.1.0:
+    resolution: {integrity: sha512-WMhsJPm8Tf9f5mKxJ1D0mB5tbCMOFi8wTrm/LGnsJHGg8xkeNT/TWDZuFauOGRISnclbYgnxD7g3xJAfQO3FLg==}
 
   supports-color@5.5.0:
     resolution: {integrity: sha512-QjVjwdXIt408MIiAqCX4oUKsgU2EqAGzs2Ppkm4aQYbjm+ZEWEcW4SfFNTr4uMNZma0ey4f5lgLrkB0aX0QMow==}
@@ -13772,6 +13778,11 @@ snapshots:
 
   supercluster@8.0.1:
     dependencies:
+      kdbush: 4.1.0
+
+  supercluster@9.1.0:
+    dependencies:
+      '@types/geojson': 7946.0.16
       kdbush: 4.1.0
 
   supports-color@5.5.0:
