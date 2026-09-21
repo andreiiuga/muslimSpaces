@@ -15,8 +15,10 @@ import type {
 } from "@muslimspaces/shared";
 import { toGeoPoint } from "../common/geo-point";
 import type { RequestUser } from "../auth/decorators/current-user.decorator";
+import { MediaService } from "../media/media.service";
 import { PoiEntity, PoiStatus, PoiVisibility } from "./entities/poi.entity";
 import { PoiCategoryAssignmentEntity } from "./entities/poi-category-assignment.entity";
+import { PoiImageEntity, PoiImageRole } from "./entities/poi-image.entity";
 import { toPoiDto, PoiCategoryInfo } from "./poi.mapper";
 
 const FOREIGN_KEY_VIOLATION = "23503";
@@ -47,6 +49,9 @@ export class PoisService {
     private readonly poisRepository: Repository<PoiEntity>,
     @InjectRepository(PoiCategoryAssignmentEntity)
     private readonly poiCategoriesRepository: Repository<PoiCategoryAssignmentEntity>,
+    @InjectRepository(PoiImageEntity)
+    private readonly poiImagesRepository: Repository<PoiImageEntity>,
+    private readonly mediaService: MediaService,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -331,16 +336,46 @@ export class PoisService {
     return map;
   }
 
+  // One row per poiId (first cover found, if a POI somehow ends up with
+  // more than one — attach() doesn't enforce uniqueness). Used to
+  // denormalize Poi.thumbnailUrl so list views never need a per-POI
+  // images fetch just to show a thumbnail.
+  private async coverImageFor(poiIds: string[]): Promise<Map<string, string>> {
+    if (poiIds.length === 0) return new Map();
+    const rows = await this.poiImagesRepository.find({
+      where: { poiId: In(poiIds), role: PoiImageRole.COVER },
+    });
+    const map = new Map<string, string>();
+    for (const row of rows) {
+      if (!map.has(row.poiId)) {
+        map.set(row.poiId, this.mediaService.urlsForKey(row.storageKey).thumbnailUrl);
+      }
+    }
+    return map;
+  }
+
   private async toDtoList(pois: PoiEntity[]): Promise<Poi[]> {
-    const infoMap = await this.categoryInfoFor(pois.map((p) => p.id));
+    const ids = pois.map((p) => p.id);
+    const [infoMap, coverMap] = await Promise.all([this.categoryInfoFor(ids), this.coverImageFor(ids)]);
     return pois.map((poi) =>
-      toPoiDto(poi, infoMap.get(poi.id) ?? { categoryIds: [], primaryCategoryId: "" }),
+      toPoiDto(
+        poi,
+        infoMap.get(poi.id) ?? { categoryIds: [], primaryCategoryId: "" },
+        coverMap.get(poi.id) ?? null,
+      ),
     );
   }
 
   private async toDto(poi: PoiEntity): Promise<Poi> {
-    const infoMap = await this.categoryInfoFor([poi.id]);
-    return toPoiDto(poi, infoMap.get(poi.id) ?? { categoryIds: [], primaryCategoryId: "" });
+    const [infoMap, coverMap] = await Promise.all([
+      this.categoryInfoFor([poi.id]),
+      this.coverImageFor([poi.id]),
+    ]);
+    return toPoiDto(
+      poi,
+      infoMap.get(poi.id) ?? { categoryIds: [], primaryCategoryId: "" },
+      coverMap.get(poi.id) ?? null,
+    );
   }
 
   private async getDto(id: string): Promise<Poi> {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FlatList, Pressable, TextInput, View } from "react-native";
+import { FlatList, Image, Pressable, TextInput, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Search, Square, SquareCheck, Map as MapIcon, Rows3 } from "lucide-react-native";
@@ -257,7 +257,14 @@ export default function ExploreScreen() {
                 ...nativeShadows.elevated,
               }}
             >
-              <View style={{ width: 56, height: 56, flexShrink: 0, borderRadius: radii.md, backgroundColor: colors.primaryLight }} />
+              {selectedPoi.thumbnailUrl ? (
+                <Image
+                  source={{ uri: selectedPoi.thumbnailUrl }}
+                  style={{ width: 56, height: 56, flexShrink: 0, borderRadius: radii.md }}
+                />
+              ) : (
+                <View style={{ width: 56, height: 56, flexShrink: 0, borderRadius: radii.md, backgroundColor: colors.primaryLight }} />
+              )}
               <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
                 {categoryLabel(selectedPoi) && (
                   <Text size="xs" weight="medium" color={colors.primaryDark} letterSpacing={1.3}>

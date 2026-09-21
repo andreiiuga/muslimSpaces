@@ -1,4 +1,4 @@
-import { Pressable, View } from "react-native";
+import { Image, Pressable, View } from "react-native";
 import { Bookmark } from "lucide-react-native";
 import { colors, radii, spacing } from "../tokens";
 import { Card } from "../Card";
@@ -15,21 +15,28 @@ export function POICard({ poi, categoryLabel, onPress, isFavorite, onToggleFavor
   return (
     <Card onPress={onPress} padding={spacing.md}>
       <View style={{ flexDirection: "row", gap: spacing.md, alignItems: "flex-start" }}>
-        <View
-          style={{
-            width: 72,
-            height: 72,
-            flexShrink: 0,
-            borderRadius: radii.md,
-            backgroundColor: colors.primaryLight,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Text size="xl" color={colors.primaryDark} weight="bold">
-            {poi.name.ro.charAt(0).toUpperCase()}
-          </Text>
-        </View>
+        {poi.thumbnailUrl ? (
+          <Image
+            source={{ uri: poi.thumbnailUrl }}
+            style={{ width: 72, height: 72, flexShrink: 0, borderRadius: radii.md }}
+          />
+        ) : (
+          <View
+            style={{
+              width: 72,
+              height: 72,
+              flexShrink: 0,
+              borderRadius: radii.md,
+              backgroundColor: colors.primaryLight,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Text size="xl" color={colors.primaryDark} weight="bold">
+              {poi.name.ro.charAt(0).toUpperCase()}
+            </Text>
+          </View>
+        )}
 
         <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
           {categoryLabel && (

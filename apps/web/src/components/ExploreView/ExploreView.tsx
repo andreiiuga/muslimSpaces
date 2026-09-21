@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Square, SquareCheck, Map as MapIcon, Rows3 } from "lucide-react";
 import { POICard, Rating, Skeleton, Text, colors, radii, spacing } from "@muslimspaces/ui";
+import type { MapBounds } from "@muslimspaces/ui/map";
 import type { Category, Poi } from "@muslimspaces/shared";
 import dynamic from "next/dynamic";
 import { getBrowserApiClient } from "../../lib/api-client";
@@ -45,6 +46,11 @@ export function ExploreView({
   const [selectedPoiId, setSelectedPoiId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Drives the map-mode left list only (see mapVisiblePois below) — the map
+  // itself still gets the full `pois` set and clusters client-side; this is
+  // just "what's currently inside the viewport", updated from MapView's own
+  // moveend listener, no extra fetch involved.
+  const [mapBounds, setMapBounds] = useState<MapBounds | null>(null);
 
   // Initial SSR list covers first paint (and SEO); this refetches on mount
   // and on any filter change. Not viewport-bounded — the map now loads
@@ -102,6 +108,21 @@ export function ExploreView({
   // pois[0] fallback) also covers the selected POI dropping out of the list
   // after a refetch.
   const selectedPoi = pois.find((poi) => poi.id === selectedPoiId);
+
+  // "Including the clustered ones" — a POI merged into a cluster bubble
+  // (not rendered as its own pin at the current zoom) still counts as
+  // visible, since this is a pure viewport-bounds check, not "is this its
+  // own marker right now". Falls back to the full list before the map's
+  // first moveend fires bounds at all.
+  const mapVisiblePois = mapBounds
+    ? pois.filter(
+        (poi) =>
+          poi.location.lat >= mapBounds.minLat &&
+          poi.location.lat <= mapBounds.maxLat &&
+          poi.location.lng >= mapBounds.minLng &&
+          poi.location.lng <= mapBounds.maxLng,
+      )
+    : pois;
 
   function poiCard(poi: Poi, layout: "row" | "grid" = "row") {
     return (
@@ -191,7 +212,7 @@ export function ExploreView({
             {loading && pois.length === 0 ? (
               [0, 1, 2, 3].map((i) => <Skeleton key={i} height={120} borderRadius={radii.lg} />)
             ) : (
-              pois.map((poi) => poiCard(poi))
+              mapVisiblePois.map((poi) => poiCard(poi))
             )}
             <Text size="sm" color={colors.textMuted}>{t("explore.empty")}</Text>
           </div>
@@ -202,6 +223,7 @@ export function ExploreView({
               categories={categories}
               onMarkerPress={setSelectedPoiId}
               onDeselect={() => setSelectedPoiId(null)}
+              onBoundsChange={setMapBounds}
               selectedPoiId={selectedPoi?.id ?? null}
             />
 
@@ -224,7 +246,16 @@ export function ExploreView({
                   textDecoration: "none",
                 }}
               >
-                <div style={{ width: 62, height: 62, flex: "none", borderRadius: 13, backgroundColor: colors.primaryLight }} />
+                {selectedPoi.thumbnailUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={selectedPoi.thumbnailUrl}
+                    alt=""
+                    style={{ width: 62, height: 62, flex: "none", borderRadius: 13, objectFit: "cover" }}
+                  />
+                ) : (
+                  <div style={{ width: 62, height: 62, flex: "none", borderRadius: 13, backgroundColor: colors.primaryLight }} />
+                )}
                 <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
                   {categoryLabel(selectedPoi) && (
                     <Text size="xs" weight="medium" color={colors.primaryDark} letterSpacing={1.4}>

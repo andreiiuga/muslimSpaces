@@ -7,7 +7,7 @@ export interface PoiCategoryInfo {
   primaryCategoryId: string;
 }
 
-export function toPoiDto(entity: PoiEntity, categories: PoiCategoryInfo): Poi {
+export function toPoiDto(entity: PoiEntity, categories: PoiCategoryInfo, thumbnailUrl: string | null = null): Poi {
   return {
     id: entity.id,
     name: entity.name,
@@ -21,6 +21,7 @@ export function toPoiDto(entity: PoiEntity, categories: PoiCategoryInfo): Poi {
     website: entity.website ?? undefined,
     ratingAvg: entity.ratingAvg !== null ? Number(entity.ratingAvg) : null,
     ratingCount: entity.ratingCount,
+    thumbnailUrl,
     status: entity.status,
     visibility: entity.visibility,
     submittedBy: entity.submittedById,

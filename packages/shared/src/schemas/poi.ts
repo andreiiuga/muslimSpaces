@@ -34,6 +34,11 @@ export const poiSchema = z.object({
   // (list/map views) never need an aggregate join.
   ratingAvg: z.number().min(0).max(5).nullable(),
   ratingCount: z.number().int().nonnegative(),
+  // Denormalized from poi_images (the "cover"-role row, if any) so list
+  // views (POICard grids, the map's marker preview card) never need a
+  // per-POI images fetch just to show a thumbnail. null when the POI has
+  // no cover image yet.
+  thumbnailUrl: z.string().url().nullable(),
   status: poiStatusSchema,
   visibility: poiVisibilitySchema,
   submittedBy: z.string().uuid(),

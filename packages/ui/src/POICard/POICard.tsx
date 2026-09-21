@@ -70,11 +70,23 @@ export function POICard({ poi, categoryLabel, isFavorite, onToggleFavorite, layo
     </>
   );
 
-  const thumbnail = (
+  const thumbnailSize = { width: layout === "grid" ? "100%" : 92, height: layout === "grid" ? 168 : 92 };
+  const thumbnail = poi.thumbnailUrl ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={poi.thumbnailUrl}
+      alt=""
+      style={{
+        ...thumbnailSize,
+        flex: layout === "grid" ? undefined : "none",
+        borderRadius: radii.md,
+        objectFit: "cover",
+      }}
+    />
+  ) : (
     <div
       style={{
-        width: layout === "grid" ? "100%" : 92,
-        height: layout === "grid" ? 168 : 92,
+        ...thumbnailSize,
         flex: layout === "grid" ? undefined : "none",
         borderRadius: radii.md,
         backgroundColor: colors.primaryLight,
