@@ -18,13 +18,16 @@ export default async function EditPoiPage({ params }: { params: Promise<{ id: st
     throw error;
   }
 
-  const categories = await api.categories.list();
+  const [categories, images] = await Promise.all([
+    api.categories.list(),
+    api.pois.images.list(id),
+  ]);
 
   return (
     <div>
       <Text size="xl" weight="bold">Edit POI</Text>
       <div style={{ marginTop: 24 }}>
-        <PoiForm categories={categories} initialPoi={poi} />
+        <PoiForm categories={categories} initialPoi={poi} images={images} />
       </div>
     </div>
   );

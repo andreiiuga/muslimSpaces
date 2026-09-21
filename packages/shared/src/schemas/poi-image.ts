@@ -22,3 +22,11 @@ export const attachPoiImageSchema = z.object({
   sortOrder: z.number().int().default(0),
 });
 export type AttachPoiImagePayload = z.infer<typeof attachPoiImageSchema>;
+
+// Full replacement order, not a single-item move — simplest contract for a
+// drag/up-down admin UI: send the complete ordered id list, the server sets
+// sortOrder = array index for each.
+export const reorderPoiImagesSchema = z.object({
+  imageIds: z.array(z.string().uuid()).min(1),
+});
+export type ReorderPoiImagesPayload = z.infer<typeof reorderPoiImagesSchema>;

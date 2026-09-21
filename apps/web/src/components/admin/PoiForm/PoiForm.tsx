@@ -3,9 +3,18 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Input, Text, Textarea, colors, spacing } from "@muslimspaces/ui";
-import type { Category, Poi } from "@muslimspaces/shared";
+import type { Category, Poi, PoiImage } from "@muslimspaces/shared";
+import { PoiImagesManager } from "../PoiImagesManager/PoiImagesManager";
 
-export function PoiForm({ categories, initialPoi }: { categories: Category[]; initialPoi?: Poi }) {
+export function PoiForm({
+  categories,
+  initialPoi,
+  images,
+}: {
+  categories: Category[];
+  initialPoi?: Poi;
+  images?: PoiImage[];
+}) {
   const router = useRouter();
   const isEdit = Boolean(initialPoi);
 
@@ -164,6 +173,12 @@ export function PoiForm({ categories, initialPoi }: { categories: Category[]; in
               Delete POI
             </Button>
           </div>
+        </div>
+      )}
+
+      {isEdit && (
+        <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: spacing.md, marginTop: spacing.sm }}>
+          <PoiImagesManager poiId={initialPoi!.id} initialImages={images ?? []} />
         </div>
       )}
     </div>

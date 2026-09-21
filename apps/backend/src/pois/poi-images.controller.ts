@@ -1,6 +1,6 @@
-import { Body, Controller, Delete, Get, Param, Post, UseGuards } from "@nestjs/common";
-import { attachPoiImageSchema } from "@muslimspaces/shared";
-import type { AttachPoiImagePayload } from "@muslimspaces/shared";
+import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from "@nestjs/common";
+import { attachPoiImageSchema, reorderPoiImagesSchema } from "@muslimspaces/shared";
+import type { AttachPoiImagePayload, ReorderPoiImagesPayload } from "@muslimspaces/shared";
 import { ZodValidationPipe } from "../common/pipes/zod-validation.pipe";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { CurrentUser, RequestUser } from "../auth/decorators/current-user.decorator";
@@ -33,5 +33,17 @@ export class PoiImagesController {
     @CurrentUser() user: RequestUser,
   ) {
     return this.poiImagesService.remove(poiId, imageId, user);
+  }
+
+  // Literal "reorder" segment — never collides with the ":imageId" delete
+  // route above since image ids are always UUIDs, never the string "reorder".
+  @Patch("reorder")
+  @UseGuards(JwtAuthGuard)
+  reorder(
+    @Param("poiId") poiId: string,
+    @Body(new ZodValidationPipe(reorderPoiImagesSchema)) body: ReorderPoiImagesPayload,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return this.poiImagesService.reorder(poiId, body, user);
   }
 }
