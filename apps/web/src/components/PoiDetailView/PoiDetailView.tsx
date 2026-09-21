@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight, Navigation, Phone, Share2 } from "lucide-react";
@@ -55,12 +56,86 @@ export function PoiDetailView({
   isLoggedIn: boolean;
 }) {
   const { locale, t } = useLocale();
+
+  // Below 900px (same breakpoint ".poi-detail-side" itself unstacks at —
+  // see globals.css), the small locator map moves out of the side column
+  // and renders once, full-bleed, between the description and the reviews
+  // instead — a real breakpoint-driven remount (not a CSS-hidden second
+  // copy) since MapView is a real WebGL map instance; mounting two would
+  // mean two live tile-fetching contexts for one visible map.
+  const [isSmallViewport, setIsSmallViewport] = useState(false);
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 900px)");
+    const update = () => setIsSmallViewport(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+
   const heroImage = images[0];
   const open = hours.length > 0 ? isOpenNow(hours) : null;
   const BackIcon = locale === "ar" ? ArrowRight : ArrowLeft;
   const name = pickLocalized(poi.name, locale);
   const altName = locale === "ro" ? poi.name.en : poi.name.ro;
   const directionsUrl = `https://www.google.com/maps/search/?api=1&query=${poi.location.lat},${poi.location.lng}`;
+
+  // Directions/phone/share + contact + hours — one card, placed in two
+  // possible spots (see isSmallViewport below) via a plain JSX variable, not
+  // a nested function component — the latter would count as a new component
+  // type on every render and force React to remount this (interactive)
+  // subtree each time instead of just repositioning the same elements.
+  const contactCard = (
+    <div style={{ background: colors.surface, borderRadius: radii.lg, boxShadow: "0 1px 3px rgba(28,25,23,.08),0 6px 18px rgba(28,25,23,.05)", padding: 18, display: "flex", flexDirection: "column", gap: spacing.lg }}>
+      <div style={{ display: "flex", gap: 9 }}>
+        <a
+          href={directionsUrl}
+          target="_blank"
+          rel="noreferrer"
+          style={{ flex: "1 1 0", minWidth: 0, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, minHeight: 48, padding: "0 14px", background: colors.primary, color: colors.textOnPrimary, borderRadius: radii.pill, fontSize: 14.5, fontWeight: 600, textDecoration: "none", boxShadow: "0 4px 14px rgba(15,118,110,.28)" }}
+        >
+          <Navigation size={17} /> {t("poi.directions")}
+        </a>
+        {poi.phone && (
+          <a href={`tel:${poi.phone.replace(/\s+/g, "")}`} aria-label={poi.phone} style={{ width: 48, flex: "none", display: "inline-flex", alignItems: "center", justifyContent: "center", minHeight: 48, border: `1px solid ${colors.border}`, background: colors.surface, borderRadius: radii.pill }}>
+            <Phone size={19} color={colors.primary} />
+          </a>
+        )}
+        <button
+          type="button"
+          onClick={() => navigator.share?.({ title: name, url: window.location.href }).catch(() => {})}
+          aria-label="Share"
+          style={{ width: 48, flex: "none", display: "inline-flex", alignItems: "center", justifyContent: "center", minHeight: 48, border: `1px solid ${colors.border}`, background: colors.surface, borderRadius: radii.pill, cursor: "pointer" }}
+        >
+          <Share2 size={19} color={colors.primary} />
+        </button>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+        <Text size="xs" weight="medium" color={colors.textMuted} letterSpacing={1.4}>{t("poi.contact").toUpperCase()}</Text>
+        <Text size="sm">{poi.address}</Text>
+        {poi.phone && <Text size="sm">{poi.phone}</Text>}
+        {poi.website && (
+          <a href={poi.website} target="_blank" rel="noreferrer" style={{ fontSize: 14.5, color: colors.primary }}>
+            {poi.website}
+          </a>
+        )}
+      </div>
+
+      {hours.length > 0 && (
+        <div>
+          <Text size="xs" weight="medium" color={colors.textMuted} letterSpacing={1.4}>{t("poi.hours").toUpperCase()}</Text>
+          <div style={{ marginTop: 6 }}>
+            {formatHours(hours, locale, t("common.closed")).map(({ day, ranges }) => (
+              <div key={day} style={{ display: "flex", justifyContent: "space-between", gap: 16, padding: "6px 0", borderBottom: `1px solid ${colors.divider}`, fontSize: 14 }}>
+                <Text size="sm">{day}</Text>
+                <Text size="sm" color={colors.textMuted}>{ranges}</Text>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <div style={{ maxWidth: 1340, margin: "0 auto", padding: "22px clamp(16px,4vw,28px) 60px" }}>
@@ -109,65 +184,30 @@ export function PoiDetailView({
             <Text color={colors.textBody} size="md">{pickLocalized(poi.description, locale)}</Text>
           )}
 
+          {isSmallViewport && (
+            <>
+              {/* Full-bleed: cancels the page wrapper's own horizontal
+                  padding (the same clamp() it's set with below) so the map
+                  spans edge to edge instead of sitting in a padded, boxed
+                  card like the desktop sidebar version does. */}
+              <div style={{ position: "relative", height: 220, marginInline: "calc(-1 * clamp(16px,4vw,28px))" }}>
+                <MapView pois={[poi]} initialCenter={poi.location} initialZoom={14} />
+              </div>
+              {contactCard}
+            </>
+          )}
+
           <ReviewsList poiId={poi.id} poiName={name} initialReviews={reviews} currentUserId={currentUserId} isLoggedIn={isLoggedIn} />
         </div>
 
-        <div className="poi-detail-side" style={{ flex: "0 1 340px", minWidth: "min(280px,100%)", display: "flex", flexDirection: "column", gap: spacing.lg }}>
-          <div style={{ background: colors.surface, borderRadius: radii.lg, boxShadow: "0 1px 3px rgba(28,25,23,.08),0 6px 18px rgba(28,25,23,.05)", padding: 18, display: "flex", flexDirection: "column", gap: spacing.lg }}>
-            <div style={{ display: "flex", gap: 9 }}>
-              <a
-                href={directionsUrl}
-                target="_blank"
-                rel="noreferrer"
-                style={{ flex: "1 1 0", minWidth: 0, display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, minHeight: 48, padding: "0 14px", background: colors.primary, color: colors.textOnPrimary, borderRadius: radii.pill, fontSize: 14.5, fontWeight: 600, textDecoration: "none", boxShadow: "0 4px 14px rgba(15,118,110,.28)" }}
-              >
-                <Navigation size={17} /> {t("poi.directions")}
-              </a>
-              {poi.phone && (
-                <a href={`tel:${poi.phone.replace(/\s+/g, "")}`} aria-label={poi.phone} style={{ width: 48, flex: "none", display: "inline-flex", alignItems: "center", justifyContent: "center", minHeight: 48, border: `1px solid ${colors.border}`, background: colors.surface, borderRadius: radii.pill }}>
-                  <Phone size={19} color={colors.primary} />
-                </a>
-              )}
-              <button
-                type="button"
-                onClick={() => navigator.share?.({ title: name, url: window.location.href }).catch(() => {})}
-                aria-label="Share"
-                style={{ width: 48, flex: "none", display: "inline-flex", alignItems: "center", justifyContent: "center", minHeight: 48, border: `1px solid ${colors.border}`, background: colors.surface, borderRadius: radii.pill, cursor: "pointer" }}
-              >
-                <Share2 size={19} color={colors.primary} />
-              </button>
+        {!isSmallViewport && (
+          <div className="poi-detail-side" style={{ flex: "0 1 340px", minWidth: "min(280px,100%)", display: "flex", flexDirection: "column", gap: spacing.lg }}>
+            {contactCard}
+            <div style={{ position: "relative", height: 180, borderRadius: radii.lg, overflow: "hidden", border: `1px solid ${colors.border}` }}>
+              <MapView pois={[poi]} initialCenter={poi.location} initialZoom={14} />
             </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-              <Text size="xs" weight="medium" color={colors.textMuted} letterSpacing={1.4}>{t("poi.contact").toUpperCase()}</Text>
-              <Text size="sm">{poi.address}</Text>
-              {poi.phone && <Text size="sm">{poi.phone}</Text>}
-              {poi.website && (
-                <a href={poi.website} target="_blank" rel="noreferrer" style={{ fontSize: 14.5, color: colors.primary }}>
-                  {poi.website}
-                </a>
-              )}
-            </div>
-
-            {hours.length > 0 && (
-              <div>
-                <Text size="xs" weight="medium" color={colors.textMuted} letterSpacing={1.4}>{t("poi.hours").toUpperCase()}</Text>
-                <div style={{ marginTop: 6 }}>
-                  {formatHours(hours, locale, t("common.closed")).map(({ day, ranges }) => (
-                    <div key={day} style={{ display: "flex", justifyContent: "space-between", gap: 16, padding: "6px 0", borderBottom: `1px solid ${colors.divider}`, fontSize: 14 }}>
-                      <Text size="sm">{day}</Text>
-                      <Text size="sm" color={colors.textMuted}>{ranges}</Text>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
-
-          <div style={{ position: "relative", height: 180, borderRadius: radii.lg, overflow: "hidden", border: `1px solid ${colors.border}` }}>
-            <MapView pois={[poi]} initialCenter={poi.location} initialZoom={14} />
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
