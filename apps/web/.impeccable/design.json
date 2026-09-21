@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-21T16:06:55Z",
+  "title": "Design System: MuslimSpaces",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Quiet Emerald", "canonical": "#0F766E", "tonalRamp": ["#09443f", "#107f76", "#17b5a9", "#26e3d5", "#5ceadf", "#92f1ea", "#c9f8f4", "#e8fcfb"] },
+      "primary-dark": { "role": "primary", "displayName": "Quiet Emerald, Dark", "canonical": "#0B564F" },
+      "primary-light": { "role": "primary", "displayName": "Quiet Emerald, Light", "canonical": "#CCFBF1" },
+      "soft-cream": { "role": "neutral", "displayName": "Soft Cream", "canonical": "#FFFBF5", "tonalRamp": ["#4d2e00", "#8f5600", "#cc7a00", "#ff9d0a", "#ffb647", "#ffce85", "#ffe7c2", "#fff5e5"] },
+      "surface": { "role": "neutral", "displayName": "Surface White", "canonical": "#FFFFFF" },
+      "border": { "role": "neutral", "displayName": "Border", "canonical": "#E7E2D8", "tonalRamp": ["#2f291d", "#584d36", "#7e6e4e", "#a28e67", "#b9aa8d", "#d0c7b3", "#e8e3d9", "#f5f3ef"] },
+      "text": { "role": "neutral", "displayName": "Ink", "canonical": "#1C1917", "tonalRamp": ["#2a2623", "#4e4640", "#70645c", "#918279", "#aca19a", "#c8c1bc", "#e3e0dd", "#f3f2f1"] },
+      "text-body": { "role": "neutral", "displayName": "Ink, Body", "canonical": "#292524" },
+      "text-muted": { "role": "neutral", "displayName": "Ink, Muted", "canonical": "#78716C" },
+      "text-faint": { "role": "neutral", "displayName": "Ink, Faint", "canonical": "#A8A29E" },
+      "danger": { "role": "error", "displayName": "Danger", "canonical": "#DC2626", "tonalRamp": ["#420b0b", "#7b1414", "#b01c1c", "#dd2c2c", "#e66161", "#ee9696", "#f7caca", "#fbe9e9"] },
+      "danger-dark": { "role": "error", "displayName": "Danger, Dark", "canonical": "#B91C1C" },
+      "success": { "role": "success", "displayName": "Success", "canonical": "#15803D", "tonalRamp": ["#0b421f", "#147b3a", "#1daf54", "#2ddc6e", "#61e593", "#96eeb7", "#caf6db", "#e9fbf0"] },
+      "warning": { "role": "warning", "displayName": "Warning", "canonical": "#D97706", "tonalRamp": ["#4a2902", "#8b4c04", "#c76d05", "#f88d11", "#faa94c", "#fcc688", "#fde2c3", "#fef3e6"] },
+      "star": { "role": "accent", "displayName": "Star", "canonical": "#F59E0B", "tonalRamp": ["#492f03", "#895806", "#c47e08", "#f5a214", "#f8b94f", "#fad089", "#fde8c4", "#fef5e7"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Page-level headings, e.g. Explore's \"Locurile ținute de comunitate\"." },
+      "headline": { "displayName": "Headline", "purpose": "Section-level headings." },
+      "title": { "displayName": "Title", "purpose": "Card titles — POI name, blog post title." },
+      "body": { "displayName": "Body", "purpose": "Paragraph text, addresses, descriptions." },
+      "label": { "displayName": "Label", "purpose": "Uppercase category kickers, dateline counts, section eyebrows." }
+    },
+    "shadows": [
+      { "name": "card", "value": "0 1px 3px rgba(28,25,23,.08), 0 1px 2px rgba(28,25,23,.06)", "purpose": "Default resting shadow for any card/surface." },
+      { "name": "elevated", "value": "0 8px 24px rgba(28,25,23,.16)", "purpose": "Reserved for elements floating over other content — the map's selected-POI preview card, dropdowns, overlays." }
+    ],
+    "breakpoints": [
+      { "name": "explore-stack", "value": "860px" },
+      { "name": "admin-stack", "value": "768px" },
+      { "name": "nav-strip", "value": "900px" },
+      { "name": "submit-icon-only", "value": "620px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Solid teal call-to-action button, full pill radius.",
+      "html": "<button class=\"ds-btn-primary\">Propune un loc</button>",
+      "css": ".ds-btn-primary { background-color: #0F766E; color: #FFFFFF; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-weight: 600; font-size: 16px; padding: 8px 16px; border: none; border-radius: 999px; box-shadow: 0 4px 14px rgba(15,118,110,.28); cursor: pointer; transition: opacity 0.15s; } .ds-btn-primary:hover { opacity: 0.92; } .ds-btn-primary:focus-visible { outline: 2px solid #0B564F; outline-offset: 2px; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Lower-emphasis teal-tinted button.",
+      "html": "<button class=\"ds-btn-secondary\">Salvează</button>",
+      "css": ".ds-btn-secondary { background-color: #CCFBF1; color: #0B564F; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-weight: 600; font-size: 16px; padding: 8px 16px; border: none; border-radius: 999px; cursor: pointer; transition: opacity 0.15s; } .ds-btn-secondary:hover { opacity: 0.85; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Lowest-emphasis outline button for secondary/tertiary actions.",
+      "html": "<button class=\"ds-btn-ghost\">Anulează</button>",
+      "css": ".ds-btn-ghost { background-color: transparent; color: #1C1917; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-weight: 600; font-size: 16px; padding: 8px 16px; border: 1px solid #E7E2D8; border-radius: 999px; cursor: pointer; transition: background-color 0.15s; } .ds-btn-ghost:hover { background-color: #FFFBF5; }"
+    },
+    {
+      "name": "Danger Button",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Outline-style destructive-action button — light red fill, not solid.",
+      "html": "<button class=\"ds-btn-danger\">Șterge</button>",
+      "css": ".ds-btn-danger { background-color: #FEF2F2; color: #B91C1C; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-weight: 600; font-size: 16px; padding: 8px 16px; border: 1px solid #FECACA; border-radius: 999px; cursor: pointer; transition: background-color 0.15s; } .ds-btn-danger:hover { background-color: #FEE2E2; }"
+    },
+    {
+      "name": "POI Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Signature component — thumbnail, category kicker, title, address, star rating. Row layout for list contexts.",
+      "html": "<div class=\"ds-poi-card\"><img class=\"ds-poi-card-thumb\" src=\"https://placehold.co/92x92\" alt=\"\" /><div class=\"ds-poi-card-body\"><div class=\"ds-poi-card-kicker\">MOSCHEE</div><div class=\"ds-poi-card-title\">Moscheea Osmancea</div><div class=\"ds-poi-card-address\">DJ391, Osmancea, Constanța</div></div></div>",
+      "css": ".ds-poi-card { display: flex; gap: 16px; align-items: flex-start; background-color: #FFFFFF; border-radius: 16px; box-shadow: 0 1px 3px rgba(28,25,23,.08), 0 1px 2px rgba(28,25,23,.06); padding: 16px; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; } .ds-poi-card-thumb { width: 92px; height: 92px; border-radius: 12px; object-fit: cover; flex-shrink: 0; } .ds-poi-card-kicker { font-size: 12px; font-weight: 500; letter-spacing: 1.3px; color: #0B564F; text-transform: uppercase; } .ds-poi-card-title { font-size: 18px; font-weight: 600; color: #1C1917; margin-top: 2px; } .ds-poi-card-address { font-size: 14px; color: #78716C; margin-top: 2px; }"
+    },
+    {
+      "name": "Category Chip",
+      "kind": "chip",
+      "refersTo": "chip-selected",
+      "description": "Filter chip — selected (solid teal) and unselected (outline) states.",
+      "html": "<div style=\"display:flex;gap:8px;\"><button class=\"ds-chip ds-chip-selected\">Toate</button><button class=\"ds-chip ds-chip-unselected\">Moschee</button></div>",
+      "css": ".ds-chip { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 14px; font-weight: 500; padding: 4px 12px; border-radius: 999px; cursor: pointer; white-space: nowrap; } .ds-chip-selected { background-color: #0F766E; color: #FFFFFF; border: 1px solid #0F766E; } .ds-chip-unselected { background-color: #FFFFFF; color: #1C1917; border: 1px solid #E7E2D8; } .ds-chip-unselected:hover { background-color: #FFFBF5; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Standard form field — label above, hairline border, error state switches border/message to danger red.",
+      "html": "<div class=\"ds-input-wrap\"><label class=\"ds-input-label\">Email</label><input class=\"ds-input\" type=\"text\" placeholder=\"you@example.ro\" /></div>",
+      "css": ".ds-input-wrap { display: flex; flex-direction: column; gap: 4px; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; } .ds-input-label { font-size: 14px; font-weight: 500; color: #1C1917; } .ds-input { padding: 8px 12px; border-radius: 14px; border: 1px solid #E7E2D8; font-size: 16px; background-color: #FFFFFF; color: #1C1917; width: 100%; box-sizing: border-box; } .ds-input:focus { border-color: #0F766E; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Neighborhood Registry",
+    "overview": "MuslimSpaces reads as a warm, hand-kept community ledger, not a venture-backed consumer app. Its job is to make a moderated, community-curated directory of mosques, halal businesses, and services feel trustworthy and welcoming — the opposite of a slick, anonymous listings site. A soft cream canvas, a single restrained teal accent, and generous rounded geometry carry that warmth; nothing about the surface competes with the actual content (place names, photos, addresses) for attention.\n\nThe teal accent (#0F766E) is a deliberate, confirmed departure from the coral-and-black gig-economy-app palette (Airbnb, Uber, and their many imitators) — this project exists specifically to not read as another one of those. Warmth here comes from the cream background and soft shadows, not from a loud accent color; the teal is reserved almost entirely for the primary action and the selected state, so its rarity keeps it legible as \"this is the one thing to notice\" rather than becoming wallpaper.",
+    "keyCharacteristics": [
+      "Warm cream background (#FFFBF5), white surfaces, soft near-flat shadows — never stark white-on-white or harsh drop shadows.",
+      "Teal used sparingly: primary buttons, selected chips/tabs, active states. Everything else stays neutral ink-on-cream.",
+      "Pill-shaped buttons and chips throughout; generous corner radii on cards and inputs (12–24px).",
+      "Bilingual by default (Romanian primary, English secondary) — Arabic script support (IBM Plex Sans Arabic) is wired into the font stack for any Arabic-script content, distinct from the primary Latin type."
+    ],
+    "rules": [
+      { "name": "The One Accent Rule", "body": "Teal is the only color allowed to signal \"this is interactive/primary\" — never introduce a second accent hue. If something needs more visual weight than teal can carry, use size, weight, or whitespace instead of a new color.", "section": "colors" },
+      { "name": "The Whisper-Kicker Rule", "body": "Every uppercase label uses the same 12px/+1.3px-tracking treatment, in muted or primary-dark ink, never in the loudest ink color. It should read as a quiet category tag, not a shout.", "section": "typography" },
+      { "name": "The Floating-Over Rule", "body": "The stronger \"elevated\" shadow means \"this is physically overlapping something else on screen right now,\" not \"this is more important.\" A regular list card never earns it just for emphasis.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep the cream (#FFFBF5) / white (#FFFFFF) two-tone background system — cream for the page, white for anything that needs to read as a raised surface.",
+      "Do reserve teal for primary actions and selected states only; let ink-on-cream carry everything else.",
+      "Do use full-pill radius (999px) for every button and chip, no exceptions.",
+      "Do use the soft \"Card\" shadow for resting surfaces and save the stronger \"Elevated\" shadow specifically for things floating over other content."
+    ],
+    "donts": [
+      "Don't introduce a second accent color alongside teal — if something needs more visual weight, reach for size/weight/whitespace, not a new hue.",
+      "Don't use a solid red fill for destructive actions — the established pattern is a light-red-fill-plus-red-border outline treatment.",
+      "Don't reach for a coral/black gig-economy-app palette or a loud, saturated multi-color system — the confirmed rejection this project's teal choice exists to avoid.",
+      "Don't add heavy, multi-layer, or glassmorphic shadow/blur effects — the system is deliberately near-flat; depth is rare and purposeful, not decorative."
+    ]
+  }
+}

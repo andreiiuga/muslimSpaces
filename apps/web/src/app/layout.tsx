@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, IBM_Plex_Sans_Arabic } from "next/font/google";
 import { colors } from "@muslimspaces/ui";
 import { Navbar } from "../components/Navbar/Navbar";
-import { Footer } from "../components/Footer/Footer";
 import { LocaleProvider } from "../i18n/LocaleContext";
 import "./globals.css";
 
@@ -55,7 +54,6 @@ export default function RootLayout({
               wider than the viewport instead of the content shrinking or
               scrolling within itself. */}
           <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
-          <Footer />
         </LocaleProvider>
       </body>
     </html>

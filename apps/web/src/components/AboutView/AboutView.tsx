@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button, Text, colors, radii, spacing } from "@muslimspaces/ui";
 import { useLocale } from "../../i18n/LocaleContext";
 
@@ -22,8 +23,23 @@ export function AboutView() {
         <Button onPress={() => router.push("/submit")}>{t("submit.entryLabel")}</Button>
       </div>
 
-      <div style={{ borderTop: `1px solid ${colors.divider}`, paddingTop: spacing.md }}>
-        <Text size="sm" color={colors.textMuted}>{t("about.footer")}</Text>
+      <div
+        style={{
+          borderTop: `1px solid ${colors.divider}`,
+          paddingTop: spacing.md,
+          display: "flex",
+          gap: spacing.lg,
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+        }}
+      >
+        <Text size="sm" color={colors.textMuted}>
+          {t("about.footer")} · hello@muslimspaces.ro
+        </Text>
+        <Link href="/blog" style={{ fontSize: 13.5, color: colors.primary, textDecoration: "none" }}>
+          {t("common.blog")}
+        </Link>
       </div>
     </div>
   );

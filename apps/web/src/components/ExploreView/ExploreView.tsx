@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Square, SquareCheck, Map as MapIcon, Rows3 } from "lucide-react";
@@ -51,6 +51,28 @@ export function ExploreView({
   // just "what's currently inside the viewport", updated from MapView's own
   // moveend listener, no extra fetch involved.
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null);
+  // Bumped once per *concluded search* (see the fetch effect below) — tells
+  // MapView to zoom/fit to whatever `pois` just came back. A ref, not
+  // state, since it only needs to survive across renders to detect "did
+  // `search` change since the last fetch", not to trigger one itself.
+  const prevSearchRef = useRef(search);
+  const [fitBoundsToken, setFitBoundsToken] = useState(0);
+
+  // Measures the sticky site header (see "data-site-header" in HeaderBar) so
+  // Map mode's small-viewport shell can size itself to exactly "the rest of
+  // the viewport" via the --header-h custom property below — see
+  // ".explore-shell--map" in globals.css. The 120 fallback only matters for
+  // the very first paint before this effect runs.
+  const [headerHeight, setHeaderHeight] = useState(120);
+  useEffect(() => {
+    const header = document.querySelector<HTMLElement>("[data-site-header]");
+    if (!header) return;
+    const update = () => setHeaderHeight(header.getBoundingClientRect().height);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(header);
+    return () => observer.disconnect();
+  }, []);
 
   // Initial SSR list covers first paint (and SEO); this refetches on mount
   // and on any filter change. Not viewport-bounded — the map now loads
@@ -62,6 +84,14 @@ export function ExploreView({
     setLoading(true);
     setError(null);
 
+    // Computed before the ref is updated below, so it reflects "did the
+    // search query specifically change for *this* fetch" — a category/
+    // openNow-only change (search unchanged) correctly reads false here,
+    // so it doesn't yank the camera around on every filter click, only on
+    // an actual search submission.
+    const searchConcluded = search !== prevSearchRef.current;
+    prevSearchRef.current = search;
+
     getBrowserApiClient()
       .pois.list({
         categoryId: selectedCategoryId ?? undefined,
@@ -70,7 +100,10 @@ export function ExploreView({
         limit: 2000,
       })
       .then((result) => {
-        if (!cancelled) setPois(result);
+        if (!cancelled) {
+          setPois(result);
+          if (searchConcluded) setFitBoundsToken((prev) => prev + 1);
+        }
       })
       .catch(() => {
         if (!cancelled) setError(t("explore.loadError"));
@@ -145,9 +178,12 @@ export function ExploreView({
   }
 
   return (
-    <div style={{ maxWidth: 1340, margin: "0 auto", padding: "26px clamp(16px,4vw,28px) 60px", display: "flex", flexDirection: "column", gap: spacing.lg }}>
-      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: spacing.xl, flexWrap: "wrap" }}>
-        <div style={{ minWidth: 0 }}>
+    <div
+      className={`explore-shell${mode === "map" ? " explore-shell--map" : ""}`}
+      style={{ "--header-h": `${headerHeight}px` } as CSSProperties}
+    >
+      <div className="explore-top">
+        <div className="explore-heading-block" style={{ minWidth: 0 }}>
           <Text size="xs" weight="medium" color={colors.textMuted} letterSpacing={1.4}>
             {t("explore.dateline", { count: pois.length }).toUpperCase()}
           </Text>
@@ -156,12 +192,14 @@ export function ExploreView({
           </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: spacing.lg, flexWrap: "wrap" }}>
+        <div className="explore-controls" style={{ display: "flex", alignItems: "center", gap: spacing.lg, flexWrap: "wrap" }}>
+          <span className="explore-count-compact">{t("explore.dateline", { count: pois.length })}</span>
+
           <button
             type="button"
+            className="explore-opennow-btn"
             onClick={() => setOpenNow((v) => !v)}
             style={{
-              display: "flex",
               alignItems: "center",
               gap: 8,
               height: 40,
@@ -176,12 +214,13 @@ export function ExploreView({
             {t("explore.openNow")}
           </button>
 
-          <div style={{ display: "flex", border: `1px solid ${colors.border}`, borderRadius: radii.pill, overflow: "hidden", background: colors.surface }}>
+          <div className="explore-mode-toggle" style={{ display: "flex", border: `1px solid ${colors.border}`, borderRadius: radii.pill, overflow: "hidden", background: colors.surface }}>
             <button
               type="button"
+              className="explore-mode-btn"
               onClick={() => setMode("map")}
               style={{
-                display: "flex", alignItems: "center", gap: 7, height: 40, padding: "0 16px", fontSize: 14, cursor: "pointer",
+                display: "flex", alignItems: "center", gap: 7, cursor: "pointer",
                 border: "none", background: mode === "map" ? colors.primary : "transparent", color: mode === "map" ? colors.textOnPrimary : colors.text,
               }}
             >
@@ -189,9 +228,10 @@ export function ExploreView({
             </button>
             <button
               type="button"
+              className="explore-mode-btn"
               onClick={() => setMode("list")}
               style={{
-                display: "flex", alignItems: "center", gap: 7, height: 40, padding: "0 16px", fontSize: 14, cursor: "pointer",
+                display: "flex", alignItems: "center", gap: 7, cursor: "pointer",
                 border: "none", borderInlineStart: `1px solid ${colors.border}`,
                 background: mode === "list" ? colors.primary : "transparent", color: mode === "list" ? colors.textOnPrimary : colors.text,
               }}
@@ -202,7 +242,13 @@ export function ExploreView({
         </div>
       </div>
 
-      <FilterBar categories={categories} selectedCategoryId={selectedCategoryId} onCategoryChange={setSelectedCategoryId} />
+      <FilterBar
+        categories={categories}
+        selectedCategoryId={selectedCategoryId}
+        onCategoryChange={setSelectedCategoryId}
+        openNow={openNow}
+        onOpenNowChange={() => setOpenNow((v) => !v)}
+      />
 
       {error && <Text size="sm" color={colors.dangerDark}>{error}</Text>}
 
@@ -224,6 +270,7 @@ export function ExploreView({
               onMarkerPress={setSelectedPoiId}
               onDeselect={() => setSelectedPoiId(null)}
               onBoundsChange={setMapBounds}
+              fitBoundsToken={fitBoundsToken}
               selectedPoiId={selectedPoi?.id ?? null}
             />
 

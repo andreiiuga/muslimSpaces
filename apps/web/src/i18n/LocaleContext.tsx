@@ -7,13 +7,55 @@
  * hardcoded `.ro` field access), then this hydrates to whatever was last
  * stored in localStorage. See CLAUDE.md and the redesign plan for why this
  * scope was chosen over the real thing.
+ *
+ * Reads the stored locale via `useSyncExternalStore`, not `useState` +
+ * `useEffect` — that looks equivalent but isn't guaranteed hydration-safe:
+ * `useSyncExternalStore`'s `getServerSnapshot` is what React actually uses
+ * for the hydration comparison pass, only switching to the real client
+ * snapshot after commit. A plain `useState(DEFAULT_LOCALE)` initial value
+ * relies on no render happening before the "read localStorage" effect
+ * fires, which doesn't hold once a Suspense boundary sits upstream of this
+ * provider's consumers — HeaderBar's `useSearchParams()` Suspense wrapper
+ * (see Navbar.tsx) is exactly that, and did produce a real, reproducible
+ * "Hydration failed" error on every load where a non-"ro" locale was
+ * already stored, confirmed via a hard reload with devtools open.
  */
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 import { isSupportedLocale, type LocaleCode } from "./types";
 import { t as translate, tArray as translateArray } from "./strings";
 
 const STORAGE_KEY = "muslimspaces.locale";
 const DEFAULT_LOCALE: LocaleCode = "ro";
+// The native `storage` event only fires in *other* tabs/windows, never the
+// one that made the write — this is how setLocale below notifies this
+// same tab's subscribers that the snapshot changed.
+const LOCALE_CHANGE_EVENT = "muslimspaces:locale-change";
+
+function readStoredLocale(): LocaleCode {
+  const stored = window.localStorage.getItem(STORAGE_KEY);
+  return stored && isSupportedLocale(stored) ? stored : DEFAULT_LOCALE;
+}
+
+function subscribe(callback: () => void) {
+  window.addEventListener("storage", callback);
+  window.addEventListener(LOCALE_CHANGE_EVENT, callback);
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener(LOCALE_CHANGE_EVENT, callback);
+  };
+}
+
+function getServerSnapshot(): LocaleCode {
+  return DEFAULT_LOCALE;
+}
 
 interface LocaleContextValue {
   locale: LocaleCode;
@@ -26,13 +68,7 @@ interface LocaleContextValue {
 const LocaleContext = createContext<LocaleContextValue | null>(null);
 
 export function LocaleProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<LocaleCode>(DEFAULT_LOCALE);
-
-  useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (stored && isSupportedLocale(stored)) setLocaleState(stored);
-  }, []);
-
+  const locale = useSyncExternalStore(subscribe, readStoredLocale, getServerSnapshot);
   const dir = locale === "ar" ? "rtl" : "ltr";
 
   useEffect(() => {
@@ -40,10 +76,10 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
     document.documentElement.lang = locale;
   }, [dir, locale]);
 
-  function setLocale(next: LocaleCode) {
-    setLocaleState(next);
+  const setLocale = useCallback((next: LocaleCode) => {
     window.localStorage.setItem(STORAGE_KEY, next);
-  }
+    window.dispatchEvent(new Event(LOCALE_CHANGE_EVENT));
+  }, []);
 
   const value = useMemo<LocaleContextValue>(
     () => ({
@@ -53,7 +89,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
       t: (key, vars) => translate(locale, key, vars),
       tArray: (key) => translateArray(locale, key),
     }),
-    [locale, dir],
+    [locale, dir, setLocale],
   );
 
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;

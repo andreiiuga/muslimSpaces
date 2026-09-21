@@ -25,6 +25,15 @@ export interface MapViewProps {
   initialCenter?: { lat: number; lng: number };
   initialZoom?: number;
   onBoundsChange?: (bounds: MapBounds) => void;
+  /**
+   * Bump this (e.g. a counter incremented once per search) to fit/zoom the
+   * camera to the bounding box of the current `pois` prop — e.g. "zoom to
+   * the results" after a search concludes. Only reacts to the value
+   * *changing*; the initial value (including 0/undefined) never triggers a
+   * fit on mount. Web only for now — MapView.native.tsx doesn't implement
+   * this prop.
+   */
+  fitBoundsToken?: number;
   onMarkerPress?: (poiId: string) => void;
   /**
    * The currently-selected POI (e.g. from a marker tap) — when this changes

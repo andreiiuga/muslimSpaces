@@ -1,22 +1,35 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Map as MapIcon, Search, MapPinPlus } from "lucide-react";
 import { Avatar, colors, radii, spacing } from "@muslimspaces/ui";
 import type { AuthUser } from "@muslimspaces/shared";
 import { useLocale } from "../../i18n/LocaleContext";
-import type { LocaleCode } from "../../i18n/types";
-
-const LOCALE_CODES: LocaleCode[] = ["en", "ro", "ar"];
+import { SUPPORTED_LOCALES } from "../../i18n/types";
+import { LocaleMenu } from "./LocaleMenu";
 
 export function HeaderBar({ user }: { user: AuthUser | null }) {
   const { locale, setLocale, t } = useLocale();
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [query, setQuery] = useState(searchParams.get("q") ?? "");
+  // Deliberately not next/navigation's useSearchParams() — that hook forces
+  // this component into a Suspense boundary (see the plain "use client"
+  // Navbar.tsx wrapper this used to need), and a Suspense boundary hydrates
+  // independently of its surroundings ("selective hydration"): by the time
+  // this boundary actually hydrates, LocaleContext's client-only locale
+  // correction (reading localStorage) may have already landed, so what
+  // should be a simple hydration of the "ro" HTML actually ships mismatches
+  // against a since-updated context value — a real, reproducible
+  // "Hydration failed" error whenever a non-"ro" locale was stored. Reading
+  // the query param directly from the URL after mount sidesteps the
+  // Suspense requirement (and the race) entirely; this is only ever used to
+  // seed the search box's initial value, never re-read afterward.
+  const [query, setQuery] = useState("");
+  useEffect(() => {
+    setQuery(new URLSearchParams(window.location.search).get("q") ?? "");
+  }, []);
 
   const navItems = [
     { href: "/", key: "nav.explore" },
@@ -58,6 +71,7 @@ export function HeaderBar({ user }: { user: AuthUser | null }) {
 
   return (
     <div
+      data-site-header
       style={{
         position: "sticky",
         top: 0,
@@ -80,7 +94,7 @@ export function HeaderBar({ user }: { user: AuthUser | null }) {
           flexWrap: "wrap",
         }}
       >
-        <Link href="/" style={{ display: "flex", alignItems: "center", gap: 9, textDecoration: "none", flex: "none" }}>
+        <Link href="/" className="header-logo" style={{ display: "flex", alignItems: "center", gap: 9, textDecoration: "none" }}>
           <MapIcon size={22} color={colors.primary} fill={colors.primaryLight} />
           <span style={{ fontSize: 20, fontWeight: 600, letterSpacing: "-.02em", color: colors.text }}>
             MuslimSpaces
@@ -89,10 +103,8 @@ export function HeaderBar({ user }: { user: AuthUser | null }) {
 
         <form
           onSubmit={submitSearch}
+          className="header-search"
           style={{
-            flex: "1 1 220px",
-            minWidth: 180,
-            maxWidth: 420,
             display: "flex",
             alignItems: "center",
             gap: 9,
@@ -103,7 +115,22 @@ export function HeaderBar({ user }: { user: AuthUser | null }) {
             height: 44,
           }}
         >
-          <Search size={18} color={colors.primary} />
+          <button
+            type="submit"
+            aria-label={t("explore.search")}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+              background: "transparent",
+              border: "none",
+              padding: 0,
+              cursor: "pointer",
+            }}
+          >
+            <Search size={18} color={colors.primary} />
+          </button>
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -117,8 +144,8 @@ export function HeaderBar({ user }: { user: AuthUser | null }) {
         </nav>
 
         <div style={{ display: "flex", alignItems: "center", gap: spacing.md, marginInlineStart: "auto", flex: "none" }}>
-          <div style={{ display: "flex", border: `1px solid ${colors.border}`, borderRadius: radii.pill, overflow: "hidden", background: colors.surface }}>
-            {LOCALE_CODES.map((code) => {
+          <div className="locale-pills-desktop" style={{ border: `1px solid ${colors.border}`, borderRadius: radii.pill, overflow: "hidden", background: colors.surface }}>
+            {SUPPORTED_LOCALES.map((code) => {
               const active = locale === code;
               return (
                 <button
@@ -143,6 +170,10 @@ export function HeaderBar({ user }: { user: AuthUser | null }) {
                 </button>
               );
             })}
+          </div>
+
+          <div className="locale-menu-mobile">
+            <LocaleMenu locale={locale} onSelect={setLocale} />
           </div>
 
           <Link
@@ -195,7 +226,7 @@ export function HeaderBar({ user }: { user: AuthUser | null }) {
       </div>
 
       <div className="header-nav-strip">
-        <div style={{ display: "flex", gap: 18, overflowX: "auto", padding: "0 clamp(16px,4vw,28px)" }}>{navLinks}</div>
+        <div style={{ display: "flex", padding: "0 clamp(16px,4vw,28px)" }}>{navLinks}</div>
       </div>
     </div>
   );

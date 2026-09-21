@@ -151,6 +151,7 @@ export function MapView({
   selectedPoiId,
   onDeselect,
   padding,
+  fitBoundsToken,
 }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -280,6 +281,62 @@ export function MapView({
     if (!map) return;
     map.easeTo({ padding: toPaddingOptions(padding), duration: 250 });
   }, [padding?.top, padding?.right, padding?.bottom, padding?.left]);
+
+  // "Zoom to results" — reacts only to fitBoundsToken *changing* (the
+  // guard below skips the initial 0/undefined value), so this never fires
+  // on mount, only when the caller deliberately bumps it (e.g. once per
+  // concluded search). Reads `pois` fresh from this render's closure rather
+  // than taking it as a dep, since the caller is expected to update `pois`
+  // and bump the token together — depending on `pois` too would also
+  // re-fit on every unrelated pois change (pan/zoom-driven re-clustering
+  // doesn't change `pois` itself, but a category/openNow filter change
+  // does, and that should NOT re-fit the camera, only a concluded search).
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !fitBoundsToken) return;
+    if (pois.length === 0) return;
+
+    if (pois.length === 1) {
+      const only = pois[0]!;
+      map.easeTo({
+        center: [only.location.lng, only.location.lat],
+        zoom: Math.max(map.getZoom(), 13),
+        padding: toPaddingOptions(padding),
+        duration: 800,
+      });
+      return;
+    }
+
+    let minLat = Infinity;
+    let minLng = Infinity;
+    let maxLat = -Infinity;
+    let maxLng = -Infinity;
+    for (const poi of pois) {
+      minLat = Math.min(minLat, poi.location.lat);
+      maxLat = Math.max(maxLat, poi.location.lat);
+      minLng = Math.min(minLng, poi.location.lng);
+      maxLng = Math.max(maxLng, poi.location.lng);
+    }
+
+    const basePadding = toPaddingOptions(padding);
+    map.fitBounds(
+      [
+        [minLng, minLat],
+        [maxLng, maxLat],
+      ],
+      {
+        padding: {
+          top: basePadding.top + 60,
+          right: basePadding.right + 60,
+          bottom: basePadding.bottom + 60,
+          left: basePadding.left + 60,
+        },
+        maxZoom: 15,
+        duration: 900,
+      },
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fitBoundsToken]);
 
   // Selecting a POI (e.g. a marker tap) flies the camera into it at an
   // angle and, once that settles, starts the slow orbit. Deselecting stops

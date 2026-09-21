@@ -23,14 +23,55 @@
    both — .header-nav-links / .header-nav-strip — this just toggles which
    one is visible, matching the design's own `showNavLinks`/`showNavStrip`
    width-driven split, implemented here as a real CSS breakpoint instead of
-   a JS-measured width). */
+   a JS-measured width). Below the same 900px breakpoint, the header row
+   itself restructures: the logo claims a full flex line on its own
+   (centered), which pushes the search bar + locale/CTA/login controls onto
+   their own shared line below it — see ".header-logo" below. The language
+   switcher swaps from the desktop EN/RO/AR pill row to a single dropdown
+   button (LocaleMenu.tsx) at the same breakpoint — both are always
+   rendered, matching the nav-links/nav-strip toggle pattern, see
+   ".locale-pills-desktop"/".locale-menu-mobile". */
 .header-nav-strip {
   display: none;
   background: #fffbf5;
   border-bottom: 1px solid #e7e2d8;
 }
 
+.header-logo {
+  flex: none;
+}
+
+.header-search {
+  flex: 1 1 220px;
+  min-width: 180px;
+  max-width: 420px;
+}
+
+.locale-pills-desktop {
+  display: flex;
+}
+
+.locale-menu-mobile {
+  display: none;
+}
+
 @media (max-width: 900px) {
+  .header-row {
+    row-gap: 8px;
+  }
+  .header-logo {
+    flex: 0 0 100%;
+    justify-content: center;
+  }
+  /* Lets the search bar share its line with the locale/CTA/login controls
+     — the wrap algorithm decides line membership from this hypothetical
+     (basis) size, not the post-shrink one, so the desktop 220px basis is
+     too wide for that decision to succeed at this width even though the
+     box itself can shrink well below it. */
+  .header-search {
+    flex: 1 1 100px;
+    min-width: 100px;
+  }
   .header-nav-links {
     display: none !important;
   }
@@ -40,9 +81,20 @@
     top: 69px;
     z-index: 25;
   }
+  /* Tabs spread evenly across the full width instead of left-anchored with
+     a fixed gap — each tab claims an equal-width slot and centers its own
+     label within it, like the mobile app's tab bar. */
   .header-nav-strip > div > a {
+    flex: 1;
+    text-align: center;
     padding: 11px 0 !important;
     font-size: 14.5px !important;
+  }
+  .locale-pills-desktop {
+    display: none;
+  }
+  .locale-menu-mobile {
+    display: block;
   }
 }
 
@@ -59,17 +111,92 @@
   }
 }
 
-@media (max-width: 640px) {
-  .header-row {
-    row-gap: 8px;
-  }
-}
-
 /* ── Explore ─────────────────────────────────────────────────────────
    Plain, non-full-bleed layout — a bordered/rounded map sits side-by-side
    with a scrollable list column inside the normal centered page column,
    matching the design exactly (not a full-bleed map with a floating
    glass panel, which is what this used to be). */
+.explore-shell {
+  max-width: 1340px;
+  margin: 0 auto;
+  padding: 26px clamp(16px, 4vw, 28px) 60px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.explore-top {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+/* Rides alongside the category chips at small viewports instead of taking
+   its own row next to the map/list switch — see ".explore-opennow-chip"
+   below and FilterBar.tsx, which renders the actual toggle chip. */
+.explore-opennow-btn {
+  display: flex;
+}
+
+.explore-mode-btn {
+  height: 40px;
+  padding: 0 16px;
+  font-size: 14px;
+}
+
+/* Hidden by default — only stands in for the big heading kicker at small
+   viewports, and only in Map mode (".explore-shell--map"), where the
+   heading itself is hidden to make room for the map. See below. */
+.explore-count-compact {
+  display: none;
+  font-size: 12px;
+  font-weight: 500;
+  color: #78716C;
+}
+
+.explore-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* The Open Now chip FilterBar renders alongside the category chips — only
+   shown at small viewports, where it replaces ".explore-opennow-btn"
+   above (hidden there) so every filter lives in one carousel. */
+.explore-opennow-chip {
+  display: none;
+}
+
+@media (max-width: 860px) {
+  .explore-opennow-btn {
+    display: none;
+  }
+
+  .explore-opennow-chip {
+    display: inline-flex;
+  }
+
+  .explore-mode-btn {
+    height: 34px;
+    padding: 0 12px;
+    font-size: 13px;
+  }
+
+  .explore-filter-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+
+  .explore-filter-row::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 .explore-columns {
   display: flex;
   gap: 20px;
@@ -106,13 +233,56 @@
 }
 
 @media (max-width: 860px) {
+  /* Map mode's side-by-side list is redundant here — List mode (the other
+     Explore tab) already covers "browse as a list" on small viewports, so
+     showing both stacked just wastes vertical space. The list column still
+     renders (skeletons, "no results" text) for map-mode's own bookkeeping;
+     this only ever hides it, it's not conditionally mounted. */
   .explore-list-col {
-    max-width: none;
-    max-height: none;
+    display: none;
   }
-  .explore-map-col {
-    height: clamp(320px, 60vh, 480px);
-    min-height: 320px;
+}
+
+/* Map mode, small viewport: a static, non-scrolling "app" screen instead of
+   a page that scrolls past the map — the map is the primary, dynamic
+   surface, everything else compacts to make room for it. ".explore-shell"
+   is sized to exactly fill the viewport below the sticky header (measured
+   into --header-h by ExploreView.tsx, since the header's own height varies
+   by breakpoint/content) and clips its own overflow, so nothing below it
+   (there is nothing below it — see Footer removal) can force the page to
+   scroll. List mode is untouched: it's an inherently scrollable list, so it
+   keeps the normal page heading/flow at every viewport. */
+@media (max-width: 860px) {
+  .explore-shell--map {
+    height: calc(100dvh - var(--header-h, 130px));
+    overflow: hidden;
+    padding: 10px clamp(16px, 4vw, 28px) 8px;
+    gap: 8px;
+  }
+
+  .explore-shell--map .explore-heading-block {
+    display: none;
+  }
+
+  .explore-shell--map .explore-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .explore-shell--map .explore-count-compact {
+    display: inline-block;
+  }
+
+  .explore-shell--map .explore-columns {
+    flex: 1;
+    min-height: 0;
+    align-items: stretch;
+  }
+
+  .explore-shell--map .explore-map-col {
+    flex: 1;
+    min-height: 0;
+    height: auto;
   }
 }
 
