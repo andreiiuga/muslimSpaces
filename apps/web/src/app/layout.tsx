@@ -37,10 +37,11 @@ export default function RootLayout({
       <body
         style={{
           margin: 0,
-          fontFamily: "var(--font-jakarta), var(--font-ibm-arabic), system-ui, sans-serif",
+          fontFamily:
+            "var(--font-jakarta), var(--font-ibm-arabic), system-ui, sans-serif",
           backgroundColor: colors.background,
           color: colors.text,
-          minHeight: "100vh",
+          minHeight: "100dvh",
           display: "flex",
           flexDirection: "column",
         }}
