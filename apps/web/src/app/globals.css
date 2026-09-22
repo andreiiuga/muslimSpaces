@@ -26,11 +26,14 @@
    a JS-measured width). Below the same 900px breakpoint, the header row
    itself restructures: the logo claims a full flex line on its own
    (centered), which pushes the search bar + locale/CTA/login controls onto
-   their own shared line below it — see ".header-logo" below. The language
-   switcher swaps from the desktop EN/RO/AR pill row to a single dropdown
-   button (LocaleMenu.tsx) at the same breakpoint — both are always
-   rendered, matching the nav-links/nav-strip toggle pattern, see
-   ".locale-pills-desktop"/".locale-menu-mobile". */
+   their own shared line below it — see ".header-logo" below. At the same
+   breakpoint the language switcher, "submit a place" CTA and login/account
+   link all move out of the header row entirely and into HeaderDrawer.tsx's
+   slide-in panel, reached through a single menu button — both the inline
+   trio (".header-desktop-controls") and the drawer trigger
+   (".header-menu-trigger", rendered by HeaderDrawer itself) are always
+   mounted, matching the nav-links/nav-strip toggle pattern; this just
+   swaps which one is visible. */
 .header-nav-strip {
   display: none;
   background: #fffbf5;
@@ -47,11 +50,11 @@
   max-width: 420px;
 }
 
-.locale-pills-desktop {
+.header-desktop-controls {
   display: flex;
 }
 
-.locale-menu-mobile {
+.header-menu-trigger {
   display: none;
 }
 
@@ -63,11 +66,11 @@
     flex: 0 0 100%;
     justify-content: center;
   }
-  /* Lets the search bar share its line with the locale/CTA/login controls
-     — the wrap algorithm decides line membership from this hypothetical
-     (basis) size, not the post-shrink one, so the desktop 220px basis is
-     too wide for that decision to succeed at this width even though the
-     box itself can shrink well below it. */
+  /* Lets the search bar share its line with the menu trigger button — the
+     wrap algorithm decides line membership from this hypothetical (basis)
+     size, not the post-shrink one, so the desktop 220px basis is too wide
+     for that decision to succeed at this width even though the box itself
+     can shrink well below it. */
   .header-search {
     flex: 1 1 100px;
     min-width: 100px;
@@ -90,24 +93,12 @@
     padding: 11px 0 !important;
     font-size: 14.5px !important;
   }
-  .locale-pills-desktop {
+  .header-desktop-controls {
     display: none;
   }
-  .locale-menu-mobile {
-    display: block;
-  }
-}
-
-/* Icon-only submit CTA below 620px — matches the design's own
-   `submitBtnLabel: w >= 620 ? label : ""`. */
-@media (max-width: 620px) {
-  .header-submit-label {
-    display: none;
-  }
-  .header-submit-cta {
-    padding: 0 !important;
-    width: 40px;
-    justify-content: center;
+  .header-menu-trigger {
+    display: flex;
+    margin-inline-start: auto;
   }
 }
 

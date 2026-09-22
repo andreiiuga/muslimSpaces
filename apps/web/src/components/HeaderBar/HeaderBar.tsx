@@ -8,7 +8,7 @@ import { Avatar, colors, radii, spacing } from "@muslimspaces/ui";
 import type { AuthUser } from "@muslimspaces/shared";
 import { useLocale } from "../../i18n/LocaleContext";
 import { SUPPORTED_LOCALES } from "../../i18n/types";
-import { LocaleMenu } from "./LocaleMenu";
+import { HeaderDrawer } from "./HeaderDrawer";
 
 export function HeaderBar({ user }: { user: AuthUser | null }) {
   const { locale, setLocale, t } = useLocale();
@@ -143,8 +143,11 @@ export function HeaderBar({ user }: { user: AuthUser | null }) {
           {navLinks}
         </nav>
 
-        <div style={{ display: "flex", alignItems: "center", gap: spacing.md, marginInlineStart: "auto", flex: "none" }}>
-          <div className="locale-pills-desktop" style={{ border: `1px solid ${colors.border}`, borderRadius: radii.pill, overflow: "hidden", background: colors.surface }}>
+        <div
+          className="header-desktop-controls"
+          style={{ alignItems: "center", gap: spacing.md, marginInlineStart: "auto", flex: "none" }}
+        >
+          <div style={{ display: "flex", border: `1px solid ${colors.border}`, borderRadius: radii.pill, overflow: "hidden", background: colors.surface }}>
             {SUPPORTED_LOCALES.map((code) => {
               const active = locale === code;
               return (
@@ -172,13 +175,8 @@ export function HeaderBar({ user }: { user: AuthUser | null }) {
             })}
           </div>
 
-          <div className="locale-menu-mobile">
-            <LocaleMenu locale={locale} onSelect={setLocale} />
-          </div>
-
           <Link
             href="/submit"
-            className="header-submit-cta"
             style={{
               display: "inline-flex",
               alignItems: "center",
@@ -195,7 +193,7 @@ export function HeaderBar({ user }: { user: AuthUser | null }) {
             }}
           >
             <MapPinPlus size={17} />
-            <span className="header-submit-label">{t("submit.entryLabel")}</span>
+            <span>{t("submit.entryLabel")}</span>
           </Link>
 
           {user ? (
@@ -223,6 +221,8 @@ export function HeaderBar({ user }: { user: AuthUser | null }) {
             </Link>
           )}
         </div>
+
+        <HeaderDrawer user={user} />
       </div>
 
       <div className="header-nav-strip">

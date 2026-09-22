@@ -8,6 +8,7 @@ export const ar: TranslationSchema = {
     cancel: "إلغاء",
     logIn: "تسجيل الدخول",
     signUp: "إنشاء حساب",
+    menu: "القائمة",
     blog: "المدونة",
     about: "عن التطبيق",
     closed: "مغلق",

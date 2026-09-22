@@ -10,6 +10,7 @@ export const en = {
     cancel: "Cancel",
     logIn: "Log in",
     signUp: "Sign up",
+    menu: "Menu",
     blog: "Blog",
     about: "About",
     closed: "Closed",

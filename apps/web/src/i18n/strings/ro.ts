@@ -8,6 +8,7 @@ export const ro: TranslationSchema = {
     cancel: "Anulează",
     logIn: "Intră în cont",
     signUp: "Înscrie-te",
+    menu: "Meniu",
     blog: "Blog",
     about: "Despre",
     closed: "Închis",
