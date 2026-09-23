@@ -44,30 +44,37 @@ export function HeaderBar({ user }: { user: AuthUser | null }) {
     router.push(`/${params.toString() ? `?${params.toString()}` : ""}`);
   }
 
-  const navLinks = (
-    <>
-      {navItems.map((item) => {
-        const active = pathname === item.href;
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            style={{
-              fontSize: 15,
-              fontWeight: active ? 600 : 400,
-              color: active ? colors.primaryDark : "#57534E",
-              textDecoration: "none",
-              padding: "6px 0",
-              borderBottom: `2px solid ${active ? colors.primary : "transparent"}`,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {t(item.key)}
-          </Link>
-        );
-      })}
-    </>
-  );
+  // "desktop" is the inline nav in the header row (>=900px); "strip" is the
+  // second sticky row below it, shown instead on narrow viewports — the two
+  // need different link styling (spread evenly & centered vs. left-anchored
+  // with a fixed gap), previously done via a CSS descendant selector
+  // (`.header-nav-strip > div > a`) with `!important` to beat these same
+  // links' own inline styles. Rendering two variants directly sidesteps the
+  // specificity fight entirely.
+  function renderNavLinks(variant: "desktop" | "strip") {
+    return navItems.map((item) => {
+      const active = pathname === item.href;
+      return (
+        <Link
+          key={item.href}
+          href={item.href}
+          style={{
+            fontSize: variant === "strip" ? 14.5 : 15,
+            flex: variant === "strip" ? 1 : undefined,
+            textAlign: variant === "strip" ? "center" : undefined,
+            fontWeight: active ? 600 : 400,
+            color: active ? colors.primaryDark : "#57534E",
+            textDecoration: "none",
+            padding: variant === "strip" ? "11px 0" : "6px 0",
+            borderBottom: `2px solid ${active ? colors.primary : "transparent"}`,
+            whiteSpace: "nowrap",
+          }}
+        >
+          {t(item.key)}
+        </Link>
+      );
+    });
+  }
 
   return (
     <div
@@ -83,18 +90,21 @@ export function HeaderBar({ user }: { user: AuthUser | null }) {
       }}
     >
       <div
-        className="header-row"
+        // row-gap is 8px on mobile (where flex-wrap actually kicks in) and
+        // matches the column-gap clamp() at "header:" width and up — the
+        // only two properties here that differ by breakpoint, everything
+        // else in this row stays a flat inline style.
+        className="flex flex-wrap items-center gap-x-[clamp(12px,1.6vw,18px)] gap-y-2 header:gap-y-[clamp(12px,1.6vw,18px)]"
         style={{
           maxWidth: 1340,
           margin: "0 auto",
           padding: "14px clamp(16px,4vw,28px)",
-          display: "flex",
-          alignItems: "center",
-          gap: "clamp(12px,1.6vw,18px)",
-          flexWrap: "wrap",
         }}
       >
-        <Link href="/" className="header-logo" style={{ display: "flex", alignItems: "center", gap: 9, textDecoration: "none" }}>
+        <Link
+          href="/"
+          className="flex flex-[0_0_100%] items-center justify-center gap-[9px] no-underline header:flex-none header:justify-start"
+        >
           <MapIcon size={22} color={colors.primary} fill={colors.primaryLight} />
           <span style={{ fontSize: 20, fontWeight: 600, letterSpacing: "-.02em", color: colors.text }}>
             MuslimSpaces
@@ -103,32 +113,9 @@ export function HeaderBar({ user }: { user: AuthUser | null }) {
 
         <form
           onSubmit={submitSearch}
-          className="header-search"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 9,
-            border: `1px solid ${colors.border}`,
-            borderRadius: radii.input,
-            background: colors.surface,
-            padding: "0 13px",
-            height: 44,
-          }}
+          className="flex h-11 flex-[1_1_100px] min-w-[100px] max-w-[420px] items-center gap-[9px] rounded-input border border-border bg-surface px-[13px] header:flex-[1_1_220px] header:min-w-[180px]"
         >
-          <button
-            type="submit"
-            aria-label={t("explore.search")}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-              background: "transparent",
-              border: "none",
-              padding: 0,
-              cursor: "pointer",
-            }}
-          >
+          <button type="submit" aria-label={t("explore.search")} className="flex flex-none items-center justify-center border-0 bg-transparent p-0 cursor-pointer">
             <Search size={18} color={colors.primary} />
           </button>
           <input
@@ -143,14 +130,9 @@ export function HeaderBar({ user }: { user: AuthUser | null }) {
           />
         </form>
 
-        <nav className="header-nav-links" style={{ display: "flex", alignItems: "center", gap: "clamp(14px,1.8vw,22px)", flex: "none" }}>
-          {navLinks}
-        </nav>
+        <nav className="hidden items-center gap-[clamp(14px,1.8vw,22px)] header:flex header:flex-none">{renderNavLinks("desktop")}</nav>
 
-        <div
-          className="header-desktop-controls"
-          style={{ alignItems: "center", gap: spacing.md, marginInlineStart: "auto", flex: "none" }}
-        >
+        <div className="hidden flex-none items-center gap-md ms-auto header:flex">
           <div style={{ display: "flex", border: `1px solid ${colors.border}`, borderRadius: radii.pill, overflow: "hidden", background: colors.surface }}>
             {SUPPORTED_LOCALES.map((code) => {
               const active = locale === code;
@@ -229,8 +211,8 @@ export function HeaderBar({ user }: { user: AuthUser | null }) {
         <HeaderDrawer user={user} />
       </div>
 
-      <div className="header-nav-strip">
-        <div style={{ display: "flex", padding: "0 clamp(16px,4vw,28px)" }}>{navLinks}</div>
+      <div className="block border-b border-border bg-background header:hidden sticky top-[69px] z-[25]">
+        <div style={{ display: "flex", padding: "0 clamp(16px,4vw,28px)" }}>{renderNavLinks("strip")}</div>
       </div>
     </div>
   );

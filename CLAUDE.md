@@ -21,12 +21,19 @@ dependency, check it's free/self-hostable within Railway before adding it.
 - **apps/mobile**: Expo (React Native). Talks to the backend's public Railway
   URL — it is not deployed to Railway itself.
 - **packages/ui**: custom lightweight design system shared by web + mobile —
-  not a third-party UI kit. Design tokens (`tokens.ts`) are plain data with
-  no platform split; components are `Name/Name.tsx` (web) +
-  `Name/Name.native.tsx` (native) pairs, resolved automatically by each
-  bundler (webpack/Turbopack only ever matches the plain `.tsx`; Metro
-  prefers `.native.tsx` when present). See "packages/ui architecture" below
-  — the peer-dependency pattern there is load-bearing, not incidental.
+  not a third-party UI kit. Styled with Tailwind CSS: `shadcn`/Radix on web,
+  NativeWind on native, both driven by one shared preset
+  (`packages/ui/tailwind-preset.js`) and `class-variance-authority` for
+  variant props — not inline style objects (that was the original approach;
+  see "Styling" under "packages/ui architecture" below for why it changed
+  and what still deliberately stays outside Tailwind). `tokens.ts` is still
+  the plain-data source of truth these mirror, and is still directly used
+  by many `apps/web`/`apps/mobile` files beyond `packages/ui` itself.
+  Components are `Name/Name.tsx` (web) + `Name/Name.native.tsx` (native)
+  pairs, resolved automatically by each bundler (webpack/Turbopack only ever
+  matches the plain `.tsx`; Metro prefers `.native.tsx` when present). See
+  "packages/ui architecture" below — the peer-dependency pattern there is
+  load-bearing, not incidental.
 - **API layer**: typed REST + zod, not tRPC. Reasoning: tRPC is strongest
   when client and server are the same TS project; here one NestJS backend
   serves two very different clients (Next SSR + Expo), so a decoupled,
@@ -95,8 +102,17 @@ dependency, check it's free/self-hostable within Railway before adding it.
   `MuslimSpaces Web.dc.html` and `MuslimSpaces Mobile v2.dc.html` (fetch via
   the `DesignSync` MCP tool's `get_file`, not a browser — the page requires
   claude.ai auth WebFetch doesn't have). Treat it as the source of truth for
-  anything visual — colors/type already match `packages/ui`'s tokens, but
-  check it before inventing new UI rather than guessing from the app alone.
+  anything visual — check it before inventing new UI rather than guessing
+  from the app alone. Colors match `tokens.ts`/`tailwind-preset.js`
+  hex-for-hex (spot-checked against the canvas's own inline styles during
+  the Tailwind migration — every color the app actually uses as a token was
+  an exact match, no drift); the `fontSizes` scale is a deliberately coarser
+  approximation of the canvas's many bespoke per-element pixel values (the
+  canvas hand-tunes font-size/letter-spacing per element, e.g. `.13em`
+  tracking on kickers; `tokens.ts`'s `letterSpacings` table already documents
+  itself as an approximation of that em-based tracking at each size's actual
+  px value, not an exact conversion — this was true before the Tailwind
+  migration and is unchanged by it).
   Notably: the map's per-category pin icons and the `pinInk`/`shortName`
   logic in `packages/ui/src/MapView/pin-utils.ts` + `MapView.tsx`/
   `MapView.native.tsx` were ported from this canvas's `CAT_ICON` map — see
@@ -330,6 +346,94 @@ the same `readlink -f` single-instance check described below.) Reason:
   has no such concept). Next's RSC compiler flags this at build time if
   it's missing, since `apps/web/src/app/page.tsx` and friends are Server
   Components by default.
+
+#### Styling: Tailwind (shadcn) + NativeWind + `cva`, not inline-styles-only
+
+`packages/ui`'s 9 core primitives (`Button`, `Text`, `IconButton`, `Avatar`,
+`Card`, `Chip`, `Input`, `Textarea`, `Rating`, `Skeleton`) plus `POICard` and
+`MapView`'s chrome were migrated off the original inline-style-objects
+system to Tailwind CSS on web (via `shadcn`/Radix, e.g. `HeaderDrawer`'s
+`Sheet`) and NativeWind on native, with `class-variance-authority` (`cva`)
+resolving each component's variant props (`variant`, `size`, `selected`,
+`error`, …) to a className string on both platforms — see `packages/ui/src/cn.ts`
+for the shared `clsx`+`tailwind-merge` helper every component uses.
+
+- **One shared preset, `packages/ui/tailwind-preset.js`** (plain CommonJS,
+  not TSX like the rest of this package — Tailwind's and NativeWind's config
+  loaders `require()` it directly at build time, outside Metro/webpack's own
+  transform), consumed via `presets: [...]` by both `apps/web/tailwind.config.ts`
+  and `apps/mobile/tailwind.config.js`. No CSS-variable/`.dark` theming —
+  colors are plain hex, matching this app's lack of a dark-mode requirement.
+- **The version-alignment rule above (React/RN) extends to
+  `tailwindcss`/`nativewind`/`class-variance-authority`/`clsx`/`tailwind-merge`** —
+  same exact-pin-everywhere discipline, verified with `pnpm why <pkg>` after
+  any install touching these.
+- **Every app's `content` glob must include `../../packages/ui/src/**/*.{ts,tsx}`** —
+  since `packages/ui` ships raw unbuilt source (same reason as the
+  React/RN section above), Tailwind's/NativeWind's JIT scanner otherwise
+  never sees its `className` strings and silently purges them. The single
+  easiest way to ship an invisibly broken component in this codebase.
+- **`packages/ui/src/tokens.ts` was *not* deleted** and still owns
+  `colors`/`spacing`/`radii`/`fontSizes`/`fontWeights`/`letterSpacings`/
+  `shadows`/`nativeShadows` — this migration's scope was `packages/ui`'s own
+  components plus `POICard`, `MapView`'s chrome, and `HeaderBar`/
+  `HeaderDrawer`/`ReviewComposerModal`, **not** every inline style in every
+  `apps/web`/`apps/mobile` screen. Dozens of consumer files still import
+  `colors`/`spacing`/`radii` directly from `@muslimspaces/ui` for their own
+  inline styles — `tokens.ts` remains load-bearing for those and must not be
+  deleted without a separate, much larger follow-up sweep of that surface.
+  `tailwind-preset.js`'s values are a direct, verified-against-the-original-
+  Claude-Design-canvas mirror of `tokens.ts`'s — the two are meant to be
+  kept in sync by hand if either changes.
+- **Two categories of value deliberately stay outside Tailwind/NativeWind,
+  applied via the `style` prop instead of `className`:** (1) genuinely
+  per-instance/arbitrary values a static class can't express — `Avatar`'s
+  `size`, `Card`'s `padding`/`radius`, `Skeleton`'s `width`/`height`/
+  `borderRadius` (sometimes a raw CSS string like `calc(...)`), `Text`'s
+  `color` (any hex a caller passes) and `numberOfLines`/`letterSpacing`
+  overrides, `MapView`'s per-instance marker/cluster colors — Tailwind's JIT
+  can't scan a dynamically built arbitrary-value class string. (2) shadow
+  and font-weight, for two unrelated platform-specific reasons: RN has no
+  single "shadow" CSS-string concept (`nativeShadows` in `tokens.ts` stays a
+  standalone export of RN shadow-prop objects, independently tuned from
+  web's `shadows`/the preset's `boxShadow` entries — this was already true
+  before the Tailwind migration, unchanged by it), and RN has no
+  fontWeight-on-a-custom-font mechanism (see `fonts.ts`) — native `Text`/
+  `Button` resolve weight to a `fontFamily()` value via `style`, never a
+  `font-semibold`-style className, since that would just set an ignored
+  `fontWeight` style against the per-weight-file Plus Jakarta Sans setup.
+- **`Box` was retired, not ported** — confirmed zero consumers in either
+  app; NativeWind makes RN's `View` itself `className`-capable and web only
+  ever needed a plain `div`, so the wrapper added nothing.
+- **`Card`'s prop surface was normalized** — web gained `elevated`/`radius`
+  props matching native (previously silently ignored on web despite being
+  typed in `Card.types.ts`).
+- **`HeaderDrawer` uses shadcn's `Sheet`** (Radix `Dialog`) instead of a
+  hand-rolled `createPortal` implementation — Radix's own default portal
+  (always into `document.body`) turned out to solve the exact problem the
+  manual portal existed for (the header's `backdropFilter` makes it a
+  containing block for `position: fixed` descendants), so no special
+  handling was needed. This added a real focus trap and enter/exit
+  animation that the previous implementation never had.
+- **The `.ms-scroll` class referenced in `HeaderDrawer.tsx` and
+  `ReviewComposerModal.tsx` was never defined anywhere in this codebase**
+  (confirmed dead) until this migration fixed it — verified against the
+  original Claude Design canvas (see "Design reference" above), which
+  defines it as `scrollbar-width:none` + `::-webkit-scrollbar{width:0;height:0}`
+  (hides the scrollbar entirely; an earlier fix attempt guessed a visible
+  "thin scrollbar" treatment instead and was wrong).
+- **`MapView`'s chrome (pins, cluster bubbles, label pills, the back
+  button) is Tailwind/NativeWind; the map engine integration is not** —
+  `maplibre-gl`'s imperative DOM marker management, `@maplibre/maplibre-
+  react-native`'s declarative `<Map>/<Camera>/<Marker>` structure, the
+  camera choreography (fly-in/orbit/`fitBoundsToken`), and `pin-utils.ts`'s
+  clustering math are all untouched by design — out of scope for a styling
+  migration. Web's markers are raw `document.createElement` nodes (not
+  JSX), so their chrome is styled via literal `el.className = "..."` string
+  assignment rather than a React `className` prop — Tailwind's JIT only
+  needs the class's literal string to appear somewhere in source to scan
+  and generate it, so this works identically to JSX as long as the string
+  is never constructed dynamically at runtime.
 
 ### `apps/mobile` architecture
 

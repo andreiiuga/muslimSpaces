@@ -4,7 +4,7 @@ import type { NativeSyntheticEvent } from "react-native";
 import { Camera, Map, Marker } from "@maplibre/maplibre-react-native";
 import type { CameraRef, ViewStateChangeEvent } from "@maplibre/maplibre-react-native";
 import { ArrowLeft } from "lucide-react-native";
-import { colors, nativeShadows, radii, spacing } from "../tokens";
+import { colors, nativeShadows } from "../tokens";
 import { IconButton } from "../IconButton";
 import { Text } from "../Text";
 import { LABEL_MIN_ZOOM, PIN_EMOJI, buildClusterIndex, getMapPoints, pinIconKeyForSlug, pinLabel } from "./pin-utils";
@@ -153,7 +153,13 @@ export function MapView({
   );
 
   return (
-    <View style={{ flex: 1 }}>
+    <View className="flex-1">
+      {/* <Map>'s own style prop is left untouched — it's @maplibre/maplibre-
+          react-native's third-party root view, not a plain RN core
+          component, so it's not a safe target for a NativeWind className
+          (no cssInterop registration for this library) — same "don't touch
+          the maplibre integration" scope as everything else in this file
+          that isn't chrome. */}
       <Map
         style={{ flex: 1 }}
         mapStyle={OPENFREEMAP_STYLE}
@@ -184,17 +190,10 @@ export function MapView({
                 }}
               >
                 <View
-                  style={{
-                    width: size,
-                    height: size,
-                    borderRadius: radii.pill,
-                    backgroundColor: colors.primary,
-                    borderWidth: 2,
-                    borderColor: colors.surface,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    ...nativeShadows.elevated,
-                  }}
+                  className="items-center justify-center rounded-pill border-2 border-surface bg-primary"
+                  // width/height are the per-instance "size band" decision
+                  // (same as web's createClusterElement) — stays inline.
+                  style={{ width: size, height: size, ...nativeShadows.elevated }}
                 >
                   <Text size={point.count < 100 ? "sm" : "xs"} weight="bold" color={colors.textOnPrimary} letterSpacing={0}>
                     {point.label}
@@ -218,18 +217,12 @@ export function MapView({
               anchor="bottom"
               onPress={() => onMarkerPress?.(poi.id)}
             >
-              <View style={{ alignItems: "center", gap: 2 }}>
+              <View className="items-center gap-0.5">
                 {showLabels && (
                   <View
-                    style={{
-                      backgroundColor: colors.background,
-                      borderWidth: 1,
-                      borderColor: color,
-                      borderRadius: radii.pill,
-                      paddingHorizontal: 10,
-                      paddingVertical: 3,
-                      ...nativeShadows.iconSolid,
-                    }}
+                    className="rounded-pill border bg-background px-[10px] py-[3px]"
+                    // borderColor is per-instance (selected vs not) — stays inline.
+                    style={{ borderColor: color, ...nativeShadows.iconSolid }}
                   >
                     <Text size="xs" weight="semibold" color={color} letterSpacing={0}>
                       {pinLabel(poi.name.en)}
@@ -241,16 +234,8 @@ export function MapView({
                     emoji can't be recolored the way an icon can to show
                     selection state. */}
                 <View
-                  style={
-                    selected
-                      ? {
-                          backgroundColor: colors.surface,
-                          borderRadius: radii.pill,
-                          padding: spacing.xs + 2,
-                          ...nativeShadows.elevated,
-                        }
-                      : undefined
-                  }
+                  className={selected ? "rounded-pill bg-surface p-[6px]" : undefined}
+                  style={selected ? nativeShadows.elevated : undefined}
                 >
                   <Text size="xl">{PIN_EMOJI[iconKey]}</Text>
                 </View>
@@ -260,7 +245,7 @@ export function MapView({
         })}
       </Map>
       {selectedPoiId && (
-        <View style={{ position: "absolute", top: 14, left: 14 }}>
+        <View className="absolute left-[14px] top-[14px]">
           <IconButton
             icon={<ArrowLeft size={20} color={colors.text} />}
             onPress={() => onDeselect?.()}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { colors, radii } from "../tokens";
+import { radii } from "../tokens";
 import type { SkeletonProps } from "./Skeleton.types";
 
 export function Skeleton({ width = "100%", height = 16, borderRadius = radii.sm, circle }: SkeletonProps) {
@@ -21,14 +21,10 @@ export function Skeleton({ width = "100%", height = 16, borderRadius = radii.sm,
   }, []);
 
   return (
-    <div
-      ref={ref}
-      style={{
-        width,
-        height,
-        borderRadius: circle ? 999 : borderRadius,
-        backgroundColor: colors.border,
-      }}
-    />
+    // width/height/borderRadius are per-instance dynamic values (width even
+    // accepts arbitrary CSS strings like "calc(...)") — Tailwind's JIT can't
+    // scan a dynamically built arbitrary-value class, so they stay inline;
+    // only the static background color moves to a className.
+    <div ref={ref} className="bg-border" style={{ width, height, borderRadius: circle ? 999 : borderRadius }} />
   );
 }

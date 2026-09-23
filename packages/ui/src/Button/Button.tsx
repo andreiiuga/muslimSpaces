@@ -1,23 +1,33 @@
 "use client";
 
-import type { CSSProperties } from "react";
-import { colors, fontSizes, fontWeights, radii, spacing } from "../tokens";
-import type { ButtonProps, ButtonVariant, ButtonSize } from "./Button.types";
+import { cva } from "class-variance-authority";
+import { cn } from "../cn";
+import type { ButtonProps } from "./Button.types";
 
-const VARIANT_STYLES: Record<ButtonVariant, CSSProperties> = {
-  primary: { backgroundColor: colors.primary, color: colors.textOnPrimary, boxShadow: "0 4px 14px rgba(15,118,110,.28)" },
-  secondary: { backgroundColor: colors.primaryLight, color: colors.primaryDark },
-  ghost: { backgroundColor: "transparent", color: colors.text, border: `1px solid ${colors.border}` },
-  // Outline treatment, not solid red — matches the design's logout pill
-  // (and Button.native.tsx's same variant, restyled for the mobile pass).
-  danger: { backgroundColor: colors.dangerBg, color: colors.dangerDark, border: `1px solid ${colors.dangerBorder}` },
-};
-
-const SIZE_STYLES: Record<ButtonSize, CSSProperties> = {
-  sm: { padding: `${spacing.xs}px ${spacing.md}px`, fontSize: fontSizes.sm },
-  md: { padding: `${spacing.sm}px ${spacing.lg}px`, fontSize: fontSizes.md },
-  lg: { padding: `${spacing.md}px ${spacing.xl}px`, fontSize: fontSizes.lg },
-};
+const button = cva(
+  "inline-flex items-center justify-center rounded-pill border-0 font-semibold disabled:cursor-not-allowed disabled:opacity-50",
+  {
+    variants: {
+      variant: {
+        primary: "bg-primary text-textOnPrimary shadow-buttonGlow",
+        secondary: "bg-primaryLight text-primaryDark",
+        ghost: "border border-border bg-transparent text-text",
+        // Outline treatment, not solid red — matches the design's logout pill.
+        danger: "border border-dangerBorder bg-dangerBg text-dangerDark",
+      },
+      size: {
+        sm: "px-md py-xs text-sm",
+        md: "px-lg py-sm text-md",
+        lg: "px-xl py-md text-lg",
+      },
+      fullWidth: {
+        true: "w-full",
+        false: "",
+      },
+    },
+    defaultVariants: { variant: "primary", size: "md" },
+  },
+);
 
 export function Button({
   children,
@@ -29,23 +39,12 @@ export function Button({
   fullWidth,
   type = "button",
 }: ButtonProps) {
-  const variantStyle = VARIANT_STYLES[variant];
-
   return (
     <button
       type={type}
       onClick={onPress}
       disabled={disabled || loading}
-      style={{
-        ...variantStyle,
-        ...SIZE_STYLES[size],
-        borderRadius: radii.pill,
-        border: variantStyle.border ?? "none",
-        fontWeight: fontWeights.semibold,
-        cursor: disabled || loading ? "not-allowed" : "pointer",
-        opacity: disabled ? 0.5 : 1,
-        width: fullWidth ? "100%" : undefined,
-      }}
+      className={cn(button({ variant, size, fullWidth }))}
     >
       {loading ? "…" : children}
     </button>

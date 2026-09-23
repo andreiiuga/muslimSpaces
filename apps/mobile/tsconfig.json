@@ -9,7 +9,14 @@
     // Mirrors Metro's runtime resolution order (.native.tsx before .tsx)
     // for plain `tsc` — without this, `pnpm typecheck` would silently
     // check the web variant of every shared component instead.
-    "moduleSuffixes": [".native", ""]
+    "moduleSuffixes": [
+      ".native",
+      ""
+    ]
   },
-  "include": ["**/*.ts", "**/*.tsx"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "nativewind-env.d.ts"
+  ]
 }

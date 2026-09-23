@@ -15,6 +15,7 @@ import { AuthProvider } from "../src/auth/AuthContext";
 import { i18n } from "../src/i18n";
 import { deviceLocale, loadStoredLocale } from "../src/i18n/locale-storage";
 import { applyLocaleDirection } from "../src/i18n/rtl";
+import "../global.css";
 
 function AppShell() {
   const { t } = useTranslation();

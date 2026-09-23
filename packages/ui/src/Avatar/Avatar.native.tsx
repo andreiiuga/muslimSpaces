@@ -4,22 +4,17 @@ import { fontFamily } from "../fonts";
 import { getInitials, type AvatarProps } from "./Avatar.types";
 
 export function Avatar({ uri, name, size = 40 }: AvatarProps) {
-  const style = {
-    width: size,
-    height: size,
-    borderRadius: size / 2,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
-    overflow: "hidden" as const,
-    backgroundColor: colors.primaryLight,
-  };
+  // size is an arbitrary per-instance pixel value (not a token), so
+  // width/height/radius stay inline — same reasoning as Avatar.tsx.
+  const dynamicStyle = { width: size, height: size, borderRadius: size / 2 };
+  const className = "items-center justify-center overflow-hidden bg-primaryLight";
 
   if (uri) {
-    return <Image source={{ uri }} style={style} />;
+    return <Image source={{ uri }} className={className} style={dynamicStyle} />;
   }
 
   return (
-    <View style={style}>
+    <View className={className} style={dynamicStyle}>
       <Text style={{ color: colors.primaryDark, fontFamily: fontFamily("semibold"), fontSize: size * 0.4 }}>
         {getInitials(name)}
       </Text>

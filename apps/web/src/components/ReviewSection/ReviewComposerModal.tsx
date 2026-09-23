@@ -66,7 +66,13 @@ export function ReviewComposerModal({
       onClick={onClose}
     >
       <div
-        className="ms-scroll"
+        // Previously referenced a "ms-scroll" class that was never defined
+        // anywhere in this codebase (a pre-existing dead reference) — this is
+        // what it was actually meant to be, verified against the original
+        // Claude Design canvas: `.ms-scroll{scrollbar-width:none}` +
+        // `.ms-scroll::-webkit-scrollbar{width:0;height:0}` (hides the
+        // scrollbar entirely, doesn't just thin it).
+        className="[scrollbar-width:none] [&::-webkit-scrollbar]:w-0 [&::-webkit-scrollbar]:h-0"
         onClick={(e) => e.stopPropagation()}
         style={{
           width: "100%",

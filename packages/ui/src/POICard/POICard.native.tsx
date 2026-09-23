@@ -1,6 +1,6 @@
 import { Image, Pressable, View } from "react-native";
 import { Bookmark } from "lucide-react-native";
-import { colors, radii, spacing } from "../tokens";
+import { colors, spacing } from "../tokens";
 import { Card } from "../Card";
 import { Text } from "../Text";
 import { Rating } from "../Rating";
@@ -14,31 +14,18 @@ import type { POICardProps } from "./POICard.types";
 export function POICard({ poi, categoryLabel, onPress, isFavorite, onToggleFavorite }: POICardProps) {
   return (
     <Card onPress={onPress} padding={spacing.md}>
-      <View style={{ flexDirection: "row", gap: spacing.md, alignItems: "flex-start" }}>
+      <View className="flex-row items-start gap-md">
         {poi.thumbnailUrl ? (
-          <Image
-            source={{ uri: poi.thumbnailUrl }}
-            style={{ width: 72, height: 72, flexShrink: 0, borderRadius: radii.md }}
-          />
+          <Image source={{ uri: poi.thumbnailUrl }} className="h-[72px] w-[72px] shrink-0 rounded-md" />
         ) : (
-          <View
-            style={{
-              width: 72,
-              height: 72,
-              flexShrink: 0,
-              borderRadius: radii.md,
-              backgroundColor: colors.primaryLight,
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
+          <View className="h-[72px] w-[72px] shrink-0 items-center justify-center rounded-md bg-primaryLight">
             <Text size="xl" color={colors.primaryDark} weight="bold">
               {poi.name.ro.charAt(0).toUpperCase()}
             </Text>
           </View>
         )}
 
-        <View style={{ flex: 1, minWidth: 0, gap: 3 }}>
+        <View className="min-w-0 flex-1 gap-[3px]">
           {categoryLabel && (
             <Text size="xs" weight="medium" color={colors.primaryDark} letterSpacing={1.3}>
               {categoryLabel.toUpperCase()}
@@ -50,7 +37,7 @@ export function POICard({ poi, categoryLabel, onPress, isFavorite, onToggleFavor
           <Text size="sm" color={colors.textMuted} numberOfLines={1}>
             {poi.address}
           </Text>
-          <View style={{ flexDirection: "row", alignItems: "baseline", gap: spacing.xs }}>
+          <View className="flex-row items-baseline gap-xs">
             <Rating value={poi.ratingAvg ?? 0} size={13} />
             <Text size="xs" color={colors.textMuted}>
               {poi.ratingCount > 0 ? `(${poi.ratingCount})` : "New"}
@@ -63,7 +50,7 @@ export function POICard({ poi, categoryLabel, onPress, isFavorite, onToggleFavor
             onPress={onToggleFavorite}
             hitSlop={8}
             accessibilityLabel={isFavorite ? "Remove from favorites" : "Add to favorites"}
-            style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center", marginTop: -spacing.sm, marginRight: -spacing.sm }}
+            className="-mr-sm -mt-sm h-11 w-11 items-center justify-center"
           >
             <Bookmark
               size={20}

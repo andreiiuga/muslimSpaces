@@ -1,7 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /*
- * The design system is inline-styles-only (see packages/ui) — this file
- * exists purely because React inline styles can't express @media queries.
- * Keep it to layout-only responsive classes; anything else belongs inline.
+ * packages/ui is migrating off inline-styles-only to Tailwind/shadcn (see
+ * packages/ui/tailwind-preset.js) — the rules below are the pre-migration
+ * hand-written responsive CSS, being retired class-by-class as each owning
+ * component moves to Tailwind's screen variants. Don't add new rules here;
+ * new responsive behavior belongs in className, not this file.
  */
 
 /* Global box-sizing reset — the design's own reference HTML has this same
@@ -15,91 +21,6 @@
 *::before,
 *::after {
   box-sizing: border-box;
-}
-
-/* ── Header ──────────────────────────────────────────────────────────
-   Design: nav links inline in the header row above 900px; below that they
-   move into a second sticky strip instead (HeaderBar.tsx always renders
-   both — .header-nav-links / .header-nav-strip — this just toggles which
-   one is visible, matching the design's own `showNavLinks`/`showNavStrip`
-   width-driven split, implemented here as a real CSS breakpoint instead of
-   a JS-measured width). Below the same 900px breakpoint, the header row
-   itself restructures: the logo claims a full flex line on its own
-   (centered), which pushes the search bar + locale/CTA/login controls onto
-   their own shared line below it — see ".header-logo" below. At the same
-   breakpoint the language switcher, "submit a place" CTA and login/account
-   link all move out of the header row entirely and into HeaderDrawer.tsx's
-   slide-in panel, reached through a single menu button — both the inline
-   trio (".header-desktop-controls") and the drawer trigger
-   (".header-menu-trigger", rendered by HeaderDrawer itself) are always
-   mounted, matching the nav-links/nav-strip toggle pattern; this just
-   swaps which one is visible. */
-.header-nav-strip {
-  display: none;
-  background: #fffbf5;
-  border-bottom: 1px solid #e7e2d8;
-}
-
-.header-logo {
-  flex: none;
-}
-
-.header-search {
-  flex: 1 1 220px;
-  min-width: 180px;
-  max-width: 420px;
-}
-
-.header-desktop-controls {
-  display: flex;
-}
-
-.header-menu-trigger {
-  display: none;
-}
-
-@media (max-width: 900px) {
-  .header-row {
-    row-gap: 8px;
-  }
-  .header-logo {
-    flex: 0 0 100%;
-    justify-content: center;
-  }
-  /* Lets the search bar share its line with the menu trigger button — the
-     wrap algorithm decides line membership from this hypothetical (basis)
-     size, not the post-shrink one, so the desktop 220px basis is too wide
-     for that decision to succeed at this width even though the box itself
-     can shrink well below it. */
-  .header-search {
-    flex: 1 1 100px;
-    min-width: 100px;
-  }
-  .header-nav-links {
-    display: none !important;
-  }
-  .header-nav-strip {
-    display: block;
-    position: sticky;
-    top: 69px;
-    z-index: 25;
-  }
-  /* Tabs spread evenly across the full width instead of left-anchored with
-     a fixed gap — each tab claims an equal-width slot and centers its own
-     label within it, like the mobile app's tab bar. */
-  .header-nav-strip > div > a {
-    flex: 1;
-    text-align: center;
-    padding: 11px 0 !important;
-    font-size: 14.5px !important;
-  }
-  .header-desktop-controls {
-    display: none;
-  }
-  .header-menu-trigger {
-    display: flex;
-    margin-inline-start: auto;
-  }
 }
 
 /* ── Explore ─────────────────────────────────────────────────────────
@@ -297,20 +218,6 @@
   }
 }
 
-@media (max-width: 640px) {
-  /* A 3-column grid of photos is cramped on a phone screen — scroll
-     horizontally instead, one photo at a time, same as the mobile app. */
-  .poi-gallery {
-    display: flex !important;
-    overflow-x: auto;
-  }
-
-  .poi-gallery > img {
-    flex: 0 0 auto;
-    width: 85% !important;
-  }
-}
-
 @media (max-width: 768px) {
   .admin-shell {
     flex-direction: column;
@@ -326,5 +233,21 @@
   .admin-sidebar-nav {
     flex-direction: row !important;
     flex-wrap: wrap;
+  }
+}
+/*
+ * No CSS-variable/`.dark` theming here — shadcn's CLI scaffolds one by
+ * default, but this app has no dark-mode requirement, so colors are plain
+ * hex directly in packages/ui/tailwind-preset.js's `background`/
+ * `foreground`/`primary`/etc. slots (same "plain data" philosophy as the
+ * tokens.ts file that preset replaces) rather than indirected through
+ * `hsl(var(--x))`/`oklch(var(--x))` custom properties.
+ */
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
   }
 }

@@ -10,7 +10,9 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.muslimspaces"
     },
-    "android": {},
+    "android": {
+      "package": "com.anonymous.muslimspaces"
+    },
     "web": {
       "bundler": "metro"
     },

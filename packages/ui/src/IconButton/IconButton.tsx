@@ -1,32 +1,35 @@
 "use client";
 
-import { colors, radii } from "../tokens";
-import type { IconButtonProps, IconButtonSize } from "./IconButton.types";
+import { cva } from "class-variance-authority";
+import { cn } from "../cn";
+import type { IconButtonProps } from "./IconButton.types";
 
-const SIZE_PX: Record<IconButtonSize, number> = { sm: 32, md: 40, lg: 48 };
+const iconButton = cva(
+  "flex items-center justify-center rounded-pill border-0 disabled:cursor-not-allowed disabled:opacity-50",
+  {
+    variants: {
+      variant: {
+        ghost: "bg-transparent",
+        solid: "bg-surface shadow-iconSolid",
+      },
+      size: {
+        sm: "w-8 h-8",
+        md: "w-10 h-10",
+        lg: "w-12 h-12",
+      },
+    },
+    defaultVariants: { variant: "ghost", size: "md" },
+  },
+);
 
 export function IconButton({ icon, onPress, variant = "ghost", size = "md", disabled, label }: IconButtonProps) {
-  const px = SIZE_PX[size];
-
   return (
     <button
       type="button"
       onClick={onPress}
       disabled={disabled}
       aria-label={label}
-      style={{
-        width: px,
-        height: px,
-        borderRadius: radii.pill,
-        border: "none",
-        backgroundColor: variant === "solid" ? colors.surface : "transparent",
-        boxShadow: variant === "solid" ? "0 1px 4px rgba(28,25,23,0.15)" : "none",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        cursor: disabled ? "not-allowed" : "pointer",
-        opacity: disabled ? 0.5 : 1,
-      }}
+      className={cn(iconButton({ variant, size }))}
     >
       {icon}
     </button>

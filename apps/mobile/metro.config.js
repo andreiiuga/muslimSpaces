@@ -1,4 +1,5 @@
 const { getDefaultConfig } = require("expo/metro-config");
+const { withNativeWind } = require("nativewind/metro");
 const path = require("path");
 
 const projectRoot = __dirname;
@@ -15,4 +16,7 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, "node_modules"),
 ];
 
-module.exports = config;
+// Wraps (not replaces) the config above — withNativeWind only adds a CSS
+// entry point + a transformer hook, it doesn't touch watchFolders/
+// nodeModulesPaths.
+module.exports = withNativeWind(config, { input: "./global.css" });

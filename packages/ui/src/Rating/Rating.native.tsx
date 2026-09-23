@@ -1,18 +1,18 @@
 import { Pressable, View } from "react-native";
 import { Star } from "lucide-react-native";
-import { colors, spacing } from "../tokens";
+import { colors } from "../tokens";
 import { STAR_COUNT, type RatingProps } from "./Rating.types";
 
 export function Rating({ value, onChange, size = 18 }: RatingProps) {
   const rounded = Math.round(value);
 
   return (
-    <View style={{ flexDirection: "row", gap: spacing.xs / 2 }}>
+    <View className="flex-row gap-0.5">
       {Array.from({ length: STAR_COUNT }, (_, i) => i + 1).map((star) => {
         const filled = star <= rounded;
-        const icon = (
-          <Star size={size} color={filled ? colors.star : colors.starEmpty} fill={filled ? colors.star : "none"} />
-        );
+        // color/fill are SVG props on the icon component, not CSS — they
+        // can't become a className regardless of how static the value is.
+        const icon = <Star size={size} color={filled ? colors.star : colors.starEmpty} fill={filled ? colors.star : "none"} />;
 
         if (!onChange) return <View key={star}>{icon}</View>;
 

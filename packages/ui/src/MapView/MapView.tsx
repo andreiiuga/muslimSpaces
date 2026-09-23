@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { ArrowLeft } from "lucide-react";
-import { colors, shadows } from "../tokens";
+import { colors } from "../tokens";
 import { IconButton } from "../IconButton";
 import { LABEL_MIN_ZOOM, PIN_EMOJI, buildClusterIndex, getMapPoints, pinIconKeyForSlug, pinLabel } from "./pin-utils";
 import type { PinIconKey } from "./pin-utils";
@@ -52,6 +52,15 @@ const ORBIT_LEG_DURATION_MS = 17_000;
 // by default; selecting it (a marker tap) adds a white circular badge +
 // elevation shadow behind it, since an emoji can't be recolored the way an
 // icon can to show selection state.
+//
+// These are plain DOM nodes built imperatively (document.createElement),
+// not JSX — Tailwind's JIT only needs a class's literal string to appear
+// somewhere in source to scan and generate it, so `.className = "..."`
+// works here exactly like a React className would, once the class strings
+// are written out literally (never constructed at runtime). Only the
+// genuinely per-instance values (border/text color, and the `selected`
+// icon treatment, which toggles a whole block of properties together) stay
+// as direct style/classList calls — everything else is static.
 function createMarkerElement(
   iconKey: PinIconKey,
   label: string,
@@ -59,37 +68,20 @@ function createMarkerElement(
   selected: boolean,
 ): { el: HTMLDivElement; labelEl: HTMLDivElement } {
   const el = document.createElement("div");
-  el.style.display = "flex";
-  el.style.flexDirection = "column";
-  el.style.alignItems = "center";
-  el.style.gap = "2px";
-  el.style.cursor = "pointer";
+  el.className = "flex flex-col items-center gap-0.5 cursor-pointer";
 
   const labelEl = document.createElement("div");
   labelEl.textContent = label;
-  labelEl.style.display = "none";
-  labelEl.style.background = colors.background;
+  labelEl.className = "hidden rounded-pill px-[10px] py-[3px] text-[11.5px] font-semibold whitespace-nowrap shadow-[0_2px_6px_rgba(28,25,23,0.14)] bg-background";
   labelEl.style.border = `1px solid ${color}`;
-  labelEl.style.borderRadius = "999px";
-  labelEl.style.padding = "3px 10px";
-  labelEl.style.fontSize = "11.5px";
-  labelEl.style.fontWeight = "600";
-  labelEl.style.whiteSpace = "nowrap";
   labelEl.style.color = color;
-  labelEl.style.boxShadow = "0 2px 6px rgba(28,25,23,.14)";
 
   const iconEl = document.createElement("div");
   iconEl.textContent = PIN_EMOJI[iconKey];
+  iconEl.className = "flex items-center justify-center leading-none";
   iconEl.style.fontSize = `${PIN_EMOJI_SIZE}px`;
-  iconEl.style.lineHeight = "1";
-  iconEl.style.display = "flex";
-  iconEl.style.alignItems = "center";
-  iconEl.style.justifyContent = "center";
   if (selected) {
-    iconEl.style.background = colors.surface;
-    iconEl.style.borderRadius = "999px";
-    iconEl.style.padding = "6px";
-    iconEl.style.boxShadow = shadows.elevated;
+    iconEl.classList.add("bg-surface", "rounded-pill", "p-[6px]", "shadow-elevated");
   }
 
   el.appendChild(labelEl);
@@ -101,22 +93,15 @@ function createMarkerElement(
 // 400-place one shouldn't read as the same size. `label` is supercluster's
 // own abbreviation (e.g. "1.3k"), not re-derived here.
 function createClusterElement(count: number, label: string): HTMLDivElement {
+  // width/height/fontSize are the same "size band" decision, kept together
+  // as inline styles — the rest is identical across every cluster bubble.
   const size = count < 10 ? 36 : count < 100 ? 44 : 52;
   const el = document.createElement("div");
   el.textContent = label;
+  el.className = "flex items-center justify-center rounded-pill border-2 border-surface bg-primary font-bold text-textOnPrimary cursor-pointer shadow-elevated";
   el.style.width = `${size}px`;
   el.style.height = `${size}px`;
-  el.style.display = "flex";
-  el.style.alignItems = "center";
-  el.style.justifyContent = "center";
-  el.style.borderRadius = "999px";
-  el.style.background = colors.primary;
-  el.style.color = colors.textOnPrimary;
-  el.style.border = `2px solid ${colors.surface}`;
   el.style.fontSize = count < 100 ? "14px" : "13px";
-  el.style.fontWeight = "700";
-  el.style.cursor = "pointer";
-  el.style.boxShadow = shadows.elevated;
   return el;
 }
 
@@ -379,10 +364,10 @@ export function MapView({
   }, [selectedPoiId]);
 
   return (
-    <div style={{ position: "relative", width: "100%", height: "100%" }}>
-      <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
+    <div className="relative h-full w-full">
+      <div ref={containerRef} className="h-full w-full" />
       {selectedPoiId && (
-        <div style={{ position: "absolute", top: 14, left: 14 }}>
+        <div className="absolute left-[14px] top-[14px]">
           <IconButton
             icon={<ArrowLeft size={20} color={colors.text} />}
             onPress={() => onDeselect?.()}

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Animated, type DimensionValue } from "react-native";
-import { colors, radii } from "../tokens";
+import { radii } from "../tokens";
 import type { SkeletonProps } from "./Skeleton.types";
 
 export function Skeleton({ width = "100%", height = 16, borderRadius = radii.sm, circle }: SkeletonProps) {
@@ -19,13 +19,13 @@ export function Skeleton({ width = "100%", height = 16, borderRadius = radii.sm,
 
   return (
     <Animated.View
+      className="bg-border"
       style={{
         // Shared prop type allows a generic string (for web's arbitrary CSS
         // values like "calc(...)"); RN's own style types are narrower.
         width: width as DimensionValue,
         height: height as DimensionValue,
         borderRadius: circle ? 999 : borderRadius,
-        backgroundColor: colors.border,
         opacity,
       }}
     />
