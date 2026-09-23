@@ -10,10 +10,12 @@ colors:
   border: "#E7E2D8"
   text: "#1C1917"
   text-body: "#292524"
+  text-secondary: "#57534E"
   text-muted: "#78716C"
   text-faint: "#A8A29E"
   danger: "#DC2626"
   danger-dark: "#B91C1C"
+  danger-bg: "#FEF2F2"
   success: "#15803D"
   warning: "#D97706"
   star: "#F59E0B"
@@ -67,7 +69,7 @@ spacing:
 components:
   button-primary:
     backgroundColor: "{colors.primary}"
-    textColor: "{colors.text}"
+    textColor: "{colors.surface}"
     rounded: "{rounded.pill}"
     padding: "8px 16px"
   button-secondary:
@@ -81,7 +83,7 @@ components:
     rounded: "{rounded.pill}"
     padding: "8px 16px"
   button-danger:
-    backgroundColor: "{colors.danger}"
+    backgroundColor: "{colors.danger-bg}"
     textColor: "{colors.danger-dark}"
     rounded: "{rounded.pill}"
     padding: "8px 16px"
@@ -137,11 +139,12 @@ A warm, low-saturation palette built around one accent color used deliberately s
 - **Border** (`#E7E2D8`): hairline borders on cards, inputs, and dividers between sections.
 - **Ink** (`#1C1917`): headings and short labels.
 - **Ink, Body** (`#292524`): a shade lighter than heading ink, reserved for long-form paragraph text (descriptions, review/blog body copy) — reads as "ink on paper" for reading-length text without competing with headings.
+- **Ink, Secondary** (`#57534E`): sits between Ink, Body and Ink, Muted — inactive nav links and toggle states that need to read as present but not selected (header nav, the locale toggle's unselected segment) without fading all the way to metadata-muted.
 - **Ink, Muted** (`#78716C`): metadata — addresses, dates, captions, secondary line under a title.
 - **Ink, Faint** (`#A8A29E`): the lightest text tone — chevrons, counts, near-disabled affordances.
 
 ### Semantic
-- **Danger** (`#DC2626` / dark `#B91C1C`): destructive actions and error text. Rendered as an outline pill (light red fill + red border), never a solid red fill, so it reads as "careful" rather than alarming.
+- **Danger** (`#DC2626` / dark `#B91C1C` / bg `#FEF2F2`): destructive actions and error text. Rendered as an outline pill (light red `bg` fill + red border, text in `dark`), never a solid red fill, so it reads as "careful" rather than alarming.
 - **Success** (`#15803D`): confirmation states.
 - **Warning** (`#D97706`): "Open now" and similar caution states.
 - **Star** (`#F59E0B`): rating stars only.
@@ -171,10 +174,11 @@ Content lives in a centered column (max-width 1340px) with responsive horizontal
 
 ## Elevation & Depth
 
-Flat by default. Cards at rest carry only a whisper-soft ambient shadow (`0 1px 3px rgba(28,25,23,.08), 0 1px 2px rgba(28,25,23,.06)`) — barely perceptible, just enough to separate a white surface from the cream page behind it. A stronger shadow (`0 8px 24px rgba(28,25,23,.16)`) is reserved specifically for elements that are visually floating *over* other content — the selected-POI preview card that overlays the map, modal-style overlays — not used as a general "more important = more shadow" scale.
+Flat by default. Cards at rest carry only a whisper-soft ambient shadow (`0 1px 3px rgba(28,25,23,.08), 0 1px 2px rgba(28,25,23,.06)`) — barely perceptible, just enough to separate a white surface from the cream page behind it. A stronger shadow (`0 8px 24px rgba(28,25,23,.16)`) is reserved specifically for elements that are visually floating *over* other content — the selected-POI preview card that overlays the map, modal-style overlays — not used as a general "more important = more shadow" scale. A third, slightly deeper resting shadow — **Panel** — backs full-page content shells (forms, the auth card, review/profile panels) that sit directly on the cream background rather than inside a denser list; it's the single most-used shadow in the system by call-site count, more common than Card itself.
 
 ### Shadow Vocabulary
 - **Card** (`0 1px 3px rgba(28,25,23,.08), 0 1px 2px rgba(28,25,23,.06)`): default resting shadow for any card/surface (POICard, admin table rows treated as cards, etc.).
+- **Panel** (`0 1px 3px rgba(28,25,23,.08), 0 6px 18px rgba(28,25,23,.05)`): resting shadow for page-level content shells — forms (submit, admin forms, change-password), the auth card, profile/review panels. A softer spread than Elevated, but with more reach than Card, since these surfaces are usually the single largest element on the page rather than one of many list items.
 - **Elevated** (`0 8px 24px rgba(28,25,23,.16)`): floating-over-content elements only — the map's selected-POI preview card, dropdowns, anything overlaying other UI.
 
 ### Named Rules
@@ -182,7 +186,7 @@ Flat by default. Cards at rest carry only a whisper-soft ambient shadow (`0 1px 
 
 ## Shapes
 
-Rounded and soft throughout — no sharp corners anywhere in the system. The radius scale runs from 8px (small chips/tags) through 12px (default), 14px (form inputs specifically), 16px (cards), 20px (larger blog-style cards), 24px (the Explore map container), up to a full pill (999px) for every button and chip. Borders are hairline (1px, `#E7E2D8`) and used sparingly — most separation comes from shadow + background contrast rather than visible strokes; a border appears mainly on inputs, the map container, and ghost/outline button variants.
+Rounded and soft throughout — no sharp corners anywhere in the system. The radius scale runs from 8px (small chips/tags) through 12px (default), 14px (form inputs specifically), 16px (cards), 20px (larger blog-style cards), up to a full pill (999px) for every button and chip. The Explore map container uses its own deliberate one-off, 22px — close to but distinct from the 20/24px scale steps, not itself promoted to a token since it has exactly one call site. Borders are hairline (1px, `#E7E2D8`) and used sparingly — most separation comes from shadow + background contrast rather than visible strokes; a border appears mainly on inputs, the map container, and ghost/outline button variants.
 
 ## Components
 
@@ -201,14 +205,23 @@ Rounded and soft throughout — no sharp corners anywhere in the system. The rad
 ### Cards / Containers
 - **Corner Style:** 16px radius by default (`radii.lg`); 20px for the taller blog-style card variant.
 - **Background:** white surface against the cream page.
-- **Shadow Strategy:** the resting "Card" shadow only — see Elevation & Depth.
+- **Shadow Strategy:** the resting "Card" shadow for list-item-style cards (POI cards, review rows); "Panel" for page-level content shells (forms, the auth card, profile/review panels) — see Elevation & Depth for the distinction.
 - **Border:** none by default; cards are separated from the page by shadow + white-on-cream contrast, not a stroke.
-- **Internal Padding:** 16px default.
+- **Internal Padding:** 16px default; page-level Panel shells use 24–28px.
 
 ### Inputs / Fields
 - **Style:** white surface, 1px hairline border (neutral, or danger-red when in an error state), 14px radius — the one place in the system with its own dedicated radius step, distinct from the general 12px default.
 - **Focus:** not explicitly styled — `outline: none` is set with no replacement focus treatment defined in code.
 - **Error:** border switches to danger red; an inline error message renders below in danger-red body text.
+
+### Navigation
+- **Back link:** a small ghost-style text link (Ink Primary, `sm` label size, no underline) paired with a directional arrow icon and a 44px minimum tap height — used above the content on any page reached by drilling in (profile sub-pages, blog post, POI submit). The arrow flips direction under Arabic/RTL, since it always points toward "back" rather than a fixed screen edge.
+- **Admin sidebar:** plain Ink-colored text links, no pill/button treatment — admin nav reads as a list, not a set of actions.
+
+### Data Tables (admin)
+- **Style:** no visible cell borders; rows are separated by a hairline bottom rule (Border color) only, hover state tints the row with a faint neutral wash. Header row uses Label-scale, Ink Muted text, no background fill.
+- **Status text:** a status word (POI pending/approved/rejected, blog published/draft, review published/hidden, visibility visible/hidden) renders as `sm`/medium-weight text colored by outcome — Success green for the positive state, Warning for pending, Danger for rejected/hidden — never a filled badge or pill; the color alone carries the meaning, consistent with the system avoiding decorative containers where text weight/color already does the job.
+- **Row actions:** small Secondary/Ghost/Danger buttons at the trailing edge of each row, same variant rules as any other button.
 
 ### POI Card (signature component)
 The system's most-used and most content-driven component: a thumbnail (a real cover photo when the POI has one, otherwise an initial-letter placeholder tinted Quiet-Emerald-Light) beside a category kicker, title, address, and star rating. Two layouts share the same visual language — a horizontal row (thumbnail left) for list contexts, and a taller grid tile (thumbnail on top) for the dedicated list view — so the component's identity survives the layout change intact.

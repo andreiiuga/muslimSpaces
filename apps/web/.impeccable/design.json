@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-21T16:06:55Z",
+  "generatedAt": "2026-09-23T14:29:03Z",
   "title": "Design System: MuslimSpaces",
   "extensions": {
     "colorMeta": {
@@ -12,10 +12,12 @@
       "border": { "role": "neutral", "displayName": "Border", "canonical": "#E7E2D8", "tonalRamp": ["#2f291d", "#584d36", "#7e6e4e", "#a28e67", "#b9aa8d", "#d0c7b3", "#e8e3d9", "#f5f3ef"] },
       "text": { "role": "neutral", "displayName": "Ink", "canonical": "#1C1917", "tonalRamp": ["#2a2623", "#4e4640", "#70645c", "#918279", "#aca19a", "#c8c1bc", "#e3e0dd", "#f3f2f1"] },
       "text-body": { "role": "neutral", "displayName": "Ink, Body", "canonical": "#292524" },
+      "text-secondary": { "role": "neutral", "displayName": "Ink, Secondary", "canonical": "#57534E" },
       "text-muted": { "role": "neutral", "displayName": "Ink, Muted", "canonical": "#78716C" },
       "text-faint": { "role": "neutral", "displayName": "Ink, Faint", "canonical": "#A8A29E" },
       "danger": { "role": "error", "displayName": "Danger", "canonical": "#DC2626", "tonalRamp": ["#420b0b", "#7b1414", "#b01c1c", "#dd2c2c", "#e66161", "#ee9696", "#f7caca", "#fbe9e9"] },
       "danger-dark": { "role": "error", "displayName": "Danger, Dark", "canonical": "#B91C1C" },
+      "danger-bg": { "role": "error", "displayName": "Danger, Background", "canonical": "#FEF2F2" },
       "success": { "role": "success", "displayName": "Success", "canonical": "#15803D", "tonalRamp": ["#0b421f", "#147b3a", "#1daf54", "#2ddc6e", "#61e593", "#96eeb7", "#caf6db", "#e9fbf0"] },
       "warning": { "role": "warning", "displayName": "Warning", "canonical": "#D97706", "tonalRamp": ["#4a2902", "#8b4c04", "#c76d05", "#f88d11", "#faa94c", "#fcc688", "#fde2c3", "#fef3e6"] },
       "star": { "role": "accent", "displayName": "Star", "canonical": "#F59E0B", "tonalRamp": ["#492f03", "#895806", "#c47e08", "#f5a214", "#f8b94f", "#fad089", "#fde8c4", "#fef5e7"] }
@@ -29,6 +31,7 @@
     },
     "shadows": [
       { "name": "card", "value": "0 1px 3px rgba(28,25,23,.08), 0 1px 2px rgba(28,25,23,.06)", "purpose": "Default resting shadow for any card/surface." },
+      { "name": "panel", "value": "0 1px 3px rgba(28,25,23,.08), 0 6px 18px rgba(28,25,23,.05)", "purpose": "Resting shadow for page-level content shells — forms, the auth card, profile/review panels. The most-used shadow in the system by call-site count." },
       { "name": "elevated", "value": "0 8px 24px rgba(28,25,23,.16)", "purpose": "Reserved for elements floating over other content — the map's selected-POI preview card, dropdowns, overlays." }
     ],
     "breakpoints": [
@@ -94,6 +97,30 @@
       "description": "Standard form field — label above, hairline border, error state switches border/message to danger red.",
       "html": "<div class=\"ds-input-wrap\"><label class=\"ds-input-label\">Email</label><input class=\"ds-input\" type=\"text\" placeholder=\"you@example.ro\" /></div>",
       "css": ".ds-input-wrap { display: flex; flex-direction: column; gap: 4px; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; } .ds-input-label { font-size: 14px; font-weight: 500; color: #1C1917; } .ds-input { padding: 8px 12px; border-radius: 14px; border: 1px solid #E7E2D8; font-size: 16px; background-color: #FFFFFF; color: #1C1917; width: 100%; box-sizing: border-box; } .ds-input:focus { border-color: #0F766E; }"
+    },
+    {
+      "name": "Back Link",
+      "kind": "nav",
+      "refersTo": "nav-back-link",
+      "description": "Drill-in navigation link with a directional arrow — flips under RTL. Ghost-weight text, 44px min tap height.",
+      "html": "<a href=\"#\" class=\"ds-back-link\"><svg class=\"ds-back-link-icon\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m12 19-7-7 7-7\"/><path d=\"M19 12H5\"/></svg>Înapoi la hartă</a>",
+      "css": ".ds-back-link { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 14px; color: #0F766E; text-decoration: none; } .ds-back-link-icon { width: 18px; height: 18px; flex-shrink: 0; } .ds-back-link:hover { color: #0B564F; }"
+    },
+    {
+      "name": "Status Text",
+      "kind": "custom",
+      "refersTo": "status-text",
+      "description": "Admin-table status word — color alone signals outcome, never a filled badge/pill.",
+      "html": "<div style=\"display:flex;gap:12px;\"><span class=\"ds-status-text ds-status-text-success\">approved</span><span class=\"ds-status-text ds-status-text-warning\">pending</span><span class=\"ds-status-text ds-status-text-danger\">rejected</span></div>",
+      "css": ".ds-status-text { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 14px; font-weight: 500; } .ds-status-text-success { color: #15803D; } .ds-status-text-warning { color: #D97706; } .ds-status-text-danger { color: #DC2626; }"
+    },
+    {
+      "name": "Data Table Row",
+      "kind": "custom",
+      "refersTo": "data-table",
+      "description": "Admin table — no cell borders, a hairline bottom rule between rows, faint hover wash, trailing row actions as small ghost buttons.",
+      "html": "<table class=\"ds-table\"><thead><tr><th>Name</th><th>Status</th><th></th></tr></thead><tbody><tr><td>Ciocârlia De Jos Mosque</td><td><span class=\"ds-status-text ds-status-text-success\">approved</span></td><td><button class=\"ds-table-action\">Edit</button></td></tr></tbody></table>",
+      "css": ".ds-table { width: 100%; border-collapse: collapse; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; font-size: 14px; } .ds-table th { text-align: left; font-size: 12px; font-weight: 500; color: #78716C; padding: 8px; } .ds-table td { padding: 8px; border-bottom: 1px solid #E7E2D8; color: #1C1917; } .ds-table tr:hover td { background-color: #FFFBF5; } .ds-status-text { font-weight: 500; } .ds-status-text-success { color: #15803D; } .ds-table-action { background: transparent; color: #1C1917; border: 1px solid #E7E2D8; border-radius: 999px; padding: 4px 12px; font-size: 12px; font-weight: 600; cursor: pointer; }"
     }
   ],
   "narrative": {

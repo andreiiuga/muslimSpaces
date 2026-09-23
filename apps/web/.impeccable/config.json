@@ -1,0 +1,44 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-radius",
+        "value": "22px",
+        "files": [
+          "src/app/globals.css"
+        ],
+        "createdAt": "2026-09-23T14:38:28.409Z",
+        "reason": "Agent: documented one-off in DESIGN.md's Layout and Shapes sections, single call site (.explore-map-col), not worth a new radius token"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "20px",
+        "files": [
+          "src/components/HeaderBar/HeaderBar.tsx"
+        ],
+        "createdAt": "2026-09-23T14:38:28.431Z",
+        "reason": "Agent: one-off brand wordmark sizing, not body type — logo marks are conventionally excluded from the type ramp"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "11px",
+        "files": [
+          "src/components/PoiDetailView/PoiDetailView.tsx"
+        ],
+        "createdAt": "2026-09-23T14:38:28.450Z",
+        "reason": "Agent: empty-photo-state caption, ported verbatim from the Claude Design canvas's hand-tuned per-element value (0.13em tracking) — CLAUDE.md documents the type ramp as a coarser approximation of canvas values, not an exact match requirement"
+      },
+      {
+        "rule": "design-system-font-size",
+        "value": "13px",
+        "files": [
+          "src/components/ExploreView/ExploreView.tsx"
+        ],
+        "createdAt": "2026-09-23T14:38:28.469Z",
+        "reason": "Agent: deliberate compact-mobile size for the Map/List toggle buttons, each paired with its own explicit explore:text-sm desktop override in the same class string"
+      }
+    ]
+  }
+}
