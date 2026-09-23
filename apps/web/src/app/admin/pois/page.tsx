@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { colors, spacing, Text } from "@muslimspaces/ui";
+import { colors, Text } from "@muslimspaces/ui";
 import { getApiClient } from "../../../lib/api-client";
 import { getCurrentToken } from "../../../lib/current-user";
 import { PoiAdminTable } from "../../../components/admin/PoiAdminTable/PoiAdminTable";
@@ -39,11 +39,11 @@ export default async function AdminPoisPage({
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div className="flex items-center justify-between">
         <Text size="xl" weight="bold">POIs</Text>
         <NewPoiButton />
       </div>
-      <div style={{ marginTop: spacing.lg, overflowX: "auto" }}>
+      <div className="mt-lg overflow-x-auto">
         {pois.length === 0 ? (
           <Text>No POIs yet.</Text>
         ) : (
@@ -51,9 +51,9 @@ export default async function AdminPoisPage({
         )}
       </div>
       {(page > 1 || hasNextPage) && (
-        <div style={{ display: "flex", alignItems: "center", gap: spacing.md, marginTop: spacing.lg }}>
+        <div className="mt-lg flex items-center gap-md">
           {page > 1 ? (
-            <Link href={`/admin/pois?page=${page - 1}`} style={{ color: colors.primary, fontSize: 14 }}>
+            <Link href={`/admin/pois?page=${page - 1}`} className="text-sm text-primary">
               ← Previous
             </Link>
           ) : (
@@ -61,7 +61,7 @@ export default async function AdminPoisPage({
           )}
           <Text size="sm" color={colors.textMuted}>Page {page}</Text>
           {hasNextPage ? (
-            <Link href={`/admin/pois?page=${page + 1}`} style={{ color: colors.primary, fontSize: 14 }}>
+            <Link href={`/admin/pois?page=${page + 1}`} className="text-sm text-primary">
               Next →
             </Link>
           ) : (

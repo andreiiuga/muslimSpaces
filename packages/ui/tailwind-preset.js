@@ -40,6 +40,12 @@ module.exports = {
         text: "#1C1917",
         textBody: "#292524",
         textMuted: "#78716C",
+        // Secondary/inactive nav-adjacent gray — sits between textBody and
+        // textMuted. Found hardcoded as "#57534E" in apps/web (HeaderBar's
+        // inactive nav links/locale toggle, ExploreView's Open Now button)
+        // during the apps/web Tailwind conversion; promoted to a token since
+        // it's a real recurring role, not a one-off.
+        textSecondary: "#57534E",
         textFaint: "#A8A29E",
         textOnPrimary: "#FFFFFF",
         danger: "#DC2626",
@@ -116,6 +122,12 @@ module.exports = {
         // IconButton.tsx's previous inline boxShadow strings.
         buttonGlow: "0 4px 14px rgba(15, 118, 110, 0.28)",
         iconSolid: "0 1px 4px rgba(28, 25, 23, 0.15)",
+        // The actual dominant "content panel" shadow in apps/web — found
+        // hardcoded verbatim in 10+ files (list rows, form cards, the auth
+        // card) during the apps/web Tailwind conversion, more often than
+        // `card`/`elevated` above. Distinct two-layer shadow, not a rounding
+        // of either existing token.
+        panel: "0 1px 3px rgba(28, 25, 23, 0.08), 0 6px 18px rgba(28, 25, 23, 0.05)",
       },
       // Matches apps/web's existing hand-written breakpoints (globals.css) —
       // retired class-by-class in Phase 4/6 as components move to these.

@@ -4,8 +4,16 @@ import { cva } from "class-variance-authority";
 import { cn } from "../cn";
 import type { ButtonProps } from "./Button.types";
 
-const button = cva(
-  "inline-flex items-center justify-center rounded-pill border-0 font-semibold disabled:cursor-not-allowed disabled:opacity-50",
+// Exported (not just used internally) so a real `<Link href>` that needs to
+// look exactly like a Button — but must stay a real anchor for navigation
+// semantics (crawlability, middle-click-open-in-new-tab), not a <button> —
+// can apply `className={buttonVariants({ variant, size })}` directly rather
+// than re-hand-rolling the same styling. Deliberately not an `asChild`/Slot
+// polymorphic prop on `Button` itself: `@radix-ui/react-slot` isn't a
+// dependency anywhere in this repo, and this export achieves the same
+// outcome without adding one.
+export const buttonVariants = cva(
+  "inline-flex items-center justify-center gap-sm rounded-pill border-0 font-semibold disabled:cursor-not-allowed disabled:opacity-50",
   {
     variants: {
       variant: {
@@ -44,7 +52,7 @@ export function Button({
       type={type}
       onClick={onPress}
       disabled={disabled || loading}
-      className={cn(button({ variant, size, fullWidth }))}
+      className={cn(buttonVariants({ variant, size, fullWidth }))}
     >
       {loading ? "…" : children}
     </button>

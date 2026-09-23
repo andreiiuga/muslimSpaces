@@ -3,8 +3,9 @@
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, KeyRound, MapPinPlus, Newspaper, Pencil, Star, UserCircle, Info } from "lucide-react";
-import { Avatar, Button, Text, colors, radii, spacing } from "@muslimspaces/ui";
+import { Avatar, Button, Text, buttonVariants, colors } from "@muslimspaces/ui";
 import type { AuthUser } from "@muslimspaces/shared";
+import { cn } from "@/lib/utils";
 import { useLocale } from "../../i18n/LocaleContext";
 
 const LOCALE_LABEL: Record<string, string> = { en: "English", ro: "Română", ar: "العربية" };
@@ -15,14 +16,14 @@ export function ProfileHubView({ user }: { user: AuthUser | null }) {
 
   if (!user) {
     return (
-      <div style={{ maxWidth: 1340, margin: "0 auto", padding: "30px clamp(16px,4vw,28px) 60px" }}>
-        <div style={{ maxWidth: 520, padding: "30px 0" }}>
-          <Text size="xs" weight="medium" color={colors.textMuted} letterSpacing={1.4}>{t("profile.welcomeKicker").toUpperCase()}</Text>
-          <div style={{ margin: "8px 0 12px" }}>
+      <div className="mx-auto max-w-[1340px] px-[clamp(16px,4vw,28px)] pb-[60px] pt-[30px]">
+        <div className="max-w-[520px] py-[30px]">
+          <Text size="xs" weight="medium" color={colors.textMuted}>{t("profile.welcomeKicker").toUpperCase()}</Text>
+          <div className="mb-[12px] mt-sm">
             <Text size="3xl" weight="semibold">{t("profile.welcomeHead")}</Text>
           </div>
           <Text size="lg" color={colors.textMuted}>{t("profile.welcomeBody")}</Text>
-          <div style={{ display: "flex", gap: 10, marginTop: 22, flexWrap: "wrap" }}>
+          <div className="mt-[22px] flex flex-wrap gap-[10px]">
             <Button onPress={() => router.push("/login")}>{t("common.logIn")}</Button>
             <Button variant="ghost" onPress={() => router.push("/signup")}>{t("profile.createAccount")}</Button>
           </div>
@@ -47,14 +48,16 @@ export function ProfileHubView({ user }: { user: AuthUser | null }) {
   ];
 
   return (
-    <div style={{ maxWidth: 1340, margin: "0 auto", padding: "30px clamp(16px,4vw,28px) 60px" }}>
-      <div style={{ display: "flex", gap: "clamp(20px,3vw,34px)", alignItems: "flex-start", flexWrap: "wrap" }}>
-        <div style={{ flex: "0 1 320px", minWidth: 280, display: "flex", flexDirection: "column", gap: 14 }}>
-          <div style={{ background: colors.surface, borderRadius: radii.lg, boxShadow: "0 1px 3px rgba(28,25,23,.08),0 6px 18px rgba(28,25,23,.05)", padding: 22, display: "flex", flexDirection: "column", gap: 14, alignItems: "flex-start" }}>
-            <Avatar uri={user.avatarUrl} name={user.displayName ?? user.email} size={74} />
+    <div className="mx-auto max-w-[1340px] px-[clamp(16px,4vw,28px)] pb-[60px] pt-[30px]">
+      <div className="flex flex-wrap items-start gap-[clamp(20px,3vw,34px)]">
+        <div className="flex min-w-[280px] flex-[0_1_320px] flex-col gap-[14px]">
+          <div className="flex flex-col items-start gap-[14px] rounded-lg bg-surface p-[22px] shadow-panel">
+            {/* size unified to 72 — was 74 here vs 72 in EditProfileForm for
+                the identical "large profile avatar" role, unintentional drift. */}
+            <Avatar uri={user.avatarUrl} name={user.displayName ?? user.email} size={72} />
             <div>
               <Text size="xl" weight="semibold">{user.displayName ?? user.email}</Text>
-              <div style={{ marginTop: 3 }}>
+              <div className="mt-[3px]">
                 <Text size="sm" color={colors.textMuted}>
                   {user.email}
                   {user.role === "admin" && ` · ${t("profile.admin")}`}
@@ -62,27 +65,24 @@ export function ProfileHubView({ user }: { user: AuthUser | null }) {
                 </Text>
               </div>
             </div>
-            <Link
-              href="/account/edit"
-              style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8, minHeight: 42, padding: "0 20px", border: `1px solid ${colors.border}`, background: colors.surface, borderRadius: radii.pill, fontSize: 14, fontWeight: 600, textDecoration: "none", color: colors.text }}
-            >
+            <Link href="/account/edit" className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "no-underline")}>
               <Pencil size={16} color={colors.primary} /> {t("profile.editProfile")}
             </Link>
           </div>
           <Button variant="danger" onPress={handleLogout} fullWidth>{t("profile.logOut")}</Button>
         </div>
 
-        <div style={{ flex: "1 1 460px", minWidth: 300, display: "flex", flexDirection: "column", gap: spacing.md }}>
-          <Text size="xs" weight="medium" color={colors.textMuted} letterSpacing={1.4}>{t("profile.account").toUpperCase()}</Text>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(300px,1fr))", gap: spacing.md }}>
+        <div className="flex min-w-[300px] flex-[1_1_460px] flex-col gap-md">
+          <Text size="xs" weight="medium" color={colors.textMuted}>{t("profile.account").toUpperCase()}</Text>
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-md">
             {rows.map((row) => (
               <Link
                 key={row.href}
                 href={row.href}
-                style={{ background: colors.surface, borderRadius: radii.lg, boxShadow: "0 1px 3px rgba(28,25,23,.08),0 6px 18px rgba(28,25,23,.05)", minHeight: 78, display: "flex", alignItems: "center", gap: spacing.md, padding: "0 18px", textDecoration: "none", color: colors.text }}
+                className="flex min-h-[78px] items-center gap-md rounded-lg bg-surface px-[18px] text-text no-underline shadow-panel"
               >
                 <row.icon size={23} color={colors.primary} />
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="min-w-0 flex-1">
                   <Text size="md">{row.label}</Text>
                   {row.note && <Text size="xs" color={colors.textMuted}>{row.note}</Text>}
                 </div>

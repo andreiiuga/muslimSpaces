@@ -37,27 +37,6 @@
   gap: 16px;
 }
 
-.explore-top {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 24px;
-  flex-wrap: wrap;
-}
-
-/* Rides alongside the category chips at small viewports instead of taking
-   its own row next to the map/list switch — see ".explore-opennow-chip"
-   below and FilterBar.tsx, which renders the actual toggle chip. */
-.explore-opennow-btn {
-  display: flex;
-}
-
-.explore-mode-btn {
-  height: 40px;
-  padding: 0 16px;
-  font-size: 14px;
-}
-
 /* Hidden by default — only stands in for the big heading kicker at small
    viewports, and only in Map mode (".explore-shell--map"), where the
    heading itself is hidden to make room for the map. See below. */
@@ -66,47 +45,6 @@
   font-size: 12px;
   font-weight: 500;
   color: #78716C;
-}
-
-.explore-filter-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-/* The Open Now chip FilterBar renders alongside the category chips — only
-   shown at small viewports, where it replaces ".explore-opennow-btn"
-   above (hidden there) so every filter lives in one carousel. */
-.explore-opennow-chip {
-  display: none;
-}
-
-@media (max-width: 860px) {
-  .explore-opennow-btn {
-    display: none;
-  }
-
-  .explore-opennow-chip {
-    display: inline-flex;
-  }
-
-  .explore-mode-btn {
-    height: 34px;
-    padding: 0 12px;
-    font-size: 13px;
-  }
-
-  .explore-filter-row {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    padding-bottom: 2px;
-  }
-
-  .explore-filter-row::-webkit-scrollbar {
-    display: none;
-  }
 }
 
 .explore-columns {
@@ -198,43 +136,6 @@
   }
 }
 
-.poi-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 18px;
-}
-
-/* ── POI detail sidebar ──────────────────────────────────────────────
-   Sticky actions/contact/hours card above 900px, static (stacked) below
-   it — matches the design's own `sidePos: w < 900 ? "static" : "sticky"`. */
-.poi-detail-side {
-  position: sticky;
-  top: 98px;
-}
-
-@media (max-width: 900px) {
-  .poi-detail-side {
-    position: static;
-  }
-}
-
-@media (max-width: 768px) {
-  .admin-shell {
-    flex-direction: column;
-  }
-
-  .admin-sidebar {
-    width: 100% !important;
-    border-right: none !important;
-    /* matches colors.border in packages/ui/src/tokens.ts */
-    border-bottom: 1px solid #e7e2d8;
-  }
-
-  .admin-sidebar-nav {
-    flex-direction: row !important;
-    flex-wrap: wrap;
-  }
-}
 /*
  * No CSS-variable/`.dark` theming here — shadcn's CLI scaffolds one by
  * default, but this app has no dark-mode requirement, so colors are plain

@@ -3,13 +3,13 @@
 import { useRef, useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
-import Link from "next/link";
-import { ArrowLeft, ArrowRight, BadgeCheck, Camera, MapPin as MapPinIcon } from "lucide-react";
-import { Button, Chip, Input, Skeleton, Text, colors, radii, spacing } from "@muslimspaces/ui";
+import { BadgeCheck, Camera, MapPin as MapPinIcon } from "lucide-react";
+import { Button, Chip, Input, Skeleton, Text, colors } from "@muslimspaces/ui";
 import type { Category, Coordinates } from "@muslimspaces/shared";
 import type { MapBounds } from "@muslimspaces/ui/map";
 import { useLocale } from "../../i18n/LocaleContext";
 import { pickLocalized } from "../../i18n/pick-localized";
+import { BackLink } from "../BackLink/BackLink";
 
 const MapView = dynamic(() => import("@muslimspaces/ui/map").then((m) => m.MapView), {
   ssr: false,
@@ -29,9 +29,9 @@ function LocationPicker({ value, onChange }: { value: Coordinates; onChange: (v:
   }
 
   return (
-    <div style={{ position: "relative", height: 250, border: `1px solid ${colors.border}`, borderRadius: radii.lg, overflow: "hidden", marginTop: 4 }}>
+    <div className="relative mt-1 h-[250px] overflow-hidden rounded-lg border border-border">
       <MapView pois={[]} initialCenter={value} initialZoom={13} onBoundsChange={handleBoundsChange} />
-      <div style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-100%)", pointerEvents: "none" }}>
+      <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-full">
         <MapPinIcon size={34} fill={colors.danger} color={colors.danger} />
       </div>
     </div>
@@ -53,8 +53,6 @@ export function SubmitPlaceForm({ categories }: { categories: Category[] }) {
   const [submitting, setSubmitting] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [sentName, setSentName] = useState<string | null>(null);
-
-  const BackIcon = locale === "ar" ? ArrowRight : ArrowLeft;
 
   function toggleCategory(id: string) {
     setCategoryIds((prev) => {
@@ -136,17 +134,15 @@ export function SubmitPlaceForm({ categories }: { categories: Category[] }) {
 
   if (sentName) {
     return (
-      <div style={{ maxWidth: 1040, margin: "0 auto", padding: "26px clamp(16px,4vw,28px) 60px" }}>
-        <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 8, minHeight: 44, fontSize: 14, color: colors.primary, textDecoration: "none" }}>
-          <BackIcon size={18} /> {t("common.backToMap")}
-        </Link>
-        <div style={{ maxWidth: 560, padding: "26px 0" }}>
+      <div className="mx-auto max-w-[1040px] px-[clamp(16px,4vw,28px)] pb-[60px] pt-[26px]">
+        <BackLink href="/">{t("common.backToMap")}</BackLink>
+        <div className="max-w-[560px] py-[26px]">
           <BadgeCheck size={44} fill={colors.primaryLight} color={colors.primary} />
-          <div style={{ margin: "14px 0 10px" }}>
+          <div className="mb-[10px] mt-[14px]">
             <Text size="3xl" weight="semibold">{t("submit.sentHeading")}</Text>
           </div>
           <Text size="md" color={colors.textMuted}>{t("submit.sentBody", { name: sentName })}</Text>
-          <div style={{ marginTop: 22 }}>
+          <div className="mt-[22px]">
             <Button onPress={() => router.push("/")}>{t("submit.backToMap")}</Button>
           </div>
         </div>
@@ -155,25 +151,23 @@ export function SubmitPlaceForm({ categories }: { categories: Category[] }) {
   }
 
   return (
-    <div style={{ maxWidth: 1040, margin: "0 auto", padding: "26px clamp(16px,4vw,28px) 60px" }}>
-      <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 8, minHeight: 44, fontSize: 14, color: colors.primary, textDecoration: "none" }}>
-        <BackIcon size={18} /> {t("common.backToMap")}
-      </Link>
+    <div className="mx-auto max-w-[1040px] px-[clamp(16px,4vw,28px)] pb-[60px] pt-[26px]">
+      <BackLink href="/">{t("common.backToMap")}</BackLink>
 
-      <div style={{ margin: "4px 0 22px" }}>
+      <div className="mb-[22px] mt-1">
         <Text size="3xl" weight="semibold">{t("submit.heading")}</Text>
-        <div style={{ marginTop: 8 }}>
+        <div className="mt-sm">
           <Text size="sm" color={colors.textMuted}>{t("submit.subheading")}</Text>
         </div>
       </div>
 
-      <div style={{ background: colors.surface, borderRadius: radii.lg, boxShadow: "0 1px 3px rgba(28,25,23,.08),0 6px 18px rgba(28,25,23,.05)", padding: 24, display: "flex", gap: 28, flexWrap: "wrap" }}>
-        <div style={{ flex: "1 1 380px", minWidth: 280, display: "flex", flexDirection: "column", gap: spacing.xl }}>
+      <div className="flex flex-wrap gap-[28px] rounded-lg bg-surface p-xl shadow-panel">
+        <div className="flex min-w-[280px] flex-[1_1_380px] flex-col gap-xl">
           <Input label={t("submit.name")} value={name} onChangeText={setName} placeholder={t("submit.namePlaceholder")} />
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-            <Text size="xs" weight="medium" color={colors.textMuted} letterSpacing={1.4}>{t("submit.categories").toUpperCase()}</Text>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          <div className="flex flex-col gap-[9px]">
+            <Text size="xs" weight="medium" color={colors.textMuted}>{t("submit.categories").toUpperCase()}</Text>
+            <div className="flex flex-wrap gap-sm">
               {categories.map((category) => {
                 const selected = categoryIds.includes(category.id);
                 const isPrimary = categoryIds[0] === category.id;
@@ -187,37 +181,33 @@ export function SubmitPlaceForm({ categories }: { categories: Category[] }) {
             </div>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-            <Text size="xs" weight="medium" color={colors.textMuted} letterSpacing={1.4}>{t("submit.openingHours").toUpperCase()}</Text>
-            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-              <div style={{ flex: "1 1 0", minWidth: 0 }}>
+          <div className="flex flex-col gap-[7px]">
+            <Text size="xs" weight="medium" color={colors.textMuted}>{t("submit.openingHours").toUpperCase()}</Text>
+            <div className="flex items-center gap-[10px]">
+              <div className="min-w-0 flex-1">
                 <Input value={opensAt} onChangeText={setOpensAt} placeholder="09:00" />
               </div>
               <Text size="sm" color={colors.textMuted}>{t("submit.to")}</Text>
-              <div style={{ flex: "1 1 0", minWidth: 0 }}>
+              <div className="min-w-0 flex-1">
                 <Input value={closesAt} onChangeText={setClosesAt} placeholder="20:00" />
               </div>
             </div>
             <Text size="xs" color={colors.textMuted}>{t("submit.hoursNote")}</Text>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-            <Text size="xs" weight="medium" color={colors.textMuted} letterSpacing={1.4}>{t("submit.photos").toUpperCase()}</Text>
+          <div className="flex flex-col gap-[9px]">
+            <Text size="xs" weight="medium" color={colors.textMuted}>{t("submit.photos").toUpperCase()}</Text>
             <input
               ref={fileInputRef}
               type="file"
               accept="image/*"
               onChange={(e: ChangeEvent<HTMLInputElement>) => setPhoto(e.target.files?.[0] ?? null)}
-              style={{ display: "none" }}
+              className="hidden"
             />
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              style={{
-                width: 96, height: 96, border: "1.5px dashed #CBC5B8", borderRadius: radii.input, display: "flex",
-                flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5, cursor: "pointer",
-                color: colors.primary, background: "transparent",
-              }}
+              className="flex h-[96px] w-[96px] cursor-pointer flex-col items-center justify-center gap-[5px] rounded-input border-[1.5px] border-dashed border-[#CBC5B8] bg-transparent text-primary"
             >
               {photo ? (
                 <Text size="xs" color={colors.textMuted} align="center">{photo.name}</Text>
@@ -231,9 +221,9 @@ export function SubmitPlaceForm({ categories }: { categories: Category[] }) {
           </div>
         </div>
 
-        <div style={{ flex: "1 1 340px", minWidth: 280, display: "flex", flexDirection: "column", gap: spacing.xl }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-            <Text size="xs" weight="medium" color={colors.textMuted} letterSpacing={1.4}>{t("submit.address").toUpperCase()}</Text>
+        <div className="flex min-w-[280px] flex-[1_1_340px] flex-col gap-xl">
+          <div className="flex flex-col gap-[7px]">
+            <Text size="xs" weight="medium" color={colors.textMuted}>{t("submit.address").toUpperCase()}</Text>
             <Input value={address} onChangeText={setAddress} placeholder={t("submit.addressPlaceholder")} />
             <LocationPicker value={location} onChange={setLocation} />
             <Text size="xs" color={colors.textMuted}>{t("submit.dragPin")}</Text>

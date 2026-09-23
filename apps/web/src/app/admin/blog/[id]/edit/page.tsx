@@ -14,7 +14,7 @@ export default async function EditBlogPostPage({ params }: { params: Promise<{ i
   return (
     <div>
       <Text size="xl" weight="bold">Edit post</Text>
-      <div style={{ marginTop: 24 }}><BlogForm initialPost={post} /></div>
+      <div className="mt-xl"><BlogForm initialPost={post} /></div>
     </div>
   );
 }

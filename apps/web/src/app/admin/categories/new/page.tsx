@@ -8,7 +8,7 @@ export default async function NewCategoryPage() {
   return (
     <div>
       <Text size="xl" weight="bold">New category</Text>
-      <div style={{ marginTop: 24 }}>
+      <div className="mt-xl">
         <CategoryForm />
       </div>
     </div>

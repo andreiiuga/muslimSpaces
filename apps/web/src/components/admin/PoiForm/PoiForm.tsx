@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Input, Text, Textarea, colors, spacing } from "@muslimspaces/ui";
+import { Button, Input, Text, Textarea, colors } from "@muslimspaces/ui";
 import type { Category, Poi, PoiImage } from "@muslimspaces/shared";
 import { PoiImagesManager } from "../PoiImagesManager/PoiImagesManager";
 
@@ -112,13 +112,13 @@ export function PoiForm({
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: spacing.md, maxWidth: 480 }}>
+    <div className="flex max-w-[480px] flex-col gap-md">
       <Input label="Name (Romanian)" value={nameRo} onChangeText={setNameRo} />
       <Input label="Name (English)" value={nameEn} onChangeText={setNameEn} />
       <Textarea label="Description (Romanian)" value={descriptionRo} onChangeText={setDescriptionRo} rows={3} />
       <Textarea label="Description (English)" value={descriptionEn} onChangeText={setDescriptionEn} rows={3} />
       <Input label="Address" value={address} onChangeText={setAddress} />
-      <div style={{ display: "flex", gap: spacing.sm }}>
+      <div className="flex gap-sm">
         <Input label="Latitude" value={lat} onChangeText={setLat} />
         <Input label="Longitude" value={lng} onChangeText={setLng} />
       </div>
@@ -127,15 +127,15 @@ export function PoiForm({
 
       <div>
         <Text size="sm" weight="medium">Categories</Text>
-        <div style={{ display: "flex", flexDirection: "column", gap: spacing.xs, marginTop: spacing.xs }}>
+        <div className="mt-xs flex flex-col gap-xs">
           {categories.map((category) => {
             const checked = categoryIds.includes(category.id);
             return (
-              <div key={category.id} style={{ display: "flex", alignItems: "center", gap: spacing.sm }}>
+              <div key={category.id} className="flex items-center gap-sm">
                 <input type="checkbox" checked={checked} onChange={() => toggleCategory(category.id)} />
                 <Text size="sm">{category.name.en}</Text>
                 {checked && (
-                  <label style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: spacing.sm }}>
+                  <label className="ms-sm flex items-center gap-1">
                     <input
                       type="radio"
                       name="primaryCategory"
@@ -160,12 +160,12 @@ export function PoiForm({
       </div>
 
       {isEdit && (
-        <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: spacing.md, marginTop: spacing.sm }}>
+        <div className="mt-sm border-t border-border pt-md">
           <Text size="sm" weight="medium">Visibility: {visibility}</Text>
           <Text size="xs" color={colors.textMuted}>
             Hidden POIs stay approved but never appear to visitors — only here in the admin panel.
           </Text>
-          <div style={{ display: "flex", gap: spacing.sm, marginTop: spacing.sm }}>
+          <div className="mt-sm flex gap-sm">
             <Button size="sm" variant="secondary" disabled={actionPending} onPress={toggleVisibility}>
               {visibility === "visible" ? "Hide" : "Show"}
             </Button>
@@ -177,7 +177,7 @@ export function PoiForm({
       )}
 
       {isEdit && (
-        <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: spacing.md, marginTop: spacing.sm }}>
+        <div className="mt-sm border-t border-border pt-md">
           <PoiImagesManager poiId={initialPoi!.id} initialImages={images ?? []} />
         </div>
       )}

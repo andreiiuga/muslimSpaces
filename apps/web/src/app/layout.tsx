@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, IBM_Plex_Sans_Arabic } from "next/font/google";
-import { colors } from "@muslimspaces/ui";
 import { Navbar } from "../components/Navbar/Navbar";
 import { LocaleProvider } from "../i18n/LocaleContext";
 import "./globals.css";
@@ -34,27 +33,18 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${jakarta.variable} ${ibmArabic.variable}`}>
-      <body
-        style={{
-          margin: 0,
-          fontFamily:
-            "var(--font-jakarta), var(--font-ibm-arabic), system-ui, sans-serif",
-          backgroundColor: colors.background,
-          color: colors.text,
-          minHeight: "100dvh",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
+      {/* bg-background/text-foreground come from globals.css's `@layer
+          base` body rule, not repeated here. */}
+      <body className="m-0 flex min-h-dvh flex-col font-[var(--font-jakarta),var(--font-ibm-arabic),system-ui,sans-serif]">
         <LocaleProvider>
           <Navbar />
-          {/* minWidth: 0 is load-bearing — a flex item's default min-width
-              is "auto" (its content's intrinsic width), so without this any
+          {/* min-w-0 is load-bearing — a flex item's default min-width is
+              "auto" (its content's intrinsic width), so without this any
               wide-content page (Explore's map+list columns, a long table,
               etc.) forces this wrapper — and therefore the whole page body —
               wider than the viewport instead of the content shrinking or
               scrolling within itself. */}
-          <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
+          <div className="min-w-0 flex-1">{children}</div>
         </LocaleProvider>
       </body>
     </html>

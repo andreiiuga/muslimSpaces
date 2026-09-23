@@ -8,7 +8,7 @@ export default async function NewPoiPage() {
   return (
     <div>
       <Text size="xl" weight="bold">New POI</Text>
-      <div style={{ marginTop: 24 }}>
+      <div className="mt-xl">
         <PoiForm categories={categories} />
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { spacing, Text } from "@muslimspaces/ui";
+import { Text } from "@muslimspaces/ui";
 import { getApiClient } from "../../../lib/api-client";
 import { getCurrentToken, requireAdmin } from "../../../lib/current-user";
 import { CategoryAdminTable } from "../../../components/admin/CategoryAdminTable/CategoryAdminTable";
@@ -11,11 +11,11 @@ export default async function AdminCategoriesPage() {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div className="flex items-center justify-between">
         <Text size="xl" weight="bold">Categories</Text>
         <NewCategoryButton />
       </div>
-      <div style={{ marginTop: spacing.lg, overflowX: "auto" }}>
+      <div className="mt-lg overflow-x-auto">
         {categories.length === 0 ? (
           <Text>No categories yet.</Text>
         ) : (

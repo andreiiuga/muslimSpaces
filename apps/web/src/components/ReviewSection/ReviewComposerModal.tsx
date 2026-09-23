@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Star, X } from "lucide-react";
-import { Button, Text, Textarea, colors, radii, spacing } from "@muslimspaces/ui";
+import { Button, Text, Textarea, colors } from "@muslimspaces/ui";
 import type { Review } from "@muslimspaces/shared";
 import { useLocale } from "../../i18n/LocaleContext";
 
@@ -53,16 +53,7 @@ export function ReviewComposerModal({
 
   return (
     <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 50,
-        background: "rgba(28,25,23,.42)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "clamp(10px,3vw,28px)",
-      }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(28,25,23,0.42)] p-[clamp(10px,3vw,28px)]"
       onClick={onClose}
     >
       <div
@@ -72,28 +63,15 @@ export function ReviewComposerModal({
         // Claude Design canvas: `.ms-scroll{scrollbar-width:none}` +
         // `.ms-scroll::-webkit-scrollbar{width:0;height:0}` (hides the
         // scrollbar entirely, doesn't just thin it).
-        className="[scrollbar-width:none] [&::-webkit-scrollbar]:w-0 [&::-webkit-scrollbar]:h-0"
+        className="flex max-h-[88vh] w-full max-w-[540px] flex-col gap-lg overflow-y-auto rounded-xl bg-surface p-[26px] shadow-[0_24px_64px_rgba(28,25,23,0.3)] [scrollbar-width:none] [&::-webkit-scrollbar]:h-0 [&::-webkit-scrollbar]:w-0"
         onClick={(e) => e.stopPropagation()}
-        style={{
-          width: "100%",
-          maxWidth: 540,
-          background: colors.surface,
-          borderRadius: radii.xl,
-          boxShadow: "0 24px 64px rgba(28,25,23,.3)",
-          padding: 26,
-          display: "flex",
-          flexDirection: "column",
-          gap: spacing.lg,
-          maxHeight: "88vh",
-          overflowY: "auto",
-        }}
       >
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: spacing.md }}>
+        <div className="flex items-start justify-between gap-md">
           <div>
-            <Text size="xs" weight="medium" color={colors.textMuted} letterSpacing={1.4}>
+            <Text size="xs" weight="medium" color={colors.textMuted}>
               {t("review.reviewing").toUpperCase()}
             </Text>
-            <div style={{ marginTop: 4 }}>
+            <div className="mt-1">
               <Text size="xl" weight="semibold">{poiName}</Text>
             </div>
           </div>
@@ -101,24 +79,24 @@ export function ReviewComposerModal({
             type="button"
             onClick={onClose}
             aria-label={t("common.cancel")}
-            style={{ width: 44, height: 44, flex: "none", display: "flex", alignItems: "center", justifyContent: "center", border: "none", background: "transparent", cursor: "pointer" }}
+            className="flex h-11 w-11 flex-none cursor-pointer items-center justify-center border-0 bg-transparent"
           >
             <X size={20} color={colors.text} />
           </button>
         </div>
 
         <div>
-          <Text size="xs" weight="medium" color={colors.textMuted} letterSpacing={1.4}>
+          <Text size="xs" weight="medium" color={colors.textMuted}>
             {t("review.yourRating").toUpperCase()}
           </Text>
-          <div style={{ display: "flex", gap: 4, marginTop: 6 }}>
+          <div className="mt-[6px] flex gap-1">
             {[1, 2, 3, 4, 5].map((n) => (
               <button
                 key={n}
                 type="button"
                 onClick={() => setRating(n)}
                 aria-label={`${n}`}
-                style={{ width: 48, height: 48, flex: "none", display: "flex", alignItems: "center", justifyContent: "center", border: "none", background: "transparent", cursor: "pointer" }}
+                className="flex h-12 w-12 flex-none cursor-pointer items-center justify-center border-0 bg-transparent"
               >
                 <Star size={31} fill={n <= rating ? colors.star : "none"} color={n <= rating ? colors.star : colors.starEmpty} />
               </button>
@@ -128,10 +106,10 @@ export function ReviewComposerModal({
         </div>
 
         <div>
-          <Text size="xs" weight="medium" color={colors.textMuted} letterSpacing={1.4}>
+          <Text size="xs" weight="medium" color={colors.textMuted}>
             {t("review.yourWords").toUpperCase()}
           </Text>
-          <div style={{ marginTop: 6 }}>
+          <div className="mt-[6px]">
             <Textarea value={comment} onChangeText={setComment} placeholder={t("review.placeholder")} rows={5} />
           </div>
           <Text size="xs" color={colors.textMuted}>{t("review.note")}</Text>
@@ -139,7 +117,7 @@ export function ReviewComposerModal({
 
         {error && <Text size="sm" color={colors.dangerDark}>{error}</Text>}
 
-        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", flexWrap: "wrap" }}>
+        <div className="flex flex-wrap justify-end gap-[10px]">
           <Button variant="ghost" onPress={onClose}>{t("common.cancel")}</Button>
           <Button onPress={handleSubmit} loading={submitting}>
             {myReview ? t("review.update") : t("review.post")}

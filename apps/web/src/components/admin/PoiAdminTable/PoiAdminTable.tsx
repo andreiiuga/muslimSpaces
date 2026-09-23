@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, colors, spacing, Text } from "@muslimspaces/ui";
+import { Button, colors, Text } from "@muslimspaces/ui";
 import type { Category, Poi } from "@muslimspaces/shared";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { StatusBadge } from "../StatusBadge";
 
 const STATUS_COLORS: Record<Poi["status"], string> = {
   pending: colors.warning,
@@ -61,35 +63,35 @@ export function PoiAdminTable({ pois: initialPois, categories }: { pois: Poi[]; 
   }
 
   return (
-    <table style={{ width: "100%", borderCollapse: "collapse" }}>
-      <thead>
-        <tr style={{ textAlign: "left", borderBottom: `1px solid ${colors.border}` }}>
+    <Table>
+      <TableHeader>
+        <TableRow>
           {["Name", "Category", "Status", "Visibility", "Address", ""].map((h) => (
-            <th key={h} style={{ padding: spacing.sm, fontSize: 12, color: colors.textMuted }}>{h}</th>
+            <TableHead key={h} className="text-xs">{h}</TableHead>
           ))}
-        </tr>
-      </thead>
-      <tbody>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
         {pois.map((poi) => (
-          <tr key={poi.id} style={{ borderBottom: `1px solid ${colors.border}` }}>
-            <td style={{ padding: spacing.sm }}>
+          <TableRow key={poi.id}>
+            <TableCell>
               <Text size="sm" weight="medium">{poi.name.ro}</Text>
-            </td>
-            <td style={{ padding: spacing.sm }}>
+            </TableCell>
+            <TableCell>
               <Text size="sm">{categoryLabel(poi)}</Text>
-            </td>
-            <td style={{ padding: spacing.sm }}>
-              <Text size="sm" color={STATUS_COLORS[poi.status]} weight="medium">{poi.status}</Text>
-            </td>
-            <td style={{ padding: spacing.sm }}>
-              <Text size="sm" color={poi.visibility === "hidden" ? colors.danger : colors.success} weight="medium">
+            </TableCell>
+            <TableCell>
+              <StatusBadge color={STATUS_COLORS[poi.status]}>{poi.status}</StatusBadge>
+            </TableCell>
+            <TableCell>
+              <StatusBadge color={poi.visibility === "hidden" ? colors.danger : colors.success}>
                 {poi.visibility}
-              </Text>
-            </td>
-            <td style={{ padding: spacing.sm }}>
+              </StatusBadge>
+            </TableCell>
+            <TableCell>
               <Text size="sm" color={colors.textMuted}>{poi.address}</Text>
-            </td>
-            <td style={{ padding: spacing.sm, display: "flex", gap: spacing.xs, flexWrap: "wrap" }}>
+            </TableCell>
+            <TableCell className="flex flex-wrap gap-xs">
               <Button
                 size="sm"
                 variant="secondary"
@@ -124,10 +126,10 @@ export function PoiAdminTable({ pois: initialPois, categories }: { pois: Poi[]; 
               <Button size="sm" variant="danger" disabled={pendingAction === poi.id} onPress={() => remove(poi.id)}>
                 Delete
               </Button>
-            </td>
-          </tr>
+            </TableCell>
+          </TableRow>
         ))}
-      </tbody>
-    </table>
+      </TableBody>
+    </Table>
   );
 }

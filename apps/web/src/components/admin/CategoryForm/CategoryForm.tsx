@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Input, Text, colors, spacing } from "@muslimspaces/ui";
+import { Button, Input, Text, colors } from "@muslimspaces/ui";
 import type { Category } from "@muslimspaces/shared";
 
 export function CategoryForm({ initialCategory }: { initialCategory?: Category }) {
@@ -47,7 +47,7 @@ export function CategoryForm({ initialCategory }: { initialCategory?: Category }
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: spacing.md, maxWidth: 480 }}>
+    <div className="flex max-w-[480px] flex-col gap-md">
       <Input
         label="Slug"
         value={slug}

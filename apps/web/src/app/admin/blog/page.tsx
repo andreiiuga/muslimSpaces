@@ -1,4 +1,4 @@
-import { spacing, Text } from "@muslimspaces/ui";
+import { Text } from "@muslimspaces/ui";
 import { getApiClient } from "../../../lib/api-client";
 import { getCurrentToken } from "../../../lib/current-user";
 import { BlogAdminTable } from "../../../components/admin/BlogAdminTable/BlogAdminTable";
@@ -10,11 +10,11 @@ export default async function AdminBlogPage() {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div className="flex items-center justify-between">
         <Text size="xl" weight="bold">Blog</Text>
         <NewBlogPostButton />
       </div>
-      <div style={{ marginTop: spacing.lg, overflowX: "auto" }}>
+      <div className="mt-lg overflow-x-auto">
         {posts.length === 0 ? <Text>No posts yet.</Text> : <BlogAdminTable posts={posts} />}
       </div>
     </div>

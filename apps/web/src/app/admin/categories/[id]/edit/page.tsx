@@ -15,7 +15,7 @@ export default async function EditCategoryPage({ params }: { params: Promise<{ i
   return (
     <div>
       <Text size="xl" weight="bold">Edit category</Text>
-      <div style={{ marginTop: 24 }}>
+      <div className="mt-xl">
         <CategoryForm initialCategory={category} />
       </div>
     </div>

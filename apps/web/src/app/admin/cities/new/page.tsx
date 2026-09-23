@@ -8,7 +8,7 @@ export default async function NewCityPage() {
   return (
     <div>
       <Text size="xl" weight="bold">New city</Text>
-      <div style={{ marginTop: 24 }}>
+      <div className="mt-xl">
         <CityForm />
       </div>
     </div>

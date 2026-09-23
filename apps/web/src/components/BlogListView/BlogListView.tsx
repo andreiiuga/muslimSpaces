@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { BlogPost } from "@muslimspaces/shared";
-import { Text, colors, radii } from "@muslimspaces/ui";
+import { Text, colors } from "@muslimspaces/ui";
 import { useLocale } from "../../i18n/LocaleContext";
 import { pickLocalized } from "../../i18n/pick-localized";
 
@@ -11,7 +11,7 @@ export function BlogListView({ posts }: { posts: BlogPost[] }) {
 
   if (posts.length === 0) {
     return (
-      <div style={{ maxWidth: 1340, margin: "0 auto", padding: "30px clamp(16px,4vw,28px) 60px" }}>
+      <div className="mx-auto max-w-[1340px] px-[clamp(16px,4vw,28px)] pb-[60px] pt-[30px]">
         <Text color={colors.textMuted}>{t("blog.empty")}</Text>
       </div>
     );
@@ -20,10 +20,10 @@ export function BlogListView({ posts }: { posts: BlogPost[] }) {
   const [featured, ...rest] = posts;
 
   return (
-    <div style={{ maxWidth: 1340, margin: "0 auto", padding: "30px clamp(16px,4vw,28px) 60px", display: "flex", flexDirection: "column", gap: 26 }}>
+    <div className="mx-auto flex max-w-[1340px] flex-col gap-[26px] px-[clamp(16px,4vw,28px)] pb-[60px] pt-[30px]">
       <div>
-        <Text size="xs" weight="medium" color={colors.textMuted} letterSpacing={1.4}>{t("blog.kicker").toUpperCase()}</Text>
-        <div style={{ marginTop: 6 }}>
+        <Text size="xs" weight="medium" color={colors.textMuted}>{t("blog.kicker").toUpperCase()}</Text>
+        <div className="mt-[6px]">
           <Text size="3xl" weight="semibold">{t("blog.heading")}</Text>
         </div>
       </div>
@@ -31,17 +31,17 @@ export function BlogListView({ posts }: { posts: BlogPost[] }) {
       {featured && (
         <Link
           href={`/blog/${featured.slug}`}
-          style={{ background: colors.surface, borderRadius: radii.lg, boxShadow: "0 1px 3px rgba(28,25,23,.08),0 6px 18px rgba(28,25,23,.05)", padding: 14, display: "flex", gap: 22, flexWrap: "wrap", textDecoration: "none", color: colors.text }}
+          className="flex flex-wrap gap-[22px] rounded-lg bg-surface p-[14px] text-text no-underline shadow-panel"
         >
-          <div style={{ flex: "1 1 380px", minWidth: "min(280px,100%)", height: "clamp(180px,40vw,300px)", borderRadius: 16, position: "relative", overflow: "hidden", background: colors.primaryLight }}>
+          <div className="relative h-[clamp(180px,40vw,300px)] min-w-[min(280px,100%)] flex-[1_1_380px] overflow-hidden rounded-lg bg-primaryLight">
             {featured.coverImageUrl && (
               // eslint-disable-next-line @next/next/no-img-element -- pre-optimized WebP, see pois/[id]
-              <img src={featured.coverImageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              <img src={featured.coverImageUrl} alt="" className="h-full w-full object-cover" />
             )}
           </div>
-          <div style={{ flex: "1 1 320px", minWidth: 280, display: "flex", flexDirection: "column", gap: 10, justifyContent: "center", padding: "10px 12px" }}>
+          <div className="flex min-w-[280px] flex-[1_1_320px] flex-col justify-center gap-[10px] px-[12px] py-[10px]">
             {featured.publishedAt && (
-              <Text size="xs" weight="medium" color={colors.primaryDark} letterSpacing={1.4}>
+              <Text size="xs" weight="medium" color={colors.primaryDark}>
                 {new Date(featured.publishedAt).toLocaleDateString()}
               </Text>
             )}
@@ -53,21 +53,21 @@ export function BlogListView({ posts }: { posts: BlogPost[] }) {
       )}
 
       {rest.length > 0 && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(300px,1fr))", gap: 18 }}>
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-lg">
           {rest.map((post) => (
             <Link
               key={post.id}
               href={`/blog/${post.slug}`}
-              style={{ background: colors.surface, borderRadius: radii.lg, boxShadow: "0 1px 3px rgba(28,25,23,.08),0 6px 18px rgba(28,25,23,.05)", padding: 12, display: "flex", flexDirection: "column", gap: 10, textDecoration: "none", color: colors.text }}
+              className="flex flex-col gap-[10px] rounded-lg bg-surface p-md text-text no-underline shadow-panel"
             >
-              <div style={{ height: 180, borderRadius: 13, position: "relative", overflow: "hidden", background: colors.primaryLight }}>
+              <div className="relative h-[180px] overflow-hidden rounded-lg bg-primaryLight">
                 {post.coverImageUrl && (
                   // eslint-disable-next-line @next/next/no-img-element -- pre-optimized WebP, see pois/[id]
-                  <img src={post.coverImageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  <img src={post.coverImageUrl} alt="" className="h-full w-full object-cover" />
                 )}
               </div>
               {post.publishedAt && (
-                <Text size="xs" weight="medium" color={colors.primaryDark} letterSpacing={1.4}>
+                <Text size="xs" weight="medium" color={colors.primaryDark}>
                   {new Date(post.publishedAt).toLocaleDateString()}
                 </Text>
               )}

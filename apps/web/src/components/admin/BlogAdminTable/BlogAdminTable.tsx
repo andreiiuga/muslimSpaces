@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, colors, spacing, Text } from "@muslimspaces/ui";
+import { Button, colors, Text } from "@muslimspaces/ui";
 import type { BlogPost } from "@muslimspaces/shared";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { StatusBadge } from "../StatusBadge";
 
 export function BlogAdminTable({ posts: initialPosts }: { posts: BlogPost[] }) {
   const router = useRouter();
@@ -37,34 +39,38 @@ export function BlogAdminTable({ posts: initialPosts }: { posts: BlogPost[] }) {
   }
 
   return (
-    <table style={{ width: "100%", borderCollapse: "collapse" }}>
-      <thead>
-        <tr style={{ textAlign: "left", borderBottom: `1px solid ${colors.border}` }}>
+    <Table>
+      <TableHeader>
+        <TableRow>
           {["Title", "Slug", "Status", ""].map((h) => (
-            <th key={h} style={{ padding: spacing.sm, fontSize: 12, color: colors.textMuted }}>{h}</th>
+            <TableHead key={h} className="text-xs">{h}</TableHead>
           ))}
-        </tr>
-      </thead>
-      <tbody>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
         {posts.map((post) => (
-          <tr key={post.id} style={{ borderBottom: `1px solid ${colors.border}` }}>
-            <td style={{ padding: spacing.sm }}><Text size="sm" weight="medium">{post.title.ro}</Text></td>
-            <td style={{ padding: spacing.sm }}><Text size="sm" color={colors.textMuted}>{post.slug}</Text></td>
-            <td style={{ padding: spacing.sm }}>
-              <Text size="sm" color={post.status === "published" ? colors.success : colors.textMuted} weight="medium">
+          <TableRow key={post.id}>
+            <TableCell>
+              <Text size="sm" weight="medium">{post.title.ro}</Text>
+            </TableCell>
+            <TableCell>
+              <Text size="sm" color={colors.textMuted}>{post.slug}</Text>
+            </TableCell>
+            <TableCell>
+              <StatusBadge color={post.status === "published" ? colors.success : colors.textMuted}>
                 {post.status}
-              </Text>
-            </td>
-            <td style={{ padding: spacing.sm, display: "flex", gap: spacing.xs, flexWrap: "wrap" }}>
+              </StatusBadge>
+            </TableCell>
+            <TableCell className="flex flex-wrap gap-xs">
               <Button size="sm" variant="secondary" disabled={pendingAction === post.id} onPress={() => toggleStatus(post)}>
                 {post.status === "published" ? "Unpublish" : "Publish"}
               </Button>
               <Button size="sm" variant="ghost" onPress={() => router.push(`/admin/blog/${post.id}/edit`)}>Edit</Button>
               <Button size="sm" variant="danger" disabled={pendingAction === post.id} onPress={() => remove(post.id)}>Delete</Button>
-            </td>
-          </tr>
+            </TableCell>
+          </TableRow>
         ))}
-      </tbody>
-    </table>
+      </TableBody>
+    </Table>
   );
 }

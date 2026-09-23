@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Input, Text, colors, spacing } from "@muslimspaces/ui";
+import { Button, Input, Text, colors } from "@muslimspaces/ui";
 
 // Create-only — the backend has no PATCH /cities/:id yet (see
 // apps/backend/src/cities/cities.controller.ts), so there's nothing for an
@@ -43,7 +43,7 @@ export function CityForm() {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: spacing.md, maxWidth: 480 }}>
+    <div className="flex max-w-[480px] flex-col gap-md">
       <Input
         label="Slug"
         value={slug}

@@ -4,10 +4,11 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Square, SquareCheck, Map as MapIcon, Rows3 } from "lucide-react";
-import { POICard, Rating, Skeleton, Text, colors, radii, spacing } from "@muslimspaces/ui";
+import { POICard, Rating, Skeleton, Text, colors, radii } from "@muslimspaces/ui";
 import type { MapBounds } from "@muslimspaces/ui/map";
 import type { Category, Poi } from "@muslimspaces/shared";
 import dynamic from "next/dynamic";
+import { cn } from "@/lib/utils";
 import { getBrowserApiClient } from "../../lib/api-client";
 import { FilterBar } from "../FilterBar/FilterBar";
 import { useLocale } from "../../i18n/LocaleContext";
@@ -159,13 +160,13 @@ export function ExploreView({
 
   function poiCard(poi: Poi, layout: "row" | "grid" = "row") {
     return (
-      // minWidth: 0 is load-bearing — a flex item's default min-width is
+      // min-w-0 is load-bearing — a flex item's default min-width is
       // "auto" (its content's intrinsic width), so without this the card
       // refuses to shrink to fit .explore-list-col's flex column, and the
       // column ends up horizontally scrollable instead of the card's text
       // actually truncating.
-      <div key={poi.id} style={{ position: "relative", minWidth: 0 }}>
-        <Link href={`/pois/${poi.id}`} aria-label={pickLocalized(poi.name, locale)} style={{ position: "absolute", inset: 0, zIndex: 1 }} />
+      <div key={poi.id} className="relative min-w-0">
+        <Link href={`/pois/${poi.id}`} aria-label={pickLocalized(poi.name, locale)} className="absolute inset-0 z-[1]" />
         <POICard
           poi={poi}
           categoryLabel={categoryLabel(poi)}
@@ -182,59 +183,49 @@ export function ExploreView({
       className={`explore-shell${mode === "map" ? " explore-shell--map" : ""}`}
       style={{ "--header-h": `${headerHeight}px` } as CSSProperties}
     >
-      <div className="explore-top">
-        <div className="explore-heading-block" style={{ minWidth: 0 }}>
-          <Text size="xs" weight="medium" color={colors.textMuted} letterSpacing={1.4}>
+      <div className="flex flex-wrap items-end justify-between gap-xl">
+        <div className="explore-heading-block min-w-0">
+          <Text size="xs" weight="medium" color={colors.textMuted}>
             {t("explore.dateline", { count: pois.length }).toUpperCase()}
           </Text>
-          <div style={{ marginTop: 5 }}>
+          <div className="mt-[5px]">
             <Text size="3xl" weight="semibold">{t("explore.heading")}</Text>
           </div>
         </div>
 
-        <div className="explore-controls" style={{ display: "flex", alignItems: "center", gap: spacing.lg, flexWrap: "wrap" }}>
+        <div className="explore-controls flex flex-wrap items-center gap-lg">
           <span className="explore-count-compact">{t("explore.dateline", { count: pois.length })}</span>
 
           <button
             type="button"
-            className="explore-opennow-btn"
+            className={cn(
+              "hidden items-center gap-sm border-0 bg-transparent text-sm cursor-pointer explore:flex",
+              openNow ? "text-primaryDark" : "text-textSecondary",
+            )}
             onClick={() => setOpenNow((v) => !v)}
-            style={{
-              alignItems: "center",
-              gap: 8,
-              height: 40,
-              cursor: "pointer",
-              fontSize: 14,
-              border: "none",
-              background: "transparent",
-              color: openNow ? colors.primaryDark : "#57534E",
-            }}
           >
             {openNow ? <SquareCheck size={20} /> : <Square size={20} />}
             {t("explore.openNow")}
           </button>
 
-          <div className="explore-mode-toggle" style={{ display: "flex", border: `1px solid ${colors.border}`, borderRadius: radii.pill, overflow: "hidden", background: colors.surface }}>
+          <div className="flex overflow-hidden rounded-pill border border-border bg-surface">
             <button
               type="button"
-              className="explore-mode-btn"
               onClick={() => setMode("map")}
-              style={{
-                display: "flex", alignItems: "center", gap: 7, cursor: "pointer",
-                border: "none", background: mode === "map" ? colors.primary : "transparent", color: mode === "map" ? colors.textOnPrimary : colors.text,
-              }}
+              className={cn(
+                "flex h-[34px] cursor-pointer items-center gap-[7px] border-0 px-[12px] text-[13px] explore:h-10 explore:px-lg explore:text-sm",
+                mode === "map" ? "bg-primary text-textOnPrimary" : "bg-transparent text-text",
+              )}
             >
               <MapIcon size={17} /> {t("explore.map")}
             </button>
             <button
               type="button"
-              className="explore-mode-btn"
               onClick={() => setMode("list")}
-              style={{
-                display: "flex", alignItems: "center", gap: 7, cursor: "pointer",
-                border: "none", borderInlineStart: `1px solid ${colors.border}`,
-                background: mode === "list" ? colors.primary : "transparent", color: mode === "list" ? colors.textOnPrimary : colors.text,
-              }}
+              className={cn(
+                "flex h-[34px] cursor-pointer items-center gap-[7px] border-0 border-s border-s-border px-[12px] text-[13px] explore:h-10 explore:px-lg explore:text-sm",
+                mode === "list" ? "bg-primary text-textOnPrimary" : "bg-transparent text-text",
+              )}
             >
               <Rows3 size={17} /> {t("explore.list")}
             </button>
@@ -277,41 +268,27 @@ export function ExploreView({
             {selectedPoi && (
               <Link
                 href={`/pois/${selectedPoi.id}`}
-                style={{
-                  position: "absolute",
-                  insetInlineStart: 14,
-                  insetInlineEnd: 14,
-                  bottom: 14,
-                  maxWidth: 400,
-                  background: colors.surface,
-                  borderRadius: radii.cardLg,
-                  boxShadow: "0 10px 28px rgba(28,25,23,.18)",
-                  padding: 14,
-                  display: "flex",
-                  gap: 13,
-                  alignItems: "flex-start",
-                  textDecoration: "none",
-                }}
+                className="absolute bottom-[14px] start-[14px] end-[14px] flex max-w-[400px] items-start gap-[13px] rounded-cardLg bg-surface p-[14px] no-underline shadow-elevated"
               >
                 {selectedPoi.thumbnailUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={selectedPoi.thumbnailUrl}
                     alt=""
-                    style={{ width: 62, height: 62, flex: "none", borderRadius: 13, objectFit: "cover" }}
+                    className="h-[62px] w-[62px] flex-none rounded-md object-cover"
                   />
                 ) : (
-                  <div style={{ width: 62, height: 62, flex: "none", borderRadius: 13, backgroundColor: colors.primaryLight }} />
+                  <div className="h-[62px] w-[62px] flex-none rounded-md bg-primaryLight" />
                 )}
-                <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
+                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                   {categoryLabel(selectedPoi) && (
-                    <Text size="xs" weight="medium" color={colors.primaryDark} letterSpacing={1.4}>
+                    <Text size="xs" weight="medium" color={colors.primaryDark}>
                       {categoryLabel(selectedPoi)!.toUpperCase()}
                     </Text>
                   )}
                   <Text weight="semibold" numberOfLines={1}>{pickLocalized(selectedPoi.name, locale)}</Text>
                   <Text size="xs" color={colors.textMuted} numberOfLines={1}>{selectedPoi.address}</Text>
-                  <div style={{ display: "flex", alignItems: "baseline", gap: spacing.xs }}>
+                  <div className="flex items-baseline gap-xs">
                     <Rating value={selectedPoi.ratingAvg ?? 0} size={13} />
                     <Text size="xs" color={colors.textMuted}>
                       {selectedPoi.ratingCount > 0 ? `(${selectedPoi.ratingCount})` : "New"}
@@ -325,7 +302,7 @@ export function ExploreView({
       ) : (
         <div>
           {loading && pois.length === 0 ? (
-            <div className="poi-grid">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-[18px]">
               {[0, 1, 2, 3].map((i) => (
                 <Skeleton key={i} height={220} borderRadius={16} />
               ))}
@@ -333,7 +310,7 @@ export function ExploreView({
           ) : pois.length === 0 ? (
             <Text color={colors.textMuted}>{t("explore.empty")}</Text>
           ) : (
-            <div className="poi-grid">{pois.map((poi) => poiCard(poi, "grid"))}</div>
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-[18px]">{pois.map((poi) => poiCard(poi, "grid"))}</div>
           )}
         </div>
       )}

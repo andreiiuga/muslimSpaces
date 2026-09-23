@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, type ChangeEvent } from "react";
-import { Button, Text, colors, spacing } from "@muslimspaces/ui";
+import { Button, Text, colors } from "@muslimspaces/ui";
 import type { PoiImage, PoiImageRole } from "@muslimspaces/shared";
 
 const ROLE_OPTIONS: PoiImageRole[] = ["gallery", "cover", "logo"];
@@ -91,29 +91,22 @@ export function PoiImagesManager({ poiId, initialImages }: { poiId: string; init
       {images.length === 0 ? (
         <Text size="sm" color={colors.textMuted}>No images yet.</Text>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: spacing.sm, marginTop: spacing.sm }}>
+        <div className="mt-sm flex flex-col gap-sm">
           {images.map((image, index) => (
             <div
               key={image.id}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: spacing.sm,
-                border: `1px solid ${colors.border}`,
-                borderRadius: 8,
-                padding: spacing.sm,
-              }}
+              className="flex items-center gap-sm rounded-sm border border-border p-sm"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={image.thumbnailUrl}
                 alt=""
-                style={{ width: 72, height: 54, objectFit: "cover", borderRadius: 6, flexShrink: 0 }}
+                className="h-[54px] w-[72px] flex-shrink-0 rounded-sm object-cover"
               />
-              <div style={{ width: 60 }}>
+              <div className="w-[60px]">
                 <Text size="xs" color={colors.textMuted}>{image.role}</Text>
               </div>
-              <div style={{ flex: 1 }} />
+              <div className="flex-1" />
               <Button
                 size="sm"
                 variant="ghost"
@@ -143,24 +136,24 @@ export function PoiImagesManager({ poiId, initialImages }: { poiId: string; init
         </div>
       )}
 
-      <div style={{ display: "flex", alignItems: "center", gap: spacing.sm, marginTop: spacing.md }}>
+      <div className="mt-md flex items-center gap-sm">
         <select
           value={role}
           onChange={(e) => setRole(e.target.value as PoiImageRole)}
-          style={{ height: 36, borderRadius: 8, border: `1px solid ${colors.border}`, padding: "0 8px" }}
+          className="h-9 rounded-sm border border-border px-2"
         >
           {ROLE_OPTIONS.map((r) => (
             <option key={r} value={r}>{r}</option>
           ))}
         </select>
-        <input ref={fileInputRef} type="file" accept="image/*" onChange={handleUpload} style={{ display: "none" }} />
+        <input ref={fileInputRef} type="file" accept="image/*" onChange={handleUpload} className="hidden" />
         <Button variant="secondary" size="sm" onPress={() => fileInputRef.current?.click()} loading={uploading}>
           Add image
         </Button>
       </div>
 
       {error && (
-        <div style={{ marginTop: spacing.xs }}>
+        <div className="mt-xs">
           <Text size="sm" color={colors.danger}>{error}</Text>
         </div>
       )}

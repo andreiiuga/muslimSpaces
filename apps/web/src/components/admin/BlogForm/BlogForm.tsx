@@ -2,7 +2,7 @@
 
 import { useRef, useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Input, Text, Textarea, colors, spacing } from "@muslimspaces/ui";
+import { Button, Input, Text, Textarea, colors } from "@muslimspaces/ui";
 import type { BlogPost } from "@muslimspaces/shared";
 
 export function BlogForm({ initialPost }: { initialPost?: BlogPost }) {
@@ -77,17 +77,17 @@ export function BlogForm({ initialPost }: { initialPost?: BlogPost }) {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: spacing.md, maxWidth: 640 }}>
+    <div className="flex max-w-[640px] flex-col gap-md">
       <Input label="Slug" value={slug} onChangeText={setSlug} placeholder="my-post-title" />
 
       <div>
         <Text size="sm" weight="medium">Cover image</Text>
-        <div style={{ display: "flex", alignItems: "center", gap: spacing.md, marginTop: spacing.xs }}>
+        <div className="mt-xs flex items-center gap-md">
           {coverImageUrl && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={coverImageUrl} alt="" style={{ width: 96, height: 64, objectFit: "cover", borderRadius: 8 }} />
+            <img src={coverImageUrl} alt="" className="h-16 w-24 rounded-sm object-cover" />
           )}
-          <input ref={fileInputRef} type="file" accept="image/*" onChange={handleCoverChange} style={{ display: "none" }} />
+          <input ref={fileInputRef} type="file" accept="image/*" onChange={handleCoverChange} className="hidden" />
           <Button variant="secondary" size="sm" onPress={() => fileInputRef.current?.click()} loading={uploading}>
             {coverImageUrl ? "Change image" : "Upload image"}
           </Button>

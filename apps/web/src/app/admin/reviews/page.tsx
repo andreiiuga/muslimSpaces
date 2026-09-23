@@ -1,4 +1,4 @@
-import { spacing, Text } from "@muslimspaces/ui";
+import { Text } from "@muslimspaces/ui";
 import { getApiClient } from "../../../lib/api-client";
 import { getCurrentToken } from "../../../lib/current-user";
 import { ReviewAdminTable } from "../../../components/admin/ReviewAdminTable/ReviewAdminTable";
@@ -25,7 +25,7 @@ export default async function AdminReviewsPage() {
   return (
     <div>
       <Text size="xl" weight="bold">Reviews</Text>
-      <div style={{ marginTop: spacing.lg, overflowX: "auto" }}>
+      <div className="mt-lg overflow-x-auto">
         {reviews.length === 0 ? (
           <Text>No reviews yet.</Text>
         ) : (

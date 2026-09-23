@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Button, colors, spacing, Text } from "@muslimspaces/ui";
+import { Button, colors, Text } from "@muslimspaces/ui";
 import type { Review } from "@muslimspaces/shared";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { StatusBadge } from "../StatusBadge";
 
 export function ReviewAdminTable({
   reviews: initialReviews,
@@ -40,38 +42,40 @@ export function ReviewAdminTable({
   }
 
   return (
-    <table style={{ width: "100%", borderCollapse: "collapse" }}>
-      <thead>
-        <tr style={{ textAlign: "left", borderBottom: `1px solid ${colors.border}` }}>
+    <Table>
+      <TableHeader>
+        <TableRow>
           {["POI", "Rating", "Comment", "Status", ""].map((h) => (
-            <th key={h} style={{ padding: spacing.sm, fontSize: 12, color: colors.textMuted }}>{h}</th>
+            <TableHead key={h} className="text-xs">{h}</TableHead>
           ))}
-        </tr>
-      </thead>
-      <tbody>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
         {reviews.map((review) => (
-          <tr key={review.id} style={{ borderBottom: `1px solid ${colors.border}` }}>
-            <td style={{ padding: spacing.sm }}>
+          <TableRow key={review.id}>
+            <TableCell>
               <Text size="sm" weight="medium">{poiNames[review.poiId] ?? "[deleted POI]"}</Text>
-            </td>
-            <td style={{ padding: spacing.sm }}><Text size="sm">{review.rating} / 5</Text></td>
-            <td style={{ padding: spacing.sm, maxWidth: 320 }}>
+            </TableCell>
+            <TableCell>
+              <Text size="sm">{review.rating} / 5</Text>
+            </TableCell>
+            <TableCell className="max-w-[320px]">
               <Text size="sm" color={colors.textMuted}>{review.comment ?? "—"}</Text>
-            </td>
-            <td style={{ padding: spacing.sm }}>
-              <Text size="sm" color={review.status === "published" ? colors.success : colors.danger} weight="medium">
+            </TableCell>
+            <TableCell>
+              <StatusBadge color={review.status === "published" ? colors.success : colors.danger}>
                 {review.status}
-              </Text>
-            </td>
-            <td style={{ padding: spacing.sm, display: "flex", gap: spacing.xs, flexWrap: "wrap" }}>
+              </StatusBadge>
+            </TableCell>
+            <TableCell className="flex flex-wrap gap-xs">
               <Button size="sm" variant="secondary" disabled={pendingAction === review.id} onPress={() => toggleStatus(review)}>
                 {review.status === "published" ? "Hide" : "Unhide"}
               </Button>
               <Button size="sm" variant="danger" disabled={pendingAction === review.id} onPress={() => remove(review.id)}>Delete</Button>
-            </td>
-          </tr>
+            </TableCell>
+          </TableRow>
         ))}
-      </tbody>
-    </table>
+      </TableBody>
+    </Table>
   );
 }

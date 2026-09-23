@@ -3,11 +3,16 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bookmark } from "lucide-react";
-import { colors } from "@muslimspaces/ui";
+import { IconButton, colors } from "@muslimspaces/ui";
 
 // Circular icon-only button, floated over the hero image — matches the
 // design's `poi.favIcon`/`favInk` treatment (a plain white circle with a
-// bookmark glyph), not a labeled pill.
+// bookmark glyph), not a labeled pill. Composes IconButton's "solid"
+// variant (same role as MapView's back button: an icon floating over photo/
+// map imagery) rather than hand-rolling — previously a one-off 46px circle
+// with its own shadow value, normalized onto IconButton's existing lg
+// (48px) size and iconSolid shadow rather than preserving what was likely
+// unintentional drift between two visually-identical use cases.
 export function FavoriteButton({
   poiId,
   initialIsFavorite,
@@ -33,25 +38,13 @@ export function FavoriteButton({
   }
 
   return (
-    <button
-      type="button"
-      onClick={toggle}
+    <IconButton
+      variant="solid"
+      size="lg"
+      onPress={toggle}
       disabled={pending}
-      aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-      style={{
-        width: 46,
-        height: 46,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        border: "none",
-        borderRadius: 999,
-        backgroundColor: colors.surface,
-        boxShadow: "0 2px 10px rgba(28,25,23,.18)",
-        cursor: pending ? "not-allowed" : "pointer",
-      }}
-    >
-      <Bookmark size={21} fill={isFavorite ? colors.danger : "none"} color={isFavorite ? colors.danger : colors.textMuted} />
-    </button>
+      label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+      icon={<Bookmark size={21} fill={isFavorite ? colors.danger : "none"} color={isFavorite ? colors.danger : colors.textMuted} />}
+    />
   );
 }

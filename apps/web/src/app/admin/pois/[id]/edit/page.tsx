@@ -26,7 +26,7 @@ export default async function EditPoiPage({ params }: { params: Promise<{ id: st
   return (
     <div>
       <Text size="xl" weight="bold">Edit POI</Text>
-      <div style={{ marginTop: 24 }}>
+      <div className="mt-xl">
         <PoiForm categories={categories} initialPoi={poi} images={images} />
       </div>
     </div>

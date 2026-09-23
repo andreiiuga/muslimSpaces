@@ -2,12 +2,13 @@
 
 import { useRef, useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft, ArrowRight, CheckCircle, Circle } from "lucide-react";
-import { Avatar, Button, Input, Text, colors, radii, spacing } from "@muslimspaces/ui";
+import { CheckCircle, Circle } from "lucide-react";
+import { Avatar, Button, Input, Text, colors } from "@muslimspaces/ui";
 import type { AuthUser } from "@muslimspaces/shared";
+import { cn } from "@/lib/utils";
 import { useLocale } from "../../i18n/LocaleContext";
 import { SUPPORTED_LOCALES, type LocaleCode } from "../../i18n/types";
+import { BackLink } from "../BackLink/BackLink";
 
 const LOCALE_LABEL: Record<LocaleCode, string> = { en: "English", ro: "Română", ar: "العربية" };
 const LOCALE_CODE: Record<LocaleCode, string> = { en: "EN", ro: "RO", ar: "AR" };
@@ -22,8 +23,6 @@ export function EditProfileForm({ user }: { user: AuthUser }) {
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-
-  const BackIcon = locale === "ar" ? ArrowRight : ArrowLeft;
 
   async function handleAvatarChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -74,38 +73,36 @@ export function EditProfileForm({ user }: { user: AuthUser }) {
   }
 
   return (
-    <div style={{ maxWidth: 760, margin: "0 auto", padding: "26px clamp(16px,4vw,28px) 60px" }}>
-      <Link href="/account" style={{ display: "inline-flex", alignItems: "center", gap: 8, minHeight: 44, fontSize: 14, color: colors.primary, textDecoration: "none" }}>
-        <BackIcon size={18} /> {t("editProfile.backProfile")}
-      </Link>
-      <div style={{ margin: "4px 0 22px" }}>
+    <div className="mx-auto max-w-[760px] px-[clamp(16px,4vw,28px)] pb-[60px] pt-[26px]">
+      <BackLink href="/account">{t("editProfile.backProfile")}</BackLink>
+      <div className="mb-[22px] mt-1">
         <Text size="3xl" weight="semibold">{t("editProfile.title")}</Text>
       </div>
 
-      <div style={{ background: colors.surface, borderRadius: radii.lg, boxShadow: "0 1px 3px rgba(28,25,23,.08),0 6px 18px rgba(28,25,23,.05)", padding: 24, display: "flex", flexDirection: "column", gap: spacing.xl }}>
-        <div style={{ display: "flex", alignItems: "center", gap: spacing.md }}>
+      <div className="flex flex-col gap-xl rounded-lg bg-surface p-xl shadow-panel">
+        <div className="flex items-center gap-md">
           <Avatar uri={avatarUrl} name={displayName || user.email} size={72} />
           <div>
-            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarChange} style={{ display: "none" }} />
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              style={{ border: "none", background: "transparent", color: colors.primary, fontSize: 14.5, cursor: uploading ? "not-allowed" : "pointer", padding: 0 }}
+              className={cn("border-0 bg-transparent p-0 text-sm text-primary", uploading ? "cursor-not-allowed" : "cursor-pointer")}
             >
               {uploading ? "…" : t("editProfile.changePhoto")}
             </button>
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(260px,1fr))", gap: spacing.lg }}>
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-lg">
           <Input label={t("editProfile.displayName")} value={displayName} onChangeText={setDisplayName} placeholder={t("editProfile.displayNamePlaceholder")} />
           <Input label={t("editProfile.email")} value={user.email} onChangeText={() => {}} disabled />
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-          <Text size="xs" weight="medium" color={colors.textMuted} letterSpacing={1.4}>{t("editProfile.language").toUpperCase()}</Text>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 10 }}>
+        <div className="flex flex-col gap-[9px]">
+          <Text size="xs" weight="medium" color={colors.textMuted}>{t("editProfile.language").toUpperCase()}</Text>
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-[10px]">
             {SUPPORTED_LOCALES.map((code) => {
               const selected = locale === code;
               return (
@@ -113,15 +110,20 @@ export function EditProfileForm({ user }: { user: AuthUser }) {
                   key={code}
                   type="button"
                   onClick={() => setLocale(code)}
-                  style={{
-                    minHeight: 56, display: "flex", alignItems: "center", gap: 10, padding: "0 16px", cursor: "pointer",
-                    border: `1px solid ${selected ? colors.primary : colors.border}`, borderRadius: radii.input,
-                    background: selected ? colors.tealTint : colors.surface, color: colors.text,
-                  }}
+                  className={cn(
+                    "flex min-h-[56px] cursor-pointer items-center gap-[10px] rounded-input border px-lg text-text",
+                    selected ? "border-primary bg-tealTint" : "border-border bg-surface",
+                  )}
                 >
                   {selected ? <CheckCircle size={20} color={colors.primary} /> : <Circle size={20} color="#D6D3D1" />}
-                  <span style={{ flex: 1, fontSize: 15.5, textAlign: "start" }}>{LOCALE_LABEL[code]}</span>
-                  <span style={{ fontSize: 12, letterSpacing: ".08em", color: selected ? colors.primary : colors.textFaint }}>{LOCALE_CODE[code]}</span>
+                  <span className="flex-1 text-start text-[15.5px]">{LOCALE_LABEL[code]}</span>
+                  {/* fontSize/letterSpacing unified with HeaderBar's locale
+                      toggle (12.5px/.06em) — was 12px/.08em here for the
+                      identical "locale code abbreviation" role, unintentional
+                      drift between the two. */}
+                  <span className={cn("text-[12.5px] tracking-[0.06em]", selected ? "text-primary" : "text-textFaint")}>
+                    {LOCALE_CODE[code]}
+                  </span>
                 </button>
               );
             })}

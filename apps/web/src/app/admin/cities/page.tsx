@@ -1,4 +1,5 @@
-import { colors, spacing, Text } from "@muslimspaces/ui";
+import { colors, Text } from "@muslimspaces/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getApiClient } from "../../../lib/api-client";
 import { getCurrentToken, requireAdmin } from "../../../lib/current-user";
 import { NewCityButton } from "./NewCityButton";
@@ -12,32 +13,38 @@ export default async function AdminCitiesPage() {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div className="flex items-center justify-between">
         <Text size="xl" weight="bold">Cities</Text>
         <NewCityButton />
       </div>
-      <div style={{ marginTop: spacing.lg, overflowX: "auto" }}>
+      <div className="mt-lg overflow-x-auto">
         {cities.length === 0 ? (
           <Text>No cities yet.</Text>
         ) : (
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ textAlign: "left", borderBottom: `1px solid ${colors.border}` }}>
+          <Table>
+            <TableHeader>
+              <TableRow>
                 {["Name (EN)", "Name (RO)", "Slug"].map((h) => (
-                  <th key={h} style={{ padding: spacing.sm, fontSize: 12, color: colors.textMuted }}>{h}</th>
+                  <TableHead key={h} className="text-xs">{h}</TableHead>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {cities.map((city) => (
-                <tr key={city.id} style={{ borderBottom: `1px solid ${colors.border}` }}>
-                  <td style={{ padding: spacing.sm }}><Text size="sm" weight="medium">{city.name.en}</Text></td>
-                  <td style={{ padding: spacing.sm }}><Text size="sm">{city.name.ro}</Text></td>
-                  <td style={{ padding: spacing.sm }}><Text size="sm" color={colors.textMuted}>{city.slug}</Text></td>
-                </tr>
+                <TableRow key={city.id}>
+                  <TableCell>
+                    <Text size="sm" weight="medium">{city.name.en}</Text>
+                  </TableCell>
+                  <TableCell>
+                    <Text size="sm">{city.name.ro}</Text>
+                  </TableCell>
+                  <TableCell>
+                    <Text size="sm" color={colors.textMuted}>{city.slug}</Text>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         )}
       </div>
     </div>
