@@ -135,7 +135,11 @@ export function HeaderBar({ user }: { user: AuthUser | null }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t("explore.search")}
-            style={{ flex: 1, minWidth: 0, border: 0, outline: "none", background: "transparent", fontSize: 14.5, color: colors.text }}
+            // 16px, not the design's 14.5px — anything smaller makes iOS
+            // Safari auto-zoom the viewport on focus, which visibly (and
+            // permanently, until the user pinch-zooms back out) shifts the
+            // whole page.
+            style={{ flex: 1, minWidth: 0, border: 0, outline: "none", background: "transparent", fontSize: 16, color: colors.text }}
           />
         </form>
 
