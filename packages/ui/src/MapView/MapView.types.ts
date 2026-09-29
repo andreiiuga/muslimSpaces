@@ -14,6 +14,11 @@ export interface MapPadding {
   left?: number;
 }
 
+export interface MapViewport {
+  center: { lat: number; lng: number };
+  zoom: number;
+}
+
 export interface MapViewProps {
   pois: Poi[];
   /**
@@ -25,6 +30,14 @@ export interface MapViewProps {
   initialCenter?: { lat: number; lng: number };
   initialZoom?: number;
   onBoundsChange?: (bounds: MapBounds) => void;
+  /**
+   * Fires alongside `onBoundsChange` with the exact camera center + zoom,
+   * which a bounding box alone can't reconstruct — e.g. for a caller that
+   * wants to persist the viewport and later restore it via
+   * `initialCenter`/`initialZoom` on a fresh mount. Web only for now —
+   * MapView.native.tsx doesn't implement this prop.
+   */
+  onViewportChange?: (viewport: MapViewport) => void;
   /**
    * Bump this (e.g. a counter incremented once per search) to fit/zoom the
    * camera to the bounding box of the current `pois` prop — e.g. "zoom to

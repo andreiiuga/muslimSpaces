@@ -132,6 +132,7 @@ export function MapView({
   initialCenter = DEFAULT_CENTER,
   initialZoom = DEFAULT_ZOOM,
   onBoundsChange,
+  onViewportChange,
   onMarkerPress,
   selectedPoiId,
   onDeselect,
@@ -147,6 +148,10 @@ export function MapView({
   // (the user selected something else, or deselected, before the fly-in
   // finished).
   const selectionTokenRef = useRef(0);
+  // Set after the selection effect's first run — lets that effect tell
+  // "mounted with a POI already selected" (e.g. a restored session) apart
+  // from "the user just selected one", see that effect for why.
+  const hasHandledSelectionRef = useRef(false);
   // Rebuilt (by the effect below) whenever pois/categories/selection change;
   // invoked imperatively from map event listeners registered once at mount,
   // so panning/zooming re-renders markers without recreating the map.
@@ -180,14 +185,19 @@ export function MapView({
     // viewport and reports the new bounds upward.
     map.on("moveend", () => {
       renderMarkersRef.current();
-      if (!onBoundsChange) return;
-      const bounds = map.getBounds();
-      onBoundsChange({
-        minLat: bounds.getSouth(),
-        minLng: bounds.getWest(),
-        maxLat: bounds.getNorth(),
-        maxLng: bounds.getEast(),
-      });
+      if (onBoundsChange) {
+        const bounds = map.getBounds();
+        onBoundsChange({
+          minLat: bounds.getSouth(),
+          minLng: bounds.getWest(),
+          maxLat: bounds.getNorth(),
+          maxLng: bounds.getEast(),
+        });
+      }
+      if (onViewportChange) {
+        const center = map.getCenter();
+        onViewportChange({ center: { lat: center.lat, lng: center.lng }, zoom: map.getZoom() });
+      }
     });
 
     mapRef.current = map;
@@ -347,6 +357,21 @@ export function MapView({
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
+
+    // Effects always run once after the initial render too, regardless of
+    // the dependency's starting value — so a caller that restores a
+    // previously-selected POI as `selectedPoiId`'s initial value (e.g. from
+    // a persisted Explore session) would otherwise replay this whole
+    // fly-in/orbit animation the instant the map mounts. That's both a
+    // jarring surprise on a screen the user expects to reopen exactly as
+    // they left it, and — because the fly-in's `moveend` reports a much
+    // tighter `onBoundsChange` — a visible flicker in anything (like
+    // ExploreView's viewport-filtered list) driven by those bounds.
+    // `initialCenter`/`initialZoom` already put the camera near enough to
+    // this selection; skip straight past the animation on this first run.
+    const isInitialMount = !hasHandledSelectionRef.current;
+    hasHandledSelectionRef.current = true;
+    if (isInitialMount && selectedPoiId) return;
 
     if (!selectedPoiId) {
       // Invalidates any orbit leg's pending `once('moveend', ...)` — without

@@ -13,6 +13,7 @@ import { getBrowserApiClient } from "../../lib/api-client";
 import { FilterBar } from "../FilterBar/FilterBar";
 import { useLocale } from "../../i18n/LocaleContext";
 import { pickLocalized } from "../../i18n/pick-localized";
+import { useExploreState, type ExploreMode } from "./ExploreStateContext";
 
 // maplibre-gl touches `window`/WebGL at import time — must never run
 // during SSR.
@@ -20,8 +21,6 @@ const MapView = dynamic(() => import("@muslimspaces/ui/map").then((m) => m.MapVi
   ssr: false,
   loading: () => <Skeleton height="100%" borderRadius={0} />,
 });
-
-type ExploreMode = "map" | "list";
 
 export function ExploreView({
   initialPois,
@@ -38,8 +37,13 @@ export function ExploreView({
   const searchParams = useSearchParams();
   const search = searchParams.get("q") ?? "";
   const { locale, t } = useLocale();
+  const { getState: getSavedExplore, setState: saveExplore } = useExploreState();
+  // Captured once (lazy initializer) — this is only ever consulted again on
+  // a fresh mount, so re-reading it on later renders would be pointless and
+  // could race with saveExplore's own writes below.
+  const [savedExplore] = useState(getSavedExplore);
 
-  const [mode, setMode] = useState<ExploreMode>("map");
+  const [mode, setMode] = useState<ExploreMode>(savedExplore.mode);
   const [pois, setPois] = useState(initialPois);
   const [favoriteIds, setFavoriteIds] = useState(() => new Set(initialFavoriteIds));
   // Which categories currently have at least one real listing — drives
@@ -51,10 +55,17 @@ export function ExploreView({
   const [categoriesWithListings, setCategoriesWithListings] = useState(
     () => new Set(initialPois.map((poi) => poi.primaryCategoryId)),
   );
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
-  const [openNow, setOpenNow] = useState(false);
-  const [selectedPoiId, setSelectedPoiId] = useState<string | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(savedExplore.selectedCategoryId);
+  const [openNow, setOpenNow] = useState(savedExplore.openNow);
+  const [selectedPoiId, setSelectedPoiId] = useState<string | null>(savedExplore.selectedPoiId);
   const [loading, setLoading] = useState(false);
+  // Set true once the real (unsampled) fetch below has resolved at least
+  // once for this mount. Guards mapVisiblePois below: a restored viewport
+  // (see ExploreStateContext) can report tight, already-correct bounds on
+  // the very first render, while `pois` is still the SSR sample — without
+  // this, the two would briefly disagree and flash an incorrect "nothing
+  // here" empty state until the real fetch lands.
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Drives the map-mode left list only (see mapVisiblePois below) — the map
   // itself still gets the full `pois` set and clusters client-side; this is
@@ -122,13 +133,23 @@ export function ExploreView({
         if (!cancelled) setError(t("explore.loadError"));
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+          setHasLoadedOnce(true);
+        }
       });
 
     return () => {
       cancelled = true;
     };
   }, [selectedCategoryId, openNow, search, t]);
+
+  // Keeps the layout-level store (see ExploreStateContext) in sync so a
+  // round trip to a POI detail page and back restores this exact state —
+  // `saveExplore` is a stable ref-backed function, safe as a dep.
+  useEffect(() => {
+    saveExplore({ mode, selectedCategoryId, openNow, selectedPoiId });
+  }, [mode, selectedCategoryId, openNow, selectedPoiId, saveExplore]);
 
   async function toggleFavorite(poiId: string) {
     if (!isLoggedIn) {
@@ -201,8 +222,11 @@ export function ExploreView({
   // (not rendered as its own pin at the current zoom) still counts as
   // visible, since this is a pure viewport-bounds check, not "is this its
   // own marker right now". Falls back to the full list before the map's
-  // first moveend fires bounds at all.
-  const mapVisiblePois = mapBounds
+  // first moveend fires bounds at all, and also until the real fetch has
+  // landed at least once (see hasLoadedOnce above) — otherwise a restored
+  // viewport can report bounds that are already correct while `pois` is
+  // still the small SSR sample, and the two briefly disagree.
+  const mapVisiblePois = mapBounds && hasLoadedOnce
     ? pois.filter(
         (poi) =>
           poi.location.lat >= mapBounds.minLat &&
@@ -326,6 +350,9 @@ export function ExploreView({
               pois={pois}
               categories={categories}
               getPoiLabel={getPoiLabel}
+              initialCenter={savedExplore.viewport?.center}
+              initialZoom={savedExplore.viewport?.zoom}
+              onViewportChange={(viewport) => saveExplore({ viewport })}
               onMarkerPress={setSelectedPoiId}
               onDeselect={() => setSelectedPoiId(null)}
               onBoundsChange={setMapBounds}

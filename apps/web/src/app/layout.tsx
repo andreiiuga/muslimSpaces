@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, IBM_Plex_Sans_Arabic } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Navbar } from "../components/Navbar/Navbar";
+import { ExploreStateProvider } from "../components/ExploreView/ExploreStateContext";
 import { LocaleProvider } from "../i18n/LocaleContext";
 import "./globals.css";
 
@@ -52,7 +53,9 @@ export default function RootLayout({
                 etc.) forces this wrapper — and therefore the whole page body —
                 wider than the viewport instead of the content shrinking or
                 scrolling within itself. */}
-            <div className="min-w-0 flex-1">{children}</div>
+            <div className="min-w-0 flex-1">
+              <ExploreStateProvider>{children}</ExploreStateProvider>
+            </div>
           </LocaleProvider>
         </ThemeProvider>
       </body>
