@@ -5,7 +5,7 @@ import { cn } from "../cn";
 import type { IconButtonProps } from "./IconButton.types";
 
 const iconButton = cva(
-  "flex items-center justify-center rounded-pill border-0 disabled:cursor-not-allowed disabled:opacity-50",
+  "flex items-center justify-center rounded-pill border-0 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50",
   {
     variants: {
       variant: {

@@ -6,13 +6,16 @@ import { cn } from "../cn";
 import type { TextareaProps } from "./Textarea.types";
 import { Text } from "../Text";
 
-const textarea = cva("w-full resize-y rounded-input border px-md py-sm font-[inherit] text-md text-text outline-none", {
-  variants: {
-    error: { true: "border-danger", false: "border-border" },
-    disabled: { true: "bg-background", false: "bg-surface" },
+const textarea = cva(
+  "w-full resize-y rounded-input border px-md py-sm font-[inherit] text-md text-text outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+  {
+    variants: {
+      error: { true: "border-danger", false: "border-border" },
+      disabled: { true: "bg-background", false: "bg-surface" },
+    },
+    defaultVariants: { error: false, disabled: false },
   },
-  defaultVariants: { error: false, disabled: false },
-});
+);
 
 export function Textarea({ value, onChangeText, placeholder, label, error, disabled, rows = 4 }: TextareaProps) {
   return (

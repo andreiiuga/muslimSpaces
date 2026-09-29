@@ -13,7 +13,7 @@ import type { ButtonProps } from "./Button.types";
 // dependency anywhere in this repo, and this export achieves the same
 // outcome without adding one.
 export const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-sm rounded-pill border-0 font-semibold disabled:cursor-not-allowed disabled:opacity-50",
+  "inline-flex items-center justify-center gap-sm rounded-pill border-0 font-semibold outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50",
   {
     variants: {
       variant: {
@@ -24,7 +24,7 @@ export const buttonVariants = cva(
         danger: "border border-dangerBorder bg-dangerBg text-dangerDark",
       },
       size: {
-        sm: "px-md py-xs text-sm",
+        sm: "px-md py-sm text-sm",
         md: "px-lg py-sm text-md",
         lg: "px-xl py-md text-lg",
       },

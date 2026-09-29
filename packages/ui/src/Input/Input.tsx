@@ -6,13 +6,16 @@ import { cn } from "../cn";
 import type { InputProps } from "./Input.types";
 import { Text } from "../Text";
 
-const input = cva("w-full rounded-input border px-md py-sm text-md text-text outline-none", {
-  variants: {
-    error: { true: "border-danger", false: "border-border" },
-    disabled: { true: "bg-background", false: "bg-surface" },
+const input = cva(
+  "w-full rounded-input border px-md py-sm text-md text-text outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
+  {
+    variants: {
+      error: { true: "border-danger", false: "border-border" },
+      disabled: { true: "bg-background", false: "bg-surface" },
+    },
+    defaultVariants: { error: false, disabled: false },
   },
-  defaultVariants: { error: false, disabled: false },
-});
+);
 
 export function Input({ value, onChangeText, placeholder, label, error, disabled, kind = "text" }: InputProps) {
   return (

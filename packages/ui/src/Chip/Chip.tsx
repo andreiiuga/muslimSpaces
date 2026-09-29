@@ -5,7 +5,7 @@ import { cn } from "../cn";
 import type { ChipProps } from "./Chip.types";
 
 const chip = cva(
-  "inline-flex items-center gap-xs whitespace-nowrap rounded-pill border px-md py-xs text-sm font-medium",
+  "inline-flex items-center gap-xs whitespace-nowrap rounded-pill border px-md py-xs text-sm font-medium outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
   {
     variants: {
       selected: {
