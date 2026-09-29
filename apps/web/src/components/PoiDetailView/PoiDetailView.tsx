@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { Navigation, Phone, Share2 } from "lucide-react";
-import { Rating, Skeleton, Text, buttonVariants, colors } from "@muslimspaces/ui";
+import { Rating, Skeleton, Text, buttonVariants } from "@muslimspaces/ui";
 import type { Poi, PoiHour, PoiImage, Review } from "@muslimspaces/shared";
 import { isOpenNow } from "@muslimspaces/shared";
 import { cn } from "@/lib/utils";
@@ -41,7 +41,7 @@ function formatHours(hours: PoiHour[], locale: string, closedLabel: string) {
 // match either of IconButton's variants (ghost is transparent, solid has a
 // shadow), so these stay directly Tailwind-styled rather than forced
 // through a mismatched IconButton variant.
-const outlinedIconButton = "inline-flex min-h-[48px] w-12 flex-none items-center justify-center rounded-pill border border-border bg-surface";
+const outlinedIconButton = "inline-flex min-h-[48px] w-12 flex-none items-center justify-center rounded-pill border border-border bg-surface text-primaryDark";
 
 export function PoiDetailView({
   poi,
@@ -103,7 +103,7 @@ export function PoiDetailView({
         </a>
         {poi.phone && (
           <a href={`tel:${poi.phone.replace(/\s+/g, "")}`} aria-label={poi.phone} className={outlinedIconButton}>
-            <Phone size={19} color={colors.primary} />
+            <Phone size={19} />
           </a>
         )}
         <button
@@ -112,16 +112,16 @@ export function PoiDetailView({
           aria-label="Share"
           className={cn(outlinedIconButton, "cursor-pointer")}
         >
-          <Share2 size={19} color={colors.primary} />
+          <Share2 size={19} />
         </button>
       </div>
 
       <div className="flex flex-col gap-[5px]">
-        <Text size="xs" weight="medium" color={colors.textMuted}>{t("poi.contact").toUpperCase()}</Text>
+        <Text size="xs" weight="medium" color="textMuted">{t("poi.contact").toUpperCase()}</Text>
         <Text size="sm">{poi.address}</Text>
         {poi.phone && <Text size="sm">{poi.phone}</Text>}
         {poi.website && (
-          <a href={poi.website} target="_blank" rel="noreferrer" className="text-sm text-primary">
+          <a href={poi.website} target="_blank" rel="noreferrer" className="text-sm text-primaryDark">
             {poi.website}
           </a>
         )}
@@ -129,12 +129,12 @@ export function PoiDetailView({
 
       {hours.length > 0 && (
         <div>
-          <Text size="xs" weight="medium" color={colors.textMuted}>{t("poi.hours").toUpperCase()}</Text>
+          <Text size="xs" weight="medium" color="textMuted">{t("poi.hours").toUpperCase()}</Text>
           <div className="mt-[6px]">
             {formatHours(hours, locale, t("common.closed")).map(({ day, ranges }) => (
               <div key={day} className="flex justify-between gap-lg border-b border-divider py-[6px]">
                 <Text size="sm">{day}</Text>
-                <Text size="sm" color={colors.textMuted}>{ranges}</Text>
+                <Text size="sm" color="textMuted">{ranges}</Text>
               </div>
             ))}
           </div>
@@ -165,19 +165,19 @@ export function PoiDetailView({
         <div className="flex min-w-[300px] flex-[1_1_480px] flex-col gap-xl">
           <div className="flex flex-col gap-[6px]">
             {categoryLabels.length > 0 && (
-              <Text size="xs" weight="medium" color={colors.primaryDark}>
+              <Text size="xs" weight="medium" color="primaryDark">
                 {categoryLabels.join(" · ").toUpperCase()}
               </Text>
             )}
             <Text size="3xl" weight="semibold">{name}</Text>
-            <Text size="md" color={colors.textMuted}>{altName}</Text>
+            <Text size="md" color="textMuted">{altName}</Text>
             <div className="mt-1 flex flex-wrap items-baseline gap-md text-sm">
               <Rating value={poi.ratingAvg ?? 0} />
-              <Text size="sm" color={colors.textMuted}>
+              <Text size="sm" color="textMuted">
                 {poi.ratingCount > 0 ? `${(poi.ratingAvg ?? 0).toFixed(1)} (${poi.ratingCount})` : t("poi.noReviewsYet")}
               </Text>
               {open !== null && (
-                <Text size="sm" color={open ? colors.success : colors.textMuted}>
+                <Text size="sm" color={open ? "success" : "textMuted"}>
                   {open ? t("explore.openNow") : t("common.closed")}
                 </Text>
               )}
@@ -185,7 +185,7 @@ export function PoiDetailView({
           </div>
 
           {poi.description && (
-            <Text color={colors.textBody} size="md">{pickLocalized(poi.description, locale)}</Text>
+            <Text color="textBody" size="md">{pickLocalized(poi.description, locale)}</Text>
           )}
 
           {isSmallViewport && (
@@ -195,7 +195,7 @@ export function PoiDetailView({
                   spans edge to edge instead of sitting in a padded, boxed
                   card like the desktop sidebar version does. */}
               <div className="relative h-[220px] ms-[calc(-1_*_clamp(16px,4vw,28px))] me-[calc(-1_*_clamp(16px,4vw,28px))]">
-                <MapView pois={[poi]} initialCenter={poi.location} initialZoom={14} />
+                <MapView pois={[poi]} initialCenter={poi.location} initialZoom={14} getPoiLabel={() => name} />
               </div>
               {contactCard}
             </>
@@ -208,7 +208,7 @@ export function PoiDetailView({
           <div className="static flex min-w-[min(280px,100%)] flex-[0_1_340px] flex-col gap-lg header:sticky header:top-[98px]">
             {contactCard}
             <div className="relative h-[180px] overflow-hidden rounded-lg border border-border">
-              <MapView pois={[poi]} initialCenter={poi.location} initialZoom={14} />
+              <MapView pois={[poi]} initialCenter={poi.location} initialZoom={14} getPoiLabel={() => name} />
             </div>
           </div>
         )}

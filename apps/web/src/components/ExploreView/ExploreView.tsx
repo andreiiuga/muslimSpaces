@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Square, SquareCheck, Map as MapIcon, Rows3 } from "lucide-react";
-import { POICard, Rating, Skeleton, Text, colors, radii } from "@muslimspaces/ui";
+import { POICard, Rating, Skeleton, Text, radii } from "@muslimspaces/ui";
 import type { MapBounds } from "@muslimspaces/ui/map";
 import type { Category, Poi } from "@muslimspaces/shared";
 import dynamic from "next/dynamic";
@@ -42,6 +42,15 @@ export function ExploreView({
   const [mode, setMode] = useState<ExploreMode>("map");
   const [pois, setPois] = useState(initialPois);
   const [favoriteIds, setFavoriteIds] = useState(() => new Set(initialFavoriteIds));
+  // Which categories currently have at least one real listing — drives
+  // FilterBar's promoted-vs-folded chip split. Seeded from the SSR sample
+  // (good enough for first paint) and refreshed from the fetch effect below
+  // whenever it resolves a genuinely unfiltered result, so it reflects the
+  // real dataset rather than just a 40-item sample once the client fetch
+  // lands, without ever being corrupted by an active filter's narrower set.
+  const [categoriesWithListings, setCategoriesWithListings] = useState(
+    () => new Set(initialPois.map((poi) => poi.primaryCategoryId)),
+  );
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [openNow, setOpenNow] = useState(false);
   const [selectedPoiId, setSelectedPoiId] = useState<string | null>(null);
@@ -103,6 +112,9 @@ export function ExploreView({
       .then((result) => {
         if (!cancelled) {
           setPois(result);
+          if (!selectedCategoryId && !openNow && !search) {
+            setCategoriesWithListings(new Set(result.map((poi) => poi.primaryCategoryId)));
+          }
           if (searchConcluded) setFitBoundsToken((prev) => prev + 1);
         }
       })
@@ -138,10 +150,52 @@ export function ExploreView({
     return category ? pickLocalized(category.name, locale) : undefined;
   }
 
+  function resetFilters() {
+    setSelectedCategoryId(null);
+    setOpenNow(false);
+    if (search) router.push("/");
+  }
+
+  // Zero results reads very differently depending on *why* — a search with
+  // no matches, a thin category, or (rare, only if the dataset itself is
+  // empty) neither. A single generic "nothing here" string with no way out
+  // was a real dead end given how concentrated this dataset is outside
+  // Dobrogea. Search takes priority in the copy when both a search and a
+  // category are active, since it's the more specific, more recently
+  // stated intent.
+  function emptyResultsNode() {
+    const message = search
+      ? t("explore.emptySearch", { query: search })
+      : selectedCategoryId
+        ? t("explore.emptyCategory")
+        : t("explore.empty");
+    const hasActiveFilters = Boolean(search || selectedCategoryId || openNow);
+    return (
+      <div className="flex flex-col items-start gap-sm">
+        <Text size="sm" color="textMuted">{message}</Text>
+        {hasActiveFilters && (
+          <button
+            type="button"
+            onClick={resetFilters}
+            className="cursor-pointer border-0 bg-transparent p-0 text-sm font-medium text-primaryDark"
+          >
+            {t("explore.clearFilters")}
+          </button>
+        )}
+      </div>
+    );
+  }
+
   // No POI is selected until the user taps a marker — undefined here (not a
   // pois[0] fallback) also covers the selected POI dropping out of the list
   // after a refetch.
   const selectedPoi = pois.find((poi) => poi.id === selectedPoiId);
+
+  // Memoized on `locale` alone (not created inline) — MapView's marker
+  // effect depends on this function's identity to know when to rebuild
+  // every pin, so a fresh closure on every ExploreView render would rebuild
+  // all markers on any unrelated state change (favoriting a POI, etc.).
+  const getPoiLabel = useCallback((poi: Poi) => pickLocalized(poi.name, locale), [locale]);
 
   // "Including the clustered ones" — a POI merged into a cluster bubble
   // (not rendered as its own pin at the current zoom) still counts as
@@ -169,6 +223,7 @@ export function ExploreView({
         <Link href={`/pois/${poi.id}`} aria-label={pickLocalized(poi.name, locale)} className="absolute inset-0 z-[1]" />
         <POICard
           poi={poi}
+          displayName={pickLocalized(poi.name, locale)}
           categoryLabel={categoryLabel(poi)}
           isFavorite={favoriteIds.has(poi.id)}
           onToggleFavorite={() => toggleFavorite(poi.id)}
@@ -185,7 +240,7 @@ export function ExploreView({
     >
       <div className="flex flex-wrap items-end justify-between gap-xl">
         <div className="explore-heading-block min-w-0">
-          <Text size="xs" weight="medium" color={colors.textMuted}>
+          <Text size="xs" weight="medium" color="textMuted">
             {t("explore.dateline", { count: pois.length }).toUpperCase()}
           </Text>
           <div className="mt-[5px]">
@@ -199,7 +254,7 @@ export function ExploreView({
           <button
             type="button"
             className={cn(
-              "hidden items-center gap-sm border-0 bg-transparent text-sm cursor-pointer explore:flex",
+              "hidden items-center gap-sm border-0 bg-transparent text-sm cursor-pointer outline-none explore:flex focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary",
               openNow ? "text-primaryDark" : "text-textSecondary",
             )}
             onClick={() => setOpenNow((v) => !v)}
@@ -208,12 +263,16 @@ export function ExploreView({
             {t("explore.openNow")}
           </button>
 
+          {/* overflow-hidden on this pill clips a normal outset outline, so
+              these two buttons get an inset ring instead — still a visible
+              teal focus indicator, just drawn inside the pill's own edge
+              rather than outside it. */}
           <div className="flex overflow-hidden rounded-pill border border-border bg-surface">
             <button
               type="button"
               onClick={() => setMode("map")}
               className={cn(
-                "flex h-[34px] cursor-pointer items-center gap-[7px] border-0 px-[12px] text-[13px] explore:h-10 explore:px-lg explore:text-sm",
+                "flex h-[34px] cursor-pointer items-center gap-[7px] border-0 px-[12px] text-[13px] outline-none explore:h-10 explore:px-lg explore:text-sm focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary",
                 mode === "map" ? "bg-primary text-textOnPrimary" : "bg-transparent text-text",
               )}
             >
@@ -223,7 +282,7 @@ export function ExploreView({
               type="button"
               onClick={() => setMode("list")}
               className={cn(
-                "flex h-[34px] cursor-pointer items-center gap-[7px] border-0 border-s border-s-border px-[12px] text-[13px] explore:h-10 explore:px-lg explore:text-sm",
+                "flex h-[34px] cursor-pointer items-center gap-[7px] border-0 border-s border-s-border px-[12px] text-[13px] outline-none explore:h-10 explore:px-lg explore:text-sm focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary",
                 mode === "list" ? "bg-primary text-textOnPrimary" : "bg-transparent text-text",
               )}
             >
@@ -235,29 +294,38 @@ export function ExploreView({
 
       <FilterBar
         categories={categories}
+        categoriesWithListings={categoriesWithListings}
         selectedCategoryId={selectedCategoryId}
         onCategoryChange={setSelectedCategoryId}
         openNow={openNow}
         onOpenNowChange={() => setOpenNow((v) => !v)}
       />
 
-      {error && <Text size="sm" color={colors.dangerDark}>{error}</Text>}
+      {error && <Text size="sm" color="dangerDark">{error}</Text>}
 
       {mode === "map" ? (
         <div className="explore-columns">
           <div className="explore-list-col">
             {loading && pois.length === 0 ? (
               [0, 1, 2, 3].map((i) => <Skeleton key={i} height={120} borderRadius={radii.lg} />)
+            ) : pois.length === 0 ? (
+              emptyResultsNode()
+            ) : mapVisiblePois.length === 0 ? (
+              // Results exist, just none inside the current map viewport —
+              // a different situation from "no results at all" (above), so
+              // it gets its own, action-free copy: panning/zooming is the
+              // obvious next step here, not a filter to clear.
+              <Text size="sm" color="textMuted">{t("explore.emptyViewport")}</Text>
             ) : (
               mapVisiblePois.map((poi) => poiCard(poi))
             )}
-            <Text size="sm" color={colors.textMuted}>{t("explore.empty")}</Text>
           </div>
 
           <div className="explore-map-col">
             <MapView
               pois={pois}
               categories={categories}
+              getPoiLabel={getPoiLabel}
               onMarkerPress={setSelectedPoiId}
               onDeselect={() => setSelectedPoiId(null)}
               onBoundsChange={setMapBounds}
@@ -282,15 +350,15 @@ export function ExploreView({
                 )}
                 <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                   {categoryLabel(selectedPoi) && (
-                    <Text size="xs" weight="medium" color={colors.primaryDark}>
+                    <Text size="xs" weight="medium" color="primaryDark">
                       {categoryLabel(selectedPoi)!.toUpperCase()}
                     </Text>
                   )}
                   <Text weight="semibold" numberOfLines={1}>{pickLocalized(selectedPoi.name, locale)}</Text>
-                  <Text size="xs" color={colors.textMuted} numberOfLines={1}>{selectedPoi.address}</Text>
+                  <Text size="xs" color="textMuted" numberOfLines={1}>{selectedPoi.address}</Text>
                   <div className="flex items-baseline gap-xs">
                     <Rating value={selectedPoi.ratingAvg ?? 0} size={13} />
-                    <Text size="xs" color={colors.textMuted}>
+                    <Text size="xs" color="textMuted">
                       {selectedPoi.ratingCount > 0 ? `(${selectedPoi.ratingCount})` : "New"}
                     </Text>
                   </div>
@@ -308,7 +376,7 @@ export function ExploreView({
               ))}
             </div>
           ) : pois.length === 0 ? (
-            <Text color={colors.textMuted}>{t("explore.empty")}</Text>
+            emptyResultsNode()
           ) : (
             <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-[18px]">{pois.map((poi) => poiCard(poi, "grid"))}</div>
           )}
