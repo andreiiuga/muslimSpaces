@@ -2,15 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, colors, Text } from "@muslimspaces/ui";
+import { Button, Text, type TextColorToken } from "@muslimspaces/ui";
 import type { Category, Poi } from "@muslimspaces/shared";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StatusBadge } from "../StatusBadge";
 
-const STATUS_COLORS: Record<Poi["status"], string> = {
-  pending: colors.warning,
-  approved: colors.success,
-  rejected: colors.danger,
+const STATUS_COLORS: Record<Poi["status"], TextColorToken> = {
+  pending: "warning",
+  approved: "success",
+  rejected: "danger",
 };
 
 export function PoiAdminTable({ pois: initialPois, categories }: { pois: Poi[]; categories: Category[] }) {
@@ -84,12 +84,12 @@ export function PoiAdminTable({ pois: initialPois, categories }: { pois: Poi[]; 
               <StatusBadge color={STATUS_COLORS[poi.status]}>{poi.status}</StatusBadge>
             </TableCell>
             <TableCell>
-              <StatusBadge color={poi.visibility === "hidden" ? colors.danger : colors.success}>
+              <StatusBadge color={poi.visibility === "hidden" ? "danger" : "success"}>
                 {poi.visibility}
               </StatusBadge>
             </TableCell>
             <TableCell>
-              <Text size="sm" color={colors.textMuted}>{poi.address}</Text>
+              <Text size="sm" color="textMuted">{poi.address}</Text>
             </TableCell>
             <TableCell className="flex flex-wrap gap-xs">
               <Button

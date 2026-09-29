@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Star, X } from "lucide-react";
-import { Button, Text, Textarea, colors } from "@muslimspaces/ui";
+import { Button, Text, Textarea } from "@muslimspaces/ui";
 import type { Review } from "@muslimspaces/shared";
 import { useLocale } from "../../i18n/LocaleContext";
 
@@ -68,7 +68,7 @@ export function ReviewComposerModal({
       >
         <div className="flex items-start justify-between gap-md">
           <div>
-            <Text size="xs" weight="medium" color={colors.textMuted}>
+            <Text size="xs" weight="medium" color="textMuted">
               {t("review.reviewing").toUpperCase()}
             </Text>
             <div className="mt-1">
@@ -81,12 +81,12 @@ export function ReviewComposerModal({
             aria-label={t("common.cancel")}
             className="flex h-11 w-11 flex-none cursor-pointer items-center justify-center border-0 bg-transparent"
           >
-            <X size={20} color={colors.text} />
+            <X size={20} className="text-text" />
           </button>
         </div>
 
         <div>
-          <Text size="xs" weight="medium" color={colors.textMuted}>
+          <Text size="xs" weight="medium" color="textMuted">
             {t("review.yourRating").toUpperCase()}
           </Text>
           <div className="mt-[6px] flex gap-1">
@@ -98,24 +98,24 @@ export function ReviewComposerModal({
                 aria-label={`${n}`}
                 className="flex h-12 w-12 flex-none cursor-pointer items-center justify-center border-0 bg-transparent"
               >
-                <Star size={31} fill={n <= rating ? colors.star : "none"} color={n <= rating ? colors.star : colors.starEmpty} />
+                <Star size={31} className={n <= rating ? "fill-star text-star" : "fill-none text-starEmpty"} />
               </button>
             ))}
           </div>
-          <Text size="sm" color={colors.textMuted}>{t(`review.${RATING_WORD_KEYS[rating]}`)}</Text>
+          <Text size="sm" color="textMuted">{t(`review.${RATING_WORD_KEYS[rating]}`)}</Text>
         </div>
 
         <div>
-          <Text size="xs" weight="medium" color={colors.textMuted}>
+          <Text size="xs" weight="medium" color="textMuted">
             {t("review.yourWords").toUpperCase()}
           </Text>
           <div className="mt-[6px]">
             <Textarea value={comment} onChangeText={setComment} placeholder={t("review.placeholder")} rows={5} />
           </div>
-          <Text size="xs" color={colors.textMuted}>{t("review.note")}</Text>
+          <Text size="xs" color="textMuted">{t("review.note")}</Text>
         </div>
 
-        {error && <Text size="sm" color={colors.dangerDark}>{error}</Text>}
+        {error && <Text size="sm" color="dangerDark">{error}</Text>}
 
         <div className="flex flex-wrap justify-end gap-[10px]">
           <Button variant="ghost" onPress={onClose}>{t("common.cancel")}</Button>

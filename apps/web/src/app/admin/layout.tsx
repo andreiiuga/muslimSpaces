@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { colors, Text } from "@muslimspaces/ui";
+import { Text } from "@muslimspaces/ui";
 import { getCurrentUser } from "../../lib/current-user";
 
 // Web-only admin surface (never shipped to mobile). UX-level gate here —
@@ -17,7 +17,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="flex min-h-[calc(100vh-65px)] flex-col admin:flex-row">
       <aside className="flex-shrink-0 border-b border-border p-lg admin:w-[200px] admin:border-b-0 admin:border-r">
-        <Text size="sm" weight="semibold" color={colors.textMuted}>ADMIN</Text>
+        <Text size="sm" weight="semibold" color="textMuted">ADMIN</Text>
         <nav className="mt-md flex flex-row flex-wrap gap-sm admin:flex-col">
           <AdminLink href="/admin/pois">POIs</AdminLink>
           <AdminLink href="/admin/blog">Blog</AdminLink>

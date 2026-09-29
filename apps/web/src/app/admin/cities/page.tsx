@@ -1,4 +1,4 @@
-import { colors, Text } from "@muslimspaces/ui";
+import { Text } from "@muslimspaces/ui";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getApiClient } from "../../../lib/api-client";
 import { getCurrentToken, requireAdmin } from "../../../lib/current-user";
@@ -39,7 +39,7 @@ export default async function AdminCitiesPage() {
                     <Text size="sm">{city.name.ro}</Text>
                   </TableCell>
                   <TableCell>
-                    <Text size="sm" color={colors.textMuted}>{city.slug}</Text>
+                    <Text size="sm" color="textMuted">{city.slug}</Text>
                   </TableCell>
                 </TableRow>
               ))}

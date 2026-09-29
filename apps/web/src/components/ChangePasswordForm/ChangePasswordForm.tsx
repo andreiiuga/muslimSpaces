@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Input, Text, colors } from "@muslimspaces/ui";
+import { Button, Input, Text } from "@muslimspaces/ui";
 import { useLocale } from "../../i18n/LocaleContext";
 import { BackLink } from "../BackLink/BackLink";
 
@@ -54,8 +54,8 @@ export function ChangePasswordForm() {
         <Input label={t("changePassword.current")} kind="password" value={currentPassword} onChangeText={setCurrentPassword} />
         <Input label={t("changePassword.newPassword")} kind="password" value={newPassword} onChangeText={setNewPassword} />
         <Input label={t("changePassword.confirm")} kind="password" value={confirmPassword} onChangeText={setConfirmPassword} />
-        {error && <Text size="sm" color={colors.dangerDark}>{error}</Text>}
-        {success && <Text size="sm" color={colors.success}>{t("changePassword.success")}</Text>}
+        {error && <Text size="sm" color="dangerDark">{error}</Text>}
+        {success && <Text size="sm" color="success">{t("changePassword.success")}</Text>}
         <Button onPress={handleSubmit} loading={submitting}>{t("changePassword.submit")}</Button>
       </div>
     </div>

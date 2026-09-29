@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { colors, Text } from "@muslimspaces/ui";
+import { Text } from "@muslimspaces/ui";
 import { getApiClient } from "../../../lib/api-client";
 import { getCurrentToken } from "../../../lib/current-user";
 import { PoiAdminTable } from "../../../components/admin/PoiAdminTable/PoiAdminTable";
@@ -53,19 +53,19 @@ export default async function AdminPoisPage({
       {(page > 1 || hasNextPage) && (
         <div className="mt-lg flex items-center gap-md">
           {page > 1 ? (
-            <Link href={`/admin/pois?page=${page - 1}`} className="text-sm text-primary">
+            <Link href={`/admin/pois?page=${page - 1}`} className="text-sm text-primaryDark">
               ← Previous
             </Link>
           ) : (
-            <Text size="sm" color={colors.textFaint}>← Previous</Text>
+            <Text size="sm" color="textFaint">← Previous</Text>
           )}
-          <Text size="sm" color={colors.textMuted}>Page {page}</Text>
+          <Text size="sm" color="textMuted">Page {page}</Text>
           {hasNextPage ? (
-            <Link href={`/admin/pois?page=${page + 1}`} className="text-sm text-primary">
+            <Link href={`/admin/pois?page=${page + 1}`} className="text-sm text-primaryDark">
               Next →
             </Link>
           ) : (
-            <Text size="sm" color={colors.textFaint}>Next →</Text>
+            <Text size="sm" color="textFaint">Next →</Text>
           )}
         </div>
       )}

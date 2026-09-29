@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Input, Text, colors } from "@muslimspaces/ui";
+import { Button, Input, Text } from "@muslimspaces/ui";
 import type { Category } from "@muslimspaces/shared";
 
 export function CategoryForm({ initialCategory }: { initialCategory?: Category }) {
@@ -54,13 +54,13 @@ export function CategoryForm({ initialCategory }: { initialCategory?: Category }
         onChangeText={setSlug}
         placeholder="convenience-store"
       />
-      <Text size="xs" color={colors.textMuted}>
+      <Text size="xs" color="textMuted">
         Lowercase, hyphen-separated — used as the stable identifier, not shown to users.
       </Text>
       <Input label="Name (Romanian)" value={nameRo} onChangeText={setNameRo} />
       <Input label="Name (English)" value={nameEn} onChangeText={setNameEn} />
 
-      {error && <Text size="sm" color={colors.danger}>{error}</Text>}
+      {error && <Text size="sm" color="danger">{error}</Text>}
 
       <div>
         <Button onPress={handleSubmit} loading={submitting}>

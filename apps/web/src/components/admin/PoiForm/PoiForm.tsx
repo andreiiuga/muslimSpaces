@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Input, Text, Textarea, colors } from "@muslimspaces/ui";
+import { Button, Input, Text, Textarea } from "@muslimspaces/ui";
 import type { Category, Poi, PoiImage } from "@muslimspaces/shared";
 import { PoiImagesManager } from "../PoiImagesManager/PoiImagesManager";
 
@@ -142,7 +142,7 @@ export function PoiForm({
                       checked={primaryCategoryId === category.id}
                       onChange={() => setPrimaryCategoryId(category.id)}
                     />
-                    <Text size="xs" color={colors.textMuted}>primary</Text>
+                    <Text size="xs" color="textMuted">primary</Text>
                   </label>
                 )}
               </div>
@@ -151,7 +151,7 @@ export function PoiForm({
         </div>
       </div>
 
-      {error && <Text size="sm" color={colors.danger}>{error}</Text>}
+      {error && <Text size="sm" color="danger">{error}</Text>}
 
       <div>
         <Button onPress={handleSubmit} loading={submitting}>
@@ -162,7 +162,7 @@ export function PoiForm({
       {isEdit && (
         <div className="mt-sm border-t border-border pt-md">
           <Text size="sm" weight="medium">Visibility: {visibility}</Text>
-          <Text size="xs" color={colors.textMuted}>
+          <Text size="xs" color="textMuted">
             Hidden POIs stay approved but never appear to visitors — only here in the admin panel.
           </Text>
           <div className="mt-sm flex gap-sm">

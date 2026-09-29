@@ -2,7 +2,7 @@
 
 import { useRef, useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Input, Text, Textarea, colors } from "@muslimspaces/ui";
+import { Button, Input, Text, Textarea } from "@muslimspaces/ui";
 import type { BlogPost } from "@muslimspaces/shared";
 
 export function BlogForm({ initialPost }: { initialPost?: BlogPost }) {
@@ -101,7 +101,7 @@ export function BlogForm({ initialPost }: { initialPost?: BlogPost }) {
       <Textarea label="Content (Romanian, Markdown)" value={contentRo} onChangeText={setContentRo} rows={10} />
       <Textarea label="Content (English, Markdown)" value={contentEn} onChangeText={setContentEn} rows={10} />
 
-      {error && <Text size="sm" color={colors.danger}>{error}</Text>}
+      {error && <Text size="sm" color="danger">{error}</Text>}
       <div>
         <Button onPress={handleSubmit} loading={submitting}>{isEdit ? "Save changes" : "Create post"}</Button>
       </div>

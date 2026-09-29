@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { BlogPost } from "@muslimspaces/shared";
-import { Text, colors } from "@muslimspaces/ui";
+import { Text } from "@muslimspaces/ui";
 import { useLocale } from "../../i18n/LocaleContext";
 import { pickLocalized } from "../../i18n/pick-localized";
 
@@ -12,7 +12,7 @@ export function BlogListView({ posts }: { posts: BlogPost[] }) {
   if (posts.length === 0) {
     return (
       <div className="mx-auto max-w-[1340px] px-[clamp(16px,4vw,28px)] pb-[60px] pt-[30px]">
-        <Text color={colors.textMuted}>{t("blog.empty")}</Text>
+        <Text color="textMuted">{t("blog.empty")}</Text>
       </div>
     );
   }
@@ -22,7 +22,7 @@ export function BlogListView({ posts }: { posts: BlogPost[] }) {
   return (
     <div className="mx-auto flex max-w-[1340px] flex-col gap-[26px] px-[clamp(16px,4vw,28px)] pb-[60px] pt-[30px]">
       <div>
-        <Text size="xs" weight="medium" color={colors.textMuted}>{t("blog.kicker").toUpperCase()}</Text>
+        <Text size="xs" weight="medium" color="textMuted">{t("blog.kicker").toUpperCase()}</Text>
         <div className="mt-[6px]">
           <Text size="3xl" weight="semibold">{t("blog.heading")}</Text>
         </div>
@@ -41,13 +41,13 @@ export function BlogListView({ posts }: { posts: BlogPost[] }) {
           </div>
           <div className="flex min-w-[280px] flex-[1_1_320px] flex-col justify-center gap-[10px] px-[12px] py-[10px]">
             {featured.publishedAt && (
-              <Text size="xs" weight="medium" color={colors.primaryDark}>
+              <Text size="xs" weight="medium" color="primaryDark">
                 {new Date(featured.publishedAt).toLocaleDateString()}
               </Text>
             )}
             <Text size="2xl" weight="semibold">{pickLocalized(featured.title, locale)}</Text>
-            <Text size="lg" color={colors.textBody}>{pickLocalized(featured.excerpt, locale)}</Text>
-            <Text size="sm" color={colors.primary}>{t("blog.readOn")}</Text>
+            <Text size="lg" color="textBody">{pickLocalized(featured.excerpt, locale)}</Text>
+            <Text size="sm" color="primaryDark">{t("blog.readOn")}</Text>
           </div>
         </Link>
       )}
@@ -67,12 +67,12 @@ export function BlogListView({ posts }: { posts: BlogPost[] }) {
                 )}
               </div>
               {post.publishedAt && (
-                <Text size="xs" weight="medium" color={colors.primaryDark}>
+                <Text size="xs" weight="medium" color="primaryDark">
                   {new Date(post.publishedAt).toLocaleDateString()}
                 </Text>
               )}
               <Text size="xl" weight="semibold">{pickLocalized(post.title, locale)}</Text>
-              <Text size="sm" color={colors.textBody}>{pickLocalized(post.excerpt, locale)}</Text>
+              <Text size="sm" color="textBody">{pickLocalized(post.excerpt, locale)}</Text>
             </Link>
           ))}
         </div>

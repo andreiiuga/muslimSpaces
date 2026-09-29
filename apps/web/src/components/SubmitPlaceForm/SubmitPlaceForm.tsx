@@ -4,7 +4,7 @@ import { useRef, useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { BadgeCheck, Camera, MapPin as MapPinIcon } from "lucide-react";
-import { Button, Chip, Input, Skeleton, Text, colors } from "@muslimspaces/ui";
+import { Button, Chip, Input, Skeleton, Text } from "@muslimspaces/ui";
 import type { Category, Coordinates } from "@muslimspaces/shared";
 import type { MapBounds } from "@muslimspaces/ui/map";
 import { useLocale } from "../../i18n/LocaleContext";
@@ -32,7 +32,7 @@ function LocationPicker({ value, onChange }: { value: Coordinates; onChange: (v:
     <div className="relative mt-1 h-[250px] overflow-hidden rounded-lg border border-border">
       <MapView pois={[]} initialCenter={value} initialZoom={13} onBoundsChange={handleBoundsChange} />
       <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-full">
-        <MapPinIcon size={34} fill={colors.danger} color={colors.danger} />
+        <MapPinIcon size={34} className="fill-danger text-danger" />
       </div>
     </div>
   );
@@ -137,11 +137,11 @@ export function SubmitPlaceForm({ categories }: { categories: Category[] }) {
       <div className="mx-auto max-w-[1040px] px-[clamp(16px,4vw,28px)] pb-[60px] pt-[26px]">
         <BackLink href="/">{t("common.backToMap")}</BackLink>
         <div className="max-w-[560px] py-[26px]">
-          <BadgeCheck size={44} fill={colors.primaryLight} color={colors.primary} />
+          <BadgeCheck size={44} className="fill-primaryLight text-primaryDark" />
           <div className="mb-[10px] mt-[14px]">
             <Text size="3xl" weight="semibold">{t("submit.sentHeading")}</Text>
           </div>
-          <Text size="md" color={colors.textMuted}>{t("submit.sentBody", { name: sentName })}</Text>
+          <Text size="md" color="textMuted">{t("submit.sentBody", { name: sentName })}</Text>
           <div className="mt-[22px]">
             <Button onPress={() => router.push("/")}>{t("submit.backToMap")}</Button>
           </div>
@@ -157,7 +157,7 @@ export function SubmitPlaceForm({ categories }: { categories: Category[] }) {
       <div className="mb-[22px] mt-1">
         <Text size="3xl" weight="semibold">{t("submit.heading")}</Text>
         <div className="mt-sm">
-          <Text size="sm" color={colors.textMuted}>{t("submit.subheading")}</Text>
+          <Text size="sm" color="textMuted">{t("submit.subheading")}</Text>
         </div>
       </div>
 
@@ -166,7 +166,7 @@ export function SubmitPlaceForm({ categories }: { categories: Category[] }) {
           <Input label={t("submit.name")} value={name} onChangeText={setName} placeholder={t("submit.namePlaceholder")} />
 
           <div className="flex flex-col gap-[9px]">
-            <Text size="xs" weight="medium" color={colors.textMuted}>{t("submit.categories").toUpperCase()}</Text>
+            <Text size="xs" weight="medium" color="textMuted">{t("submit.categories").toUpperCase()}</Text>
             <div className="flex flex-wrap gap-sm">
               {categories.map((category) => {
                 const selected = categoryIds.includes(category.id);
@@ -182,21 +182,21 @@ export function SubmitPlaceForm({ categories }: { categories: Category[] }) {
           </div>
 
           <div className="flex flex-col gap-[7px]">
-            <Text size="xs" weight="medium" color={colors.textMuted}>{t("submit.openingHours").toUpperCase()}</Text>
+            <Text size="xs" weight="medium" color="textMuted">{t("submit.openingHours").toUpperCase()}</Text>
             <div className="flex items-center gap-[10px]">
               <div className="min-w-0 flex-1">
                 <Input value={opensAt} onChangeText={setOpensAt} placeholder="09:00" />
               </div>
-              <Text size="sm" color={colors.textMuted}>{t("submit.to")}</Text>
+              <Text size="sm" color="textMuted">{t("submit.to")}</Text>
               <div className="min-w-0 flex-1">
                 <Input value={closesAt} onChangeText={setClosesAt} placeholder="20:00" />
               </div>
             </div>
-            <Text size="xs" color={colors.textMuted}>{t("submit.hoursNote")}</Text>
+            <Text size="xs" color="textMuted">{t("submit.hoursNote")}</Text>
           </div>
 
           <div className="flex flex-col gap-[9px]">
-            <Text size="xs" weight="medium" color={colors.textMuted}>{t("submit.photos").toUpperCase()}</Text>
+            <Text size="xs" weight="medium" color="textMuted">{t("submit.photos").toUpperCase()}</Text>
             <input
               ref={fileInputRef}
               type="file"
@@ -207,14 +207,14 @@ export function SubmitPlaceForm({ categories }: { categories: Category[] }) {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="flex h-[96px] w-[96px] cursor-pointer flex-col items-center justify-center gap-[5px] rounded-input border-[1.5px] border-dashed border-[#CBC5B8] bg-transparent text-primary"
+              className="flex h-[96px] w-[96px] cursor-pointer flex-col items-center justify-center gap-[5px] rounded-input border-[1.5px] border-dashed border-[#CBC5B8] bg-transparent text-primaryDark"
             >
               {photo ? (
-                <Text size="xs" color={colors.textMuted} align="center">{photo.name}</Text>
+                <Text size="xs" color="textMuted" align="center">{photo.name}</Text>
               ) : (
                 <>
                   <Camera size={23} />
-                  <Text size="xs" color={colors.primary}>{t("submit.add")}</Text>
+                  <Text size="xs" color="primaryDark">{t("submit.add")}</Text>
                 </>
               )}
             </button>
@@ -223,13 +223,13 @@ export function SubmitPlaceForm({ categories }: { categories: Category[] }) {
 
         <div className="flex min-w-[280px] flex-[1_1_340px] flex-col gap-xl">
           <div className="flex flex-col gap-[7px]">
-            <Text size="xs" weight="medium" color={colors.textMuted}>{t("submit.address").toUpperCase()}</Text>
+            <Text size="xs" weight="medium" color="textMuted">{t("submit.address").toUpperCase()}</Text>
             <Input value={address} onChangeText={setAddress} placeholder={t("submit.addressPlaceholder")} />
             <LocationPicker value={location} onChange={setLocation} />
-            <Text size="xs" color={colors.textMuted}>{t("submit.dragPin")}</Text>
+            <Text size="xs" color="textMuted">{t("submit.dragPin")}</Text>
           </div>
 
-          {note && <Text size="sm" color={colors.dangerDark}>{note}</Text>}
+          {note && <Text size="sm" color="dangerDark">{note}</Text>}
 
           <Button onPress={handleSubmit} loading={submitting}>
             {submitting ? t("submit.sending") : t("submit.send")}

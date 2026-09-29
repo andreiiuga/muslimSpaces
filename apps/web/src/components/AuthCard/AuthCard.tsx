@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Text, colors } from "@muslimspaces/ui";
+import { Text } from "@muslimspaces/ui";
 import { useLocale } from "../../i18n/LocaleContext";
 
 /**
@@ -17,7 +17,7 @@ export function AuthCard({ kicker, title, children }: { kicker: string; title: s
     <div className="flex justify-center px-[clamp(16px,4vw,28px)] pb-[70px] pt-[52px]">
       <div className="flex w-full max-w-[460px] flex-col gap-lg rounded-lg bg-surface p-[28px] shadow-panel">
         <div>
-          <Text size="xs" weight="medium" color={colors.textMuted}>
+          <Text size="xs" weight="medium" color="textMuted">
             {kicker.toUpperCase()}
           </Text>
           <div className="mt-[5px]">
@@ -27,7 +27,7 @@ export function AuthCard({ kicker, title, children }: { kicker: string; title: s
           </div>
         </div>
         {children}
-        <Text size="xs" color={colors.textMuted} align="center">
+        <Text size="xs" color="textMuted" align="center">
           {t("auth.note")}
         </Text>
       </div>

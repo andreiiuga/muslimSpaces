@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Button, colors, Text } from "@muslimspaces/ui";
+import { Button, Text } from "@muslimspaces/ui";
 import type { Category } from "@muslimspaces/shared";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
@@ -30,7 +30,7 @@ export function CategoryAdminTable({ categories }: { categories: Category[] }) {
               <Text size="sm">{category.name.ro}</Text>
             </TableCell>
             <TableCell>
-              <Text size="sm" color={colors.textMuted}>{category.slug}</Text>
+              <Text size="sm" color="textMuted">{category.slug}</Text>
             </TableCell>
             <TableCell>
               <Button size="sm" variant="ghost" onPress={() => router.push(`/admin/categories/${category.id}/edit`)}>

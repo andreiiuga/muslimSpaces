@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, colors, Text } from "@muslimspaces/ui";
+import { Button, Text } from "@muslimspaces/ui";
 import type { Review } from "@muslimspaces/shared";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StatusBadge } from "../StatusBadge";
@@ -60,10 +60,10 @@ export function ReviewAdminTable({
               <Text size="sm">{review.rating} / 5</Text>
             </TableCell>
             <TableCell className="max-w-[320px]">
-              <Text size="sm" color={colors.textMuted}>{review.comment ?? "—"}</Text>
+              <Text size="sm" color="textMuted">{review.comment ?? "—"}</Text>
             </TableCell>
             <TableCell>
-              <StatusBadge color={review.status === "published" ? colors.success : colors.danger}>
+              <StatusBadge color={review.status === "published" ? "success" : "danger"}>
                 {review.status}
               </StatusBadge>
             </TableCell>

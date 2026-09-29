@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Button, Input, Text, colors } from "@muslimspaces/ui";
+import { Button, Input, Text } from "@muslimspaces/ui";
 import { useLocale } from "../../i18n/LocaleContext";
 import { AuthCard } from "../../components/AuthCard/AuthCard";
 
@@ -43,12 +43,12 @@ export default function SignupPage() {
       <form onSubmit={handleSubmit} className="flex flex-col gap-md">
         <Input label={t("auth.email")} kind="email" value={email} onChangeText={setEmail} placeholder="you@example.ro" />
         <Input label={t("auth.password")} kind="password" value={password} onChangeText={setPassword} placeholder="••••••••" />
-        {error && <Text size="sm" color={colors.dangerDark}>{error}</Text>}
+        {error && <Text size="sm" color="dangerDark">{error}</Text>}
         <Button type="submit" loading={submitting} fullWidth>
           {submitting ? t("auth.signingUp") : t("common.signUp")}
         </Button>
       </form>
-      <Link href="/login" className="flex min-h-[44px] items-center justify-center text-sm text-primary no-underline">
+      <Link href="/login" className="flex min-h-[44px] items-center justify-center text-sm text-primaryDark no-underline">
         {t("auth.haveAccount")}
       </Link>
     </AuthCard>

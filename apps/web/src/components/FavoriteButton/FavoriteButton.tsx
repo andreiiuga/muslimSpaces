@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bookmark } from "lucide-react";
-import { IconButton, colors } from "@muslimspaces/ui";
+import { IconButton } from "@muslimspaces/ui";
 
 // Circular icon-only button, floated over the hero image — matches the
 // design's `poi.favIcon`/`favInk` treatment (a plain white circle with a
@@ -44,7 +44,7 @@ export function FavoriteButton({
       onPress={toggle}
       disabled={pending}
       label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-      icon={<Bookmark size={21} fill={isFavorite ? colors.danger : "none"} color={isFavorite ? colors.danger : colors.textMuted} />}
+      icon={<Bookmark size={21} className={isFavorite ? "fill-danger text-danger" : "fill-none text-textMuted"} />}
     />
   );
 }

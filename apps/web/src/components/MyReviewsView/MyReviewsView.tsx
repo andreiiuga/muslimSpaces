@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Star } from "lucide-react";
-import { Text, colors } from "@muslimspaces/ui";
+import { Text } from "@muslimspaces/ui";
 import type { Poi, Review } from "@muslimspaces/shared";
 import { useLocale } from "../../i18n/LocaleContext";
 import { pickLocalized } from "../../i18n/pick-localized";
@@ -19,7 +19,7 @@ export function MyReviewsView({ reviews, pois }: { reviews: Review[]; pois: Reco
       </div>
 
       {reviews.length === 0 ? (
-        <Text color={colors.textMuted}>{t("myReviews.empty")}</Text>
+        <Text color="textMuted">{t("myReviews.empty")}</Text>
       ) : (
         <div className="flex flex-col gap-md">
           {reviews.map((review) => {
@@ -32,15 +32,15 @@ export function MyReviewsView({ reviews, pois }: { reviews: Review[]; pois: Reco
               >
                 <div className="flex items-baseline justify-between gap-md">
                   <Text weight="semibold" numberOfLines={1}>{poi ? pickLocalized(poi.name, locale) : "…"}</Text>
-                  <Text size="xs" color={colors.textMuted}>{new Date(review.createdAt).toLocaleDateString()}</Text>
+                  <Text size="xs" color="textMuted">{new Date(review.createdAt).toLocaleDateString()}</Text>
                 </div>
                 <div className="flex gap-px">
                   {[1, 2, 3, 4, 5].map((n) => (
-                    <Star key={n} size={14} fill={n <= review.rating ? colors.star : "none"} color={n <= review.rating ? colors.star : colors.starEmpty} />
+                    <Star key={n} size={14} className={n <= review.rating ? "fill-star text-star" : "fill-none text-starEmpty"} />
                   ))}
                 </div>
-                {review.comment && <Text size="sm" color={colors.textBody}>{review.comment}</Text>}
-                {review.status === "hidden" && <Text size="xs" color={colors.dangerDark}>{t("myReviews.hidden")}</Text>}
+                {review.comment && <Text size="sm" color="textBody">{review.comment}</Text>}
+                {review.status === "hidden" && <Text size="xs" color="dangerDark">{t("myReviews.hidden")}</Text>}
               </Link>
             );
           })}

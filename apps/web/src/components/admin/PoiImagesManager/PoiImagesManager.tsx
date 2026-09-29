@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, type ChangeEvent } from "react";
-import { Button, Text, colors } from "@muslimspaces/ui";
+import { Button, Text } from "@muslimspaces/ui";
 import type { PoiImage, PoiImageRole } from "@muslimspaces/shared";
 
 const ROLE_OPTIONS: PoiImageRole[] = ["gallery", "cover", "logo"];
@@ -89,7 +89,7 @@ export function PoiImagesManager({ poiId, initialImages }: { poiId: string; init
       <Text size="sm" weight="medium">Images</Text>
 
       {images.length === 0 ? (
-        <Text size="sm" color={colors.textMuted}>No images yet.</Text>
+        <Text size="sm" color="textMuted">No images yet.</Text>
       ) : (
         <div className="mt-sm flex flex-col gap-sm">
           {images.map((image, index) => (
@@ -104,7 +104,7 @@ export function PoiImagesManager({ poiId, initialImages }: { poiId: string; init
                 className="h-[54px] w-[72px] flex-shrink-0 rounded-sm object-cover"
               />
               <div className="w-[60px]">
-                <Text size="xs" color={colors.textMuted}>{image.role}</Text>
+                <Text size="xs" color="textMuted">{image.role}</Text>
               </div>
               <div className="flex-1" />
               <Button
@@ -154,7 +154,7 @@ export function PoiImagesManager({ poiId, initialImages }: { poiId: string; init
 
       {error && (
         <div className="mt-xs">
-          <Text size="sm" color={colors.danger}>{error}</Text>
+          <Text size="sm" color="danger">{error}</Text>
         </div>
       )}
     </div>

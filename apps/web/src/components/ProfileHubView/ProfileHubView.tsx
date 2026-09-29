@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight, KeyRound, MapPinPlus, Newspaper, Pencil, Star, UserCircle, Info } from "lucide-react";
-import { Avatar, Button, Text, buttonVariants, colors } from "@muslimspaces/ui";
+import { Avatar, Button, Text, buttonVariants } from "@muslimspaces/ui";
 import type { AuthUser } from "@muslimspaces/shared";
 import { cn } from "@/lib/utils";
 import { useLocale } from "../../i18n/LocaleContext";
@@ -18,11 +18,11 @@ export function ProfileHubView({ user }: { user: AuthUser | null }) {
     return (
       <div className="mx-auto max-w-[1340px] px-[clamp(16px,4vw,28px)] pb-[60px] pt-[30px]">
         <div className="max-w-[520px] py-[30px]">
-          <Text size="xs" weight="medium" color={colors.textMuted}>{t("profile.welcomeKicker").toUpperCase()}</Text>
+          <Text size="xs" weight="medium" color="textMuted">{t("profile.welcomeKicker").toUpperCase()}</Text>
           <div className="mb-[12px] mt-sm">
             <Text size="3xl" weight="semibold">{t("profile.welcomeHead")}</Text>
           </div>
-          <Text size="lg" color={colors.textMuted}>{t("profile.welcomeBody")}</Text>
+          <Text size="lg" color="textMuted">{t("profile.welcomeBody")}</Text>
           <div className="mt-[22px] flex flex-wrap gap-[10px]">
             <Button onPress={() => router.push("/login")}>{t("common.logIn")}</Button>
             <Button variant="ghost" onPress={() => router.push("/signup")}>{t("profile.createAccount")}</Button>
@@ -58,7 +58,7 @@ export function ProfileHubView({ user }: { user: AuthUser | null }) {
             <div>
               <Text size="xl" weight="semibold">{user.displayName ?? user.email}</Text>
               <div className="mt-[3px]">
-                <Text size="sm" color={colors.textMuted}>
+                <Text size="sm" color="textMuted">
                   {user.email}
                   {user.role === "admin" && ` · ${t("profile.admin")}`}
                   {user.role === "moderator" && ` · ${t("profile.moderator")}`}
@@ -66,14 +66,14 @@ export function ProfileHubView({ user }: { user: AuthUser | null }) {
               </div>
             </div>
             <Link href="/account/edit" className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "no-underline")}>
-              <Pencil size={16} color={colors.primary} /> {t("profile.editProfile")}
+              <Pencil size={16} className="text-primaryDark" /> {t("profile.editProfile")}
             </Link>
           </div>
           <Button variant="danger" onPress={handleLogout} fullWidth>{t("profile.logOut")}</Button>
         </div>
 
         <div className="flex min-w-[300px] flex-[1_1_460px] flex-col gap-md">
-          <Text size="xs" weight="medium" color={colors.textMuted}>{t("profile.account").toUpperCase()}</Text>
+          <Text size="xs" weight="medium" color="textMuted">{t("profile.account").toUpperCase()}</Text>
           <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-md">
             {rows.map((row) => (
               <Link
@@ -81,12 +81,12 @@ export function ProfileHubView({ user }: { user: AuthUser | null }) {
                 href={row.href}
                 className="flex min-h-[78px] items-center gap-md rounded-lg bg-surface px-[18px] text-text no-underline shadow-panel"
               >
-                <row.icon size={23} color={colors.primary} />
+                <row.icon size={23} className="text-primaryDark" />
                 <div className="min-w-0 flex-1">
                   <Text size="md">{row.label}</Text>
-                  {row.note && <Text size="xs" color={colors.textMuted}>{row.note}</Text>}
+                  {row.note && <Text size="xs" color="textMuted">{row.note}</Text>}
                 </div>
-                <ChevronRight size={16} color={colors.textFaint} />
+                <ChevronRight size={16} className="text-textFaint" />
               </Link>
             ))}
           </div>

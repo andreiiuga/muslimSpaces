@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, colors, Text } from "@muslimspaces/ui";
+import { Button, Text } from "@muslimspaces/ui";
 import type { BlogPost } from "@muslimspaces/shared";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StatusBadge } from "../StatusBadge";
@@ -54,10 +54,10 @@ export function BlogAdminTable({ posts: initialPosts }: { posts: BlogPost[] }) {
               <Text size="sm" weight="medium">{post.title.ro}</Text>
             </TableCell>
             <TableCell>
-              <Text size="sm" color={colors.textMuted}>{post.slug}</Text>
+              <Text size="sm" color="textMuted">{post.slug}</Text>
             </TableCell>
             <TableCell>
-              <StatusBadge color={post.status === "published" ? colors.success : colors.textMuted}>
+              <StatusBadge color={post.status === "published" ? "success" : "textMuted"}>
                 {post.status}
               </StatusBadge>
             </TableCell>

@@ -19,7 +19,7 @@ export function BackLink({ href, children, className }: { href: string; children
   const Icon = locale === "ar" ? ArrowRight : ArrowLeft;
 
   return (
-    <Link href={href} className={cn("inline-flex min-h-[44px] items-center gap-sm text-sm text-primary no-underline", className)}>
+    <Link href={href} className={cn("inline-flex min-h-[44px] items-center gap-sm text-sm text-primaryDark no-underline", className)}>
       <Icon size={18} />
       {children}
     </Link>

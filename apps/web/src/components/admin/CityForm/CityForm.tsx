@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, Input, Text, colors } from "@muslimspaces/ui";
+import { Button, Input, Text } from "@muslimspaces/ui";
 
 // Create-only — the backend has no PATCH /cities/:id yet (see
 // apps/backend/src/cities/cities.controller.ts), so there's nothing for an
@@ -50,13 +50,13 @@ export function CityForm() {
         onChangeText={setSlug}
         placeholder="cluj-napoca"
       />
-      <Text size="xs" color={colors.textMuted}>
+      <Text size="xs" color="textMuted">
         Lowercase, hyphen-separated — used in SEO URLs like /cluj-napoca/mosques.
       </Text>
       <Input label="Name (Romanian)" value={nameRo} onChangeText={setNameRo} />
       <Input label="Name (English)" value={nameEn} onChangeText={setNameEn} />
 
-      {error && <Text size="sm" color={colors.danger}>{error}</Text>}
+      {error && <Text size="sm" color="danger">{error}</Text>}
 
       <div>
         <Button onPress={handleSubmit} loading={submitting}>

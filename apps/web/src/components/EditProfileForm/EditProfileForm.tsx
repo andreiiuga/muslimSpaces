@@ -3,7 +3,7 @@
 import { useRef, useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle, Circle } from "lucide-react";
-import { Avatar, Button, Input, Text, colors } from "@muslimspaces/ui";
+import { Avatar, Button, Input, Text } from "@muslimspaces/ui";
 import type { AuthUser } from "@muslimspaces/shared";
 import { cn } from "@/lib/utils";
 import { useLocale } from "../../i18n/LocaleContext";
@@ -88,7 +88,7 @@ export function EditProfileForm({ user }: { user: AuthUser }) {
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className={cn("border-0 bg-transparent p-0 text-sm text-primary", uploading ? "cursor-not-allowed" : "cursor-pointer")}
+              className={cn("border-0 bg-transparent p-0 text-sm text-primaryDark", uploading ? "cursor-not-allowed" : "cursor-pointer")}
             >
               {uploading ? "…" : t("editProfile.changePhoto")}
             </button>
@@ -101,7 +101,7 @@ export function EditProfileForm({ user }: { user: AuthUser }) {
         </div>
 
         <div className="flex flex-col gap-[9px]">
-          <Text size="xs" weight="medium" color={colors.textMuted}>{t("editProfile.language").toUpperCase()}</Text>
+          <Text size="xs" weight="medium" color="textMuted">{t("editProfile.language").toUpperCase()}</Text>
           <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-[10px]">
             {SUPPORTED_LOCALES.map((code) => {
               const selected = locale === code;
@@ -115,23 +115,23 @@ export function EditProfileForm({ user }: { user: AuthUser }) {
                     selected ? "border-primary bg-tealTint" : "border-border bg-surface",
                   )}
                 >
-                  {selected ? <CheckCircle size={20} color={colors.primary} /> : <Circle size={20} color="#D6D3D1" />}
+                  {selected ? <CheckCircle size={20} className="text-primaryDark" /> : <Circle size={20} className="text-border" />}
                   <span className="flex-1 text-start text-[15.5px]">{LOCALE_LABEL[code]}</span>
                   {/* fontSize/letterSpacing unified with HeaderBar's locale
                       toggle (12.5px/.06em) — was 12px/.08em here for the
                       identical "locale code abbreviation" role, unintentional
                       drift between the two. */}
-                  <span className={cn("text-[12.5px] tracking-[0.06em]", selected ? "text-primary" : "text-textFaint")}>
+                  <span className={cn("text-[12.5px] tracking-[0.06em]", selected ? "text-primaryDark" : "text-textFaint")}>
                     {LOCALE_CODE[code]}
                   </span>
                 </button>
               );
             })}
           </div>
-          <Text size="xs" color={colors.textMuted}>{t("editProfile.languageNote")}</Text>
+          <Text size="xs" color="textMuted">{t("editProfile.languageNote")}</Text>
         </div>
 
-        {message && <Text size="sm" color={colors.textMuted}>{message}</Text>}
+        {message && <Text size="sm" color="textMuted">{message}</Text>}
 
         <div>
           <Button onPress={handleSave} loading={saving}>{t("editProfile.save")}</Button>

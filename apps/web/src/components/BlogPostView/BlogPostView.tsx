@@ -3,7 +3,7 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { BlogPost } from "@muslimspaces/shared";
-import { colors, Text } from "@muslimspaces/ui";
+import { Text } from "@muslimspaces/ui";
 import { useLocale } from "../../i18n/LocaleContext";
 import { pickLocalized } from "../../i18n/pick-localized";
 import { BackLink } from "../BackLink/BackLink";
@@ -16,12 +16,12 @@ export function BlogPostView({ post }: { post: BlogPost }) {
       <BackLink href="/blog" className="self-start">{t("blog.backDesk")}</BackLink>
 
       {post.publishedAt && (
-        <Text size="xs" weight="medium" color={colors.primaryDark}>
+        <Text size="xs" weight="medium" color="primaryDark">
           {new Date(post.publishedAt).toLocaleDateString()}
         </Text>
       )}
       <Text size="3xl" weight="semibold">{pickLocalized(post.title, locale)}</Text>
-      <Text size="lg" color={colors.textMuted}>{pickLocalized(post.excerpt, locale)}</Text>
+      <Text size="lg" color="textMuted">{pickLocalized(post.excerpt, locale)}</Text>
 
       {post.coverImageUrl && (
         <div className="my-[6px] h-[clamp(180px,34vw,340px)] overflow-hidden rounded-xl bg-primaryLight">
