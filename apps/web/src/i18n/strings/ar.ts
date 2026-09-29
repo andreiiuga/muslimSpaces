@@ -13,6 +13,7 @@ export const ar: TranslationSchema = {
     about: "عن التطبيق",
     closed: "مغلق",
     today: "اليوم",
+    toggleTheme: "تبديل المظهر",
   },
   nav: {
     explore: "استكشف",

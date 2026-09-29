@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Menu, MapPinPlus } from "lucide-react";
-import { Avatar, colors } from "@muslimspaces/ui";
+import { useTheme } from "next-themes";
+import { Menu, MapPinPlus, Sun, Moon } from "lucide-react";
+import { Avatar } from "@muslimspaces/ui";
 import type { AuthUser } from "@muslimspaces/shared";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "../ui/sheet";
 import { SUPPORTED_LOCALES, type LocaleCode } from "../../i18n/types";
@@ -32,6 +33,11 @@ const LOCALE_LABEL: Record<LocaleCode, string> = {
 export function HeaderDrawer({ user }: { user: AuthUser | null }) {
   const { locale, setLocale, t } = useLocale();
   const [open, setOpen] = useState(false);
+  const { resolvedTheme, setTheme } = useTheme();
+  // Same pre-mount guard as HeaderBar's toggle — resolvedTheme is undefined
+  // until next-themes reads the real preference client-side.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   function close() {
     setOpen(false);
@@ -45,7 +51,7 @@ export function HeaderDrawer({ user }: { user: AuthUser | null }) {
           className="flex h-10 w-10 flex-none items-center justify-center rounded-pill border border-border bg-surface header:hidden"
           aria-label={t("common.menu")}
         >
-          <Menu size={19} color={colors.text} />
+          <Menu size={19} className="text-text" />
         </button>
       </SheetTrigger>
 
@@ -84,11 +90,24 @@ export function HeaderDrawer({ user }: { user: AuthUser | null }) {
                 }`}
               >
                 {LOCALE_LABEL[code]}
-                <span className={`text-[11px] ${active ? "text-primaryDark" : "text-textFaint"}`}>{code.toUpperCase()}</span>
+                {/* textFaint here computed to ~2.5:1 against this button's
+                    white background — well under WCAG AA's 4.5:1 floor for
+                    normal-size text. textMuted (~4.8:1) is the closest
+                    token that both passes and still reads as secondary. */}
+                <span className={`text-[11px] ${active ? "text-primaryDark" : "text-textMuted"}`}>{code.toUpperCase()}</span>
               </button>
             );
           })}
         </div>
+
+        <button
+          type="button"
+          onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+          className="flex h-11 items-center gap-sm rounded-md border border-border bg-surface px-md text-start text-[14.5px] font-medium text-text"
+        >
+          {mounted && resolvedTheme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
+          {t("common.toggleTheme")}
+        </button>
 
         <Link
           href="/submit"

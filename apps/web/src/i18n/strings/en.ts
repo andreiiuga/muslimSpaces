@@ -15,6 +15,7 @@ export const en = {
     about: "About",
     closed: "Closed",
     today: "today",
+    toggleTheme: "Switch theme",
   },
   nav: {
     explore: "Explore",

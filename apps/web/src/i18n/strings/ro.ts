@@ -13,6 +13,7 @@ export const ro: TranslationSchema = {
     about: "Despre",
     closed: "Închis",
     today: "azi",
+    toggleTheme: "Schimbă tema",
   },
   nav: {
     explore: "Explorează",

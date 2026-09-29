@@ -3,6 +3,99 @@
 @tailwind utilities;
 
 /*
+ * Web-only theming: every semantic color/shadow slot the local override in
+ * tailwind.config.ts points at. `:root` carries light values (unchanged
+ * from packages/ui/tailwind-preset.js's plain hex — the "light theme" IS
+ * just today's existing palette); `.dark` (toggled by next-themes on
+ * <html>, see layout.tsx) carries the dark equivalents. Every dark value
+ * below was verified with the real WCAG relative-luminance contrast
+ * formula, not eyeballed — see the design-system theming plan for the
+ * worked numbers. packages/ui/tailwind-preset.js itself is never touched:
+ * apps/mobile has no concept of CSS custom properties at all (no CSS
+ * cascade on React Native), so this mechanism is web-only by necessity,
+ * not just by choice.
+ */
+:root {
+  --color-background: #FFFBF5;
+  --color-surface: #FFFFFF;
+  --color-text: #1C1917;
+  --color-textBody: #292524;
+  --color-textSecondary: #57534E;
+  --color-textMuted: #78716C;
+  --color-textFaint: #A8A29E;
+  --color-textOnPrimary: #FFFFFF;
+  --color-border: #E7E2D8;
+  --color-divider: #EDE7DC;
+  --color-starEmpty: #E7E2D8;
+  --color-primary: #0F766E;
+  --color-primaryDark: #0B564F;
+  --color-primaryLight: #CCFBF1;
+  --color-tealTint: #F0FDF9;
+  --color-danger: #DC2626;
+  --color-dangerDark: #B91C1C;
+  --color-dangerBg: #FEF2F2;
+  --color-dangerBorder: #FECACA;
+  --color-dangerLight: #FEE2E2;
+  --color-success: #15803D;
+  --color-warning: #D97706;
+  --color-star: #F59E0B;
+  --color-input: #E7E2D8;
+  --color-ring: #0F766E;
+  --color-destructive: #DC2626;
+  --color-destructive-foreground: #FFFFFF;
+
+  --shadow-card: 0 1px 3px rgba(28, 25, 23, 0.08), 0 1px 2px rgba(28, 25, 23, 0.06);
+  --shadow-elevated: 0 8px 24px rgba(28, 25, 23, 0.16);
+  --shadow-buttonGlow: 0 4px 14px rgba(15, 118, 110, 0.28);
+  --shadow-iconSolid: 0 1px 4px rgba(28, 25, 23, 0.15);
+  --shadow-panel: 0 1px 3px rgba(28, 25, 23, 0.08), 0 6px 18px rgba(28, 25, 23, 0.05);
+}
+
+.dark {
+  --color-background: #15120F;
+  --color-surface: #231F1A;
+  --color-text: #F5F3EF;
+  --color-textBody: #E3DFD9;
+  --color-textSecondary: #B6AEA5;
+  --color-textMuted: #988F86;
+  --color-textFaint: #746C63;
+  --color-textOnPrimary: #FFFFFF;
+  --color-border: #3A332C;
+  --color-divider: #403930;
+  --color-starEmpty: #3A332C;
+  --color-primary: #19766B;
+  --color-primaryDark: #27B9A8;
+  --color-primaryLight: #163B37;
+  --color-tealTint: #163B37;
+  --color-danger: #E45858;
+  --color-dangerDark: #EDABAB;
+  --color-dangerBg: #391818;
+  --color-dangerBorder: #673232;
+  --color-dangerLight: #4A2020;
+  --color-success: #4DCB7B;
+  --color-warning: #EB9E47;
+  --color-star: #F5B547;
+  --color-input: #3A332C;
+  --color-ring: #19766B;
+  --color-destructive: #C23F3F;
+  --color-destructive-foreground: #FFFFFF;
+
+  /* card/panel/iconSolid: black shadows read as nearly invisible against a
+     near-black canvas, so their elevation cue moves into the shadow value
+     itself — an inset hairline — rather than a drop shadow. Both Card.tsx
+     and IconButton.tsx hardcode border-0, so this can't be a className-
+     level border; baking it into the CSS variable is the only lever. */
+  --shadow-card: inset 0 0 0 1px #3A332C, 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-panel: inset 0 0 0 1px #3A332C, 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-iconSolid: inset 0 0 0 1px #3A332C;
+  /* elevated floats OVER arbitrary content (the Explore map's selected-POI
+     preview card, Radix popovers) — often over colorful content, not just
+     the dark canvas — so it keeps a real, higher-alpha shadow instead. */
+  --shadow-elevated: 0 8px 28px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-buttonGlow: 0 4px 18px rgba(39, 185, 168, 0.35);
+}
+
+/*
  * packages/ui is migrating off inline-styles-only to Tailwind/shadcn (see
  * packages/ui/tailwind-preset.js) — the rules below are the pre-migration
  * hand-written responsive CSS, being retired class-by-class as each owning
@@ -44,7 +137,7 @@
   display: none;
   font-size: 12px;
   font-weight: 500;
-  color: #78716C;
+  color: var(--color-textMuted);
 }
 
 .explore-columns {
@@ -76,10 +169,18 @@
   height: calc(100vh - 250px);
   min-height: 440px;
   position: relative;
-  border: 1px solid #e7e2d8;
+  border: 1px solid var(--color-border);
   border-radius: 22px;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(28, 25, 23, 0.08);
+}
+
+.dark .explore-map-col {
+  /* Same "black shadow disappears on dark backgrounds" reasoning as the
+     --shadow-card/panel/iconSolid variables above — the border already
+     carries the container's definition here, so the shadow is dropped
+     entirely rather than given a dark-mode replacement. */
+  box-shadow: none;
 }
 
 @media (max-width: 860px) {
@@ -136,14 +237,6 @@
   }
 }
 
-/*
- * No CSS-variable/`.dark` theming here — shadcn's CLI scaffolds one by
- * default, but this app has no dark-mode requirement, so colors are plain
- * hex directly in packages/ui/tailwind-preset.js's `background`/
- * `foreground`/`primary`/etc. slots (same "plain data" philosophy as the
- * tokens.ts file that preset replaces) rather than indirected through
- * `hsl(var(--x))`/`oklch(var(--x))` custom properties.
- */
 @layer base {
   * {
     @apply border-border;

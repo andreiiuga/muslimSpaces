@@ -1,4 +1,4 @@
-import { Text } from "@muslimspaces/ui";
+import { Text, type TextColorToken } from "@muslimspaces/ui";
 
 /**
  * A colored status word in an admin table cell (POI pending/approved/
@@ -8,7 +8,7 @@ import { Text } from "@muslimspaces/ui";
  * mapping stays with each caller (it's domain-specific per entity), only
  * the visual treatment is shared here.
  */
-export function StatusBadge({ color, children }: { color: string; children: string }) {
+export function StatusBadge({ color, children }: { color: TextColorToken; children: string }) {
   return (
     <Text size="sm" weight="medium" color={color}>
       {children}

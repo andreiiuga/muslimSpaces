@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, IBM_Plex_Sans_Arabic } from "next/font/google";
+import { ThemeProvider } from "next-themes";
 import { Navbar } from "../components/Navbar/Navbar";
 import { LocaleProvider } from "../i18n/LocaleContext";
 import "./globals.css";
@@ -32,20 +33,28 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${jakarta.variable} ${ibmArabic.variable}`}>
+    // suppressHydrationWarning is required by next-themes: it injects a
+    // blocking inline script that sets class="dark" on this element before
+    // React hydrates (reading localStorage / prefers-color-scheme), so the
+    // server-rendered and first-client-render class attributes legitimately
+    // differ — this silences React's (harmless, expected) warning about
+    // exactly that one attribute, nothing else on the page is affected.
+    <html lang="en" suppressHydrationWarning className={`${jakarta.variable} ${ibmArabic.variable}`}>
       {/* bg-background/text-foreground come from globals.css's `@layer
           base` body rule, not repeated here. */}
       <body className="m-0 flex min-h-dvh flex-col font-[var(--font-jakarta),var(--font-ibm-arabic),system-ui,sans-serif]">
-        <LocaleProvider>
-          <Navbar />
-          {/* min-w-0 is load-bearing — a flex item's default min-width is
-              "auto" (its content's intrinsic width), so without this any
-              wide-content page (Explore's map+list columns, a long table,
-              etc.) forces this wrapper — and therefore the whole page body —
-              wider than the viewport instead of the content shrinking or
-              scrolling within itself. */}
-          <div className="min-w-0 flex-1">{children}</div>
-        </LocaleProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <LocaleProvider>
+            <Navbar />
+            {/* min-w-0 is load-bearing — a flex item's default min-width is
+                "auto" (its content's intrinsic width), so without this any
+                wide-content page (Explore's map+list columns, a long table,
+                etc.) forces this wrapper — and therefore the whole page body —
+                wider than the viewport instead of the content shrinking or
+                scrolling within itself. */}
+            <div className="min-w-0 flex-1">{children}</div>
+          </LocaleProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

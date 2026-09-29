@@ -3,8 +3,9 @@
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Map as MapIcon, Search, MapPinPlus } from "lucide-react";
-import { Avatar, buttonVariants, colors } from "@muslimspaces/ui";
+import { useTheme } from "next-themes";
+import { Map as MapIcon, Search, MapPinPlus, Sun, Moon } from "lucide-react";
+import { Avatar, buttonVariants } from "@muslimspaces/ui";
 import type { AuthUser } from "@muslimspaces/shared";
 import { cn } from "@/lib/utils";
 import { useLocale } from "../../i18n/LocaleContext";
@@ -15,6 +16,13 @@ export function HeaderBar({ user }: { user: AuthUser | null }) {
   const { locale, setLocale, t } = useLocale();
   const router = useRouter();
   const pathname = usePathname();
+  const { resolvedTheme, setTheme } = useTheme();
+  // resolvedTheme is undefined until next-themes has read localStorage/
+  // system preference client-side — rendering the light-mode icon (Moon,
+  // "switch to dark") as the SSR/pre-mount default avoids a hydration
+  // mismatch, since the server has no way to know the real preference.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   // Deliberately not next/navigation's useSearchParams() — that hook forces
   // this component into a Suspense boundary (see the plain "use client"
   // Navbar.tsx wrapper this used to need), and a Suspense boundary hydrates
@@ -83,7 +91,7 @@ export function HeaderBar({ user }: { user: AuthUser | null }) {
           href="/"
           className="flex flex-[0_0_100%] items-center justify-center gap-[9px] no-underline header:flex-none header:justify-start"
         >
-          <MapIcon size={22} color={colors.primary} fill={colors.primaryLight} />
+          <MapIcon size={22} className="text-primaryDark fill-primaryLight" />
           <span className="text-[20px] font-semibold tracking-[-0.02em] text-text">MuslimSpaces</span>
         </Link>
 
@@ -91,8 +99,12 @@ export function HeaderBar({ user }: { user: AuthUser | null }) {
           onSubmit={submitSearch}
           className="flex h-11 flex-[1_1_100px] min-w-[100px] max-w-[420px] items-center gap-[9px] rounded-input border border-border bg-surface px-[13px] header:flex-[1_1_220px] header:min-w-[180px]"
         >
-          <button type="submit" aria-label={t("explore.search")} className="flex flex-none items-center justify-center border-0 bg-transparent p-0 cursor-pointer">
-            <Search size={18} color={colors.primary} />
+          <button
+            type="submit"
+            aria-label={t("explore.search")}
+            className="flex flex-none cursor-pointer items-center justify-center border-0 bg-transparent p-0 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            <Search size={18} className="text-primaryDark" />
           </button>
           <input
             value={query}
@@ -101,8 +113,10 @@ export function HeaderBar({ user }: { user: AuthUser | null }) {
             // 16px, not the design's 14.5px — anything smaller makes iOS
             // Safari auto-zoom the viewport on focus, which visibly (and
             // permanently, until the user pinch-zooms back out) shifts the
-            // whole page.
-            className="flex-1 min-w-0 border-0 bg-transparent text-[16px] text-text outline-none"
+            // whole page. focus-visible instead of plain outline-none-
+            // forever: a keyboard user tabbing to this field still needs to
+            // see it's focused, same reasoning as every other primitive.
+            className="flex-1 min-w-0 border-0 bg-transparent text-[16px] text-text outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           />
         </form>
 
@@ -118,7 +132,9 @@ export function HeaderBar({ user }: { user: AuthUser | null }) {
                   type="button"
                   onClick={() => setLocale(code)}
                   className={cn(
-                    "flex h-9 min-w-[44px] cursor-pointer items-center justify-center border-0 text-[12.5px] tracking-[0.06em]",
+                    // overflow-hidden on the wrapping pill clips a normal
+                    // outset outline, so this gets an inset ring instead.
+                    "flex h-9 min-w-[44px] cursor-pointer items-center justify-center border-0 text-[12.5px] tracking-[0.06em] outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary",
                     active ? "bg-primary text-textOnPrimary" : "bg-transparent text-textSecondary",
                   )}
                 >
@@ -127,6 +143,15 @@ export function HeaderBar({ user }: { user: AuthUser | null }) {
               );
             })}
           </div>
+
+          <button
+            type="button"
+            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+            aria-label={t("common.toggleTheme")}
+            className="flex h-9 w-9 flex-none cursor-pointer items-center justify-center rounded-pill border border-border bg-surface text-textSecondary outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            {mounted && resolvedTheme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
 
           <Link href="/submit" className={cn(buttonVariants({ variant: "primary", size: "sm" }), "no-underline")}>
             <MapPinPlus size={17} />
