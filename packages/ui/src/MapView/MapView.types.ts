@@ -57,4 +57,11 @@ export interface MapViewProps {
    * @maplibre/maplibre-react-native (mobile) support this natively.
    */
   padding?: MapPadding;
+  /**
+   * Resolves the text shown on a pin's label pill — resolved by the caller
+   * (has the active locale), same reasoning as POICard's `displayName`
+   * prop: keeps this component decoupled from i18n. Falls back to
+   * `poi.name.en` when omitted, matching the previous hardcoded default.
+   */
+  getPoiLabel?: (poi: Poi) => string;
 }

@@ -39,7 +39,7 @@ const thumbnailFallback = cva("flex items-center justify-center rounded-md bg-pr
  * positioned <Link> as a sibling, lower z-index than the favorite button)
  * instead — see apps/web's usage.
  */
-export function POICard({ poi, categoryLabel, isFavorite, onToggleFavorite, layout = "row" }: POICardProps) {
+export function POICard({ poi, categoryLabel, isFavorite, onToggleFavorite, layout = "row", displayName = poi.name.ro }: POICardProps) {
   const favoriteButton = onToggleFavorite && (
     <button
       type="button"
@@ -64,7 +64,7 @@ export function POICard({ poi, categoryLabel, isFavorite, onToggleFavorite, layo
         </Text>
       )}
       <Text weight="semibold" size={layout === "grid" ? "xl" : "lg"} numberOfLines={1}>
-        {poi.name.ro}
+        {displayName}
       </Text>
       <Text size="sm" color={colors.textMuted} numberOfLines={1}>
         {poi.address}
@@ -84,7 +84,7 @@ export function POICard({ poi, categoryLabel, isFavorite, onToggleFavorite, layo
   ) : (
     <div className={cn(thumbnailFallback({ layout }))}>
       <Text size={layout === "grid" ? "2xl" : "xl"} color={colors.primaryDark} weight="bold">
-        {poi.name.ro.charAt(0).toUpperCase()}
+        {displayName.charAt(0).toUpperCase()}
       </Text>
     </div>
   );

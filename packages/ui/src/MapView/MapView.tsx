@@ -137,6 +137,7 @@ export function MapView({
   onDeselect,
   padding,
   fitBoundsToken,
+  getPoiLabel,
 }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -237,7 +238,7 @@ export function MapView({
         const iconKey = pinIconKeyForSlug(category?.slug);
         const selected = poi.id === selectedPoiId;
         const color = selected ? colors.danger : colors.primary;
-        const { el, labelEl } = createMarkerElement(iconKey, pinLabel(poi.name.en), color, selected);
+        const { el, labelEl } = createMarkerElement(iconKey, pinLabel(getPoiLabel?.(poi) ?? poi.name.en), color, selected);
         labelEl.style.display = showLabels ? "block" : "none";
 
         const marker = new maplibregl.Marker({ element: el, anchor: "bottom" })
@@ -255,7 +256,7 @@ export function MapView({
     return () => {
       markersRef.current.forEach((marker) => marker.remove());
     };
-  }, [pois, categories, selectedPoiId, onMarkerPress]);
+  }, [pois, categories, selectedPoiId, onMarkerPress, getPoiLabel]);
 
   // Reacts to padding changes after mount (e.g. a responsive breakpoint
   // toggling the overlay layout on/off). No `center` given — easeTo re-uses
@@ -279,7 +280,21 @@ export function MapView({
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !fitBoundsToken) return;
-    if (pois.length === 0) return;
+
+    // A concluded search/filter that comes back empty used to leave the
+    // camera wherever it last was — often a tight, irrelevant zoom level
+    // from a previous selection — instead of resetting to something
+    // sensible. Ease back to the whole-country default so an empty result
+    // doesn't strand the user on a random street.
+    if (pois.length === 0) {
+      map.easeTo({
+        center: [DEFAULT_CENTER.lng, DEFAULT_CENTER.lat],
+        zoom: DEFAULT_ZOOM,
+        padding: toPaddingOptions(padding),
+        duration: 900,
+      });
+      return;
+    }
 
     if (pois.length === 1) {
       const only = pois[0]!;

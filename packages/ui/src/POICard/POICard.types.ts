@@ -4,6 +4,14 @@ export interface POICardProps {
   poi: Poi;
   /** Resolved by the caller (has the categories list); keeps this component decoupled from category lookups. */
   categoryLabel?: string;
+  /**
+   * Resolved by the caller (has the active locale); keeps this component
+   * decoupled from i18n, same reasoning as categoryLabel above. Falls back
+   * to `poi.name.ro` when omitted — Romanian was this card's original
+   * hardcoded default, kept as the fallback so an existing caller that
+   * hasn't been updated yet still renders exactly as before.
+   */
+  displayName?: string;
   onPress?: () => void;
   /** Omit entirely to hide the favorite toggle (e.g. logged-out users). */
   isFavorite?: boolean;
