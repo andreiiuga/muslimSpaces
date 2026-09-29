@@ -40,6 +40,11 @@ export const ar: TranslationSchema = {
   },
   poi: {
     photoCaption: "صورة · من المجتمع",
+    viewAllPhotos: "عرض جميع الصور ({{count}})",
+    photoCounter: "{{current}} من {{total}}",
+    previousPhoto: "الصورة السابقة",
+    nextPhoto: "الصورة التالية",
+    closePhotos: "إغلاق",
     contact: "التواصل",
     hours: "الأوقات",
     reviews: "المراجعات",

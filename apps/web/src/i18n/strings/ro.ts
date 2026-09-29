@@ -40,6 +40,11 @@ export const ro: TranslationSchema = {
   },
   poi: {
     photoCaption: "Foto · trimisă de comunitate",
+    viewAllPhotos: "Vezi toate cele {{count}} fotografii",
+    photoCounter: "{{current}} din {{total}}",
+    previousPhoto: "Fotografia anterioară",
+    nextPhoto: "Fotografia următoare",
+    closePhotos: "Închide",
     contact: "Contact",
     hours: "Program",
     reviews: "Recenzii",

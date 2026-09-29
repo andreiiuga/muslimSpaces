@@ -42,6 +42,11 @@ export const en = {
   },
   poi: {
     photoCaption: "Photo · community submitted",
+    viewAllPhotos: "View all {{count}} photos",
+    photoCounter: "{{current}} of {{total}}",
+    previousPhoto: "Previous photo",
+    nextPhoto: "Next photo",
+    closePhotos: "Close",
     contact: "Contact",
     hours: "Hours",
     reviews: "Reviews",

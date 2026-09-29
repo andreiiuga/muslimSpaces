@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import { Navigation, Phone, Share2 } from "lucide-react";
+import { Images, Navigation, Phone, Share2 } from "lucide-react";
 import { Rating, Skeleton, Text, buttonVariants } from "@muslimspaces/ui";
 import type { Poi, PoiHour, PoiImage, Review } from "@muslimspaces/shared";
 import { isOpenNow } from "@muslimspaces/shared";
@@ -12,6 +12,7 @@ import { pickLocalized } from "../../i18n/pick-localized";
 import { FavoriteButton } from "../FavoriteButton/FavoriteButton";
 import { ReviewsList } from "../ReviewSection/ReviewsList";
 import { BackLink } from "../BackLink/BackLink";
+import { ImageLightbox } from "./ImageLightbox";
 
 const MapView = dynamic(() => import("@muslimspaces/ui/map").then((m) => m.MapView), {
   ssr: false,
@@ -80,6 +81,10 @@ export function PoiDetailView({
   }, []);
 
   const heroImage = images[0];
+  // Which photo the lightbox is showing, or `null` while it's closed —
+  // opened at a specific index (hero click vs. "view all" both start at 0
+  // today, but the lightbox itself supports arriving at any index).
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const open = hours.length > 0 ? isOpenNow(hours) : null;
   const name = pickLocalized(poi.name, locale);
   const altName = locale === "ro" ? poi.name.en : poi.name.ro;
@@ -149,8 +154,14 @@ export function PoiDetailView({
 
       <div className="relative mt-[6px] h-[clamp(180px,32vw,340px)] overflow-hidden rounded-xl bg-primaryLight">
         {heroImage ? (
-          // eslint-disable-next-line @next/next/no-img-element -- pre-optimized WebP from our own media pipeline
-          <img src={heroImage.url} alt={name} className="h-full w-full object-cover" />
+          <button
+            type="button"
+            onClick={() => setLightboxIndex(0)}
+            className="block h-full w-full cursor-pointer border-0 bg-transparent p-0"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element -- pre-optimized WebP from our own media pipeline */}
+            <img src={heroImage.url} alt={name} className="h-full w-full object-cover" />
+          </button>
         ) : (
           <div className="absolute bottom-[16px] start-[20px] text-[11px] uppercase tracking-[0.13em] text-textMuted">
             {t("poi.photoCaption")}
@@ -159,7 +170,26 @@ export function PoiDetailView({
         <div className="absolute end-[16px] top-[16px]">
           <FavoriteButton poiId={poi.id} initialIsFavorite={isFavorite} isLoggedIn={isLoggedIn} />
         </div>
+        {images.length > 1 && (
+          <button
+            type="button"
+            onClick={() => setLightboxIndex(0)}
+            className="absolute bottom-[14px] start-[16px] inline-flex cursor-pointer items-center gap-xs rounded-pill border-0 bg-black/55 px-[14px] py-[8px] text-xs font-medium text-white"
+          >
+            <Images size={15} /> {t("poi.viewAllPhotos", { count: images.length })}
+          </button>
+        )}
       </div>
+
+      {lightboxIndex !== null && (
+        <ImageLightbox
+          images={images}
+          index={lightboxIndex}
+          poiName={name}
+          onIndexChange={setLightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+        />
+      )}
 
       <div className="mt-[26px] flex flex-wrap items-start gap-[clamp(20px,3vw,34px)]">
         <div className="flex min-w-[300px] flex-[1_1_480px] flex-col gap-xl">
