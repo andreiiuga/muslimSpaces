@@ -53,14 +53,10 @@ export function HeaderBar({ user }: { user: AuthUser | null }) {
     router.push(`/${params.toString() ? `?${params.toString()}` : ""}`);
   }
 
-  // "desktop" is the inline nav in the header row (>=900px); "strip" is the
-  // second sticky row below it, shown instead on narrow viewports — the two
-  // need different link styling (spread evenly & centered vs. left-anchored
-  // with a fixed gap), previously done via a CSS descendant selector
-  // (`.header-nav-strip > div > a`) with `!important` to beat these same
-  // links' own inline styles. Rendering two variants directly sidesteps the
-  // specificity fight entirely.
-  function renderNavLinks(variant: "desktop" | "strip") {
+  // Only used by the desktop inline nav (>=900px) now — on narrower
+  // viewports these same items live inside HeaderDrawer's sliding menu
+  // instead (see navItems passed to it below).
+  function renderNavLinks() {
     return navItems.map((item) => {
       const active = pathname === item.href;
       return (
@@ -68,9 +64,8 @@ export function HeaderBar({ user }: { user: AuthUser | null }) {
           key={item.href}
           href={item.href}
           className={cn(
-            "whitespace-nowrap border-b-2 no-underline",
+            "whitespace-nowrap border-b-2 py-[6px] text-sm no-underline",
             active ? "border-primary font-semibold text-primaryDark" : "border-transparent font-normal text-textSecondary",
-            variant === "strip" ? "flex-1 py-[11px] text-center text-sm" : "py-[6px] text-sm",
           )}
         >
           {t(item.key)}
@@ -120,7 +115,7 @@ export function HeaderBar({ user }: { user: AuthUser | null }) {
           />
         </form>
 
-        <nav className="hidden items-center gap-[clamp(14px,1.8vw,22px)] header:flex header:flex-none">{renderNavLinks("desktop")}</nav>
+        <nav className="hidden items-center gap-[clamp(14px,1.8vw,22px)] header:flex header:flex-none">{renderNavLinks()}</nav>
 
         <div className="ms-auto hidden flex-none items-center gap-md header:flex">
           <div className="flex overflow-hidden rounded-pill border border-border bg-surface">
@@ -169,11 +164,7 @@ export function HeaderBar({ user }: { user: AuthUser | null }) {
           )}
         </div>
 
-        <HeaderDrawer user={user} />
-      </div>
-
-      <div className="sticky top-[69px] z-[25] block border-b border-border bg-background header:hidden">
-        <div className="flex px-[clamp(16px,4vw,28px)]">{renderNavLinks("strip")}</div>
+        <HeaderDrawer user={user} navItems={navItems} />
       </div>
     </div>
   );

@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Menu, MapPinPlus, Sun, Moon } from "lucide-react";
 import { Avatar } from "@muslimspaces/ui";
 import type { AuthUser } from "@muslimspaces/shared";
+import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "../ui/sheet";
 import { SUPPORTED_LOCALES, type LocaleCode } from "../../i18n/types";
 import { useLocale } from "../../i18n/LocaleContext";
@@ -17,10 +19,11 @@ const LOCALE_LABEL: Record<LocaleCode, string> = {
 };
 
 // Below the header's 900px breakpoint ("header:" in the shared Tailwind
-// preset) the language switcher, "submit a place" CTA and login/account
-// link all move in here instead of competing for space in the header row
-// (see ".header-desktop-controls" in HeaderBar.tsx) — above it, HeaderBar
-// renders all three inline as before and this trigger stays hidden.
+// preset) the primary nav (Explore/Favorites/Blog/About), language switcher,
+// "submit a place" CTA, and login/account link all move in here instead of
+// competing for space in the header row — above it, HeaderBar renders the
+// nav inline and the other three in its own controls row, and this trigger
+// stays hidden.
 //
 // Sheet (Radix Dialog under the hood) always portals its content into
 // document.body by default, which is exactly the fix the previous manual
@@ -30,8 +33,15 @@ const LOCALE_LABEL: Record<LocaleCode, string> = {
 // default portal solves this the same way, and also adds a focus trap and
 // enter/exit animation this implementation never had before (the old
 // `panelRef` was declared but unused — no focus trap existed).
-export function HeaderDrawer({ user }: { user: AuthUser | null }) {
+export function HeaderDrawer({
+  user,
+  navItems,
+}: {
+  user: AuthUser | null;
+  navItems: { href: string; key: string }[];
+}) {
   const { locale, setLocale, t } = useLocale();
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const { resolvedTheme, setTheme } = useTheme();
   // Same pre-mount guard as HeaderBar's toggle — resolvedTheme is undefined
@@ -70,6 +80,25 @@ export function HeaderDrawer({ user }: { user: AuthUser | null }) {
         <SheetHeader>
           <SheetTitle className="text-left text-lg font-semibold text-text">{t("common.menu")}</SheetTitle>
         </SheetHeader>
+
+        <div className="flex flex-col gap-sm">
+          {navItems.map((item) => {
+            const active = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={close}
+                className={cn(
+                  "flex h-11 items-center rounded-md border px-md text-start text-[14.5px] no-underline",
+                  active ? "border-primary bg-tealTint font-semibold text-primaryDark" : "border-border bg-surface font-medium text-text",
+                )}
+              >
+                {t(item.key)}
+              </Link>
+            );
+          })}
+        </div>
 
         <div className="flex flex-col gap-sm">
           <span className="text-xs font-semibold uppercase tracking-[1.3px] text-textMuted">
