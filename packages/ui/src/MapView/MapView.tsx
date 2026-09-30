@@ -18,9 +18,12 @@ function toPaddingOptions(padding: MapPadding | undefined): maplibregl.PaddingOp
 
 // Free, whole-planet vector tiles, no API key, built for production use —
 // see CLAUDE.md's "Map tiles" decision. Both styles are hosted on the same
-// free instance — "dark" costs nothing extra, just a different style URL.
+// free instance — the dark variant costs nothing extra, just a different
+// style URL. "fiord" (not OpenFreeMap's own "dark" style) is used for dark
+// mode — a deliberate pick over "dark" for a better visual match with this
+// app's dark theme.
 const OPENFREEMAP_STYLE = "https://tiles.openfreemap.org/styles/liberty";
-const OPENFREEMAP_DARK_STYLE = "https://tiles.openfreemap.org/styles/dark";
+const OPENFREEMAP_DARK_STYLE = "https://tiles.openfreemap.org/styles/fiord";
 
 function styleUrlForTheme(theme: "light" | "dark"): string {
   return theme === "dark" ? OPENFREEMAP_DARK_STYLE : OPENFREEMAP_STYLE;

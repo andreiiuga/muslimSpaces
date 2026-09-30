@@ -79,13 +79,14 @@ export interface MapViewProps {
   getPoiLabel?: (poi: Poi) => string;
   /**
    * Which OpenFreeMap style to render — "light" (the default) uses the
-   * existing "liberty" style; "dark" swaps to OpenFreeMap's own hosted
-   * "dark" style, same free/no-API-key host, no new dependency. Changing
-   * this after mount re-styles the map in place via maplibre-gl's
-   * `setStyle` rather than recreating it, so existing markers (plain DOM
-   * overlays tracked by the Map instance, not part of the style) aren't
-   * affected. Web only for now — MapView.native.tsx doesn't implement this
-   * prop, since the mobile app has no theming system yet.
+   * existing "liberty" style; "dark" swaps to OpenFreeMap's "fiord" style
+   * (picked over OpenFreeMap's own "dark" style for a better visual match
+   * with this app's dark theme), same free/no-API-key host, no new
+   * dependency. Changing this after mount re-styles the map in place via
+   * maplibre-gl's `setStyle` rather than recreating it, so existing markers
+   * (plain DOM overlays tracked by the Map instance, not part of the style)
+   * aren't affected. Web only for now — MapView.native.tsx doesn't
+   * implement this prop, since the mobile app has no theming system yet.
    */
   theme?: "light" | "dark";
 }
