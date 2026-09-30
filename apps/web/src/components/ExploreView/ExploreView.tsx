@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useTheme } from "next-themes";
 import { Square, SquareCheck, Map as MapIcon, Rows3 } from "lucide-react";
 import { POICard, Rating, Skeleton, Text, radii } from "@muslimspaces/ui";
 import type { MapBounds } from "@muslimspaces/ui/map";
@@ -37,6 +38,7 @@ export function ExploreView({
   const searchParams = useSearchParams();
   const search = searchParams.get("q") ?? "";
   const { locale, t } = useLocale();
+  const { resolvedTheme } = useTheme();
   const { getState: getSavedExplore, setState: saveExplore } = useExploreState();
   // Captured once (lazy initializer) — this is only ever consulted again on
   // a fresh mount, so re-reading it on later renders would be pointless and
@@ -350,6 +352,7 @@ export function ExploreView({
               pois={pois}
               categories={categories}
               getPoiLabel={getPoiLabel}
+              theme={resolvedTheme === "dark" ? "dark" : "light"}
               initialCenter={savedExplore.viewport?.center}
               initialZoom={savedExplore.viewport?.zoom}
               onViewportChange={(viewport) => saveExplore({ viewport })}

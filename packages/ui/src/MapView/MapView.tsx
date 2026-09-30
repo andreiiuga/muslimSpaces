@@ -17,8 +17,14 @@ function toPaddingOptions(padding: MapPadding | undefined): maplibregl.PaddingOp
 }
 
 // Free, whole-planet vector tiles, no API key, built for production use —
-// see CLAUDE.md's "Map tiles" decision.
+// see CLAUDE.md's "Map tiles" decision. Both styles are hosted on the same
+// free instance — "dark" costs nothing extra, just a different style URL.
 const OPENFREEMAP_STYLE = "https://tiles.openfreemap.org/styles/liberty";
+const OPENFREEMAP_DARK_STYLE = "https://tiles.openfreemap.org/styles/dark";
+
+function styleUrlForTheme(theme: "light" | "dark"): string {
+  return theme === "dark" ? OPENFREEMAP_DARK_STYLE : OPENFREEMAP_STYLE;
+}
 
 // Romania's rough center — sensible default before any POIs/geolocation exist.
 const DEFAULT_CENTER = { lat: 45.9432, lng: 24.9668 };
@@ -139,10 +145,17 @@ export function MapView({
   padding,
   fitBoundsToken,
   getPoiLabel,
+  theme = "light",
 }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<maplibregl.Marker[]>([]);
+  // Tracks which theme's style is currently loaded on the map — lets the
+  // theme-swap effect below tell "the `theme` prop just changed" apart from
+  // "this is the first render, and it already matches what the map was
+  // constructed with" (effects always run once on mount too, regardless of
+  // the dependency's starting value).
+  const styleThemeRef = useRef(theme);
   // Bumped on every selection change — guards the orbit's `once('moveend')`
   // callback against starting for a POI that's no longer the current one
   // (the user selected something else, or deselected, before the fly-in
@@ -162,7 +175,7 @@ export function MapView({
 
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: OPENFREEMAP_STYLE,
+      style: styleUrlForTheme(styleThemeRef.current),
       center: [initialCenter.lng, initialCenter.lat],
       zoom: initialZoom,
     });
@@ -267,6 +280,19 @@ export function MapView({
       markersRef.current.forEach((marker) => marker.remove());
     };
   }, [pois, categories, selectedPoiId, onMarkerPress, getPoiLabel]);
+
+  // Re-styles the map in place when `theme` changes after mount (e.g. the
+  // site's light/dark toggle) — `setStyle` swaps only the style's own
+  // sources/layers, not the Map instance or its container, so the markers
+  // above (plain DOM overlays the Map tracks separately from the style)
+  // aren't affected and don't need rebuilding. Skips the first run — the
+  // map was already constructed with this exact theme's style above.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || theme === styleThemeRef.current) return;
+    styleThemeRef.current = theme;
+    map.setStyle(styleUrlForTheme(theme));
+  }, [theme]);
 
   // Reacts to padding changes after mount (e.g. a responsive breakpoint
   // toggling the overlay layout on/off). No `center` given — easeTo re-uses

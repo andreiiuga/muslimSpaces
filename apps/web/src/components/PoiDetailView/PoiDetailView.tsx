@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
+import { useTheme } from "next-themes";
 import { Images, Navigation, Phone, Share2 } from "lucide-react";
 import { Rating, Skeleton, Text, buttonVariants } from "@muslimspaces/ui";
 import type { Poi, PoiHour, PoiImage, Review } from "@muslimspaces/shared";
@@ -64,6 +65,7 @@ export function PoiDetailView({
   isLoggedIn: boolean;
 }) {
   const { locale, t } = useLocale();
+  const { resolvedTheme } = useTheme();
 
   // Below 900px (same breakpoint ".poi-detail-side" itself unstacks at —
   // see globals.css), the small locator map moves out of the side column
@@ -225,7 +227,7 @@ export function PoiDetailView({
                   spans edge to edge instead of sitting in a padded, boxed
                   card like the desktop sidebar version does. */}
               <div className="relative h-[220px] ms-[calc(-1_*_clamp(16px,4vw,28px))] me-[calc(-1_*_clamp(16px,4vw,28px))]">
-                <MapView pois={[poi]} initialCenter={poi.location} initialZoom={14} getPoiLabel={() => name} />
+                <MapView pois={[poi]} initialCenter={poi.location} initialZoom={14} getPoiLabel={() => name} theme={resolvedTheme === "dark" ? "dark" : "light"} />
               </div>
               {contactCard}
             </>
@@ -238,7 +240,7 @@ export function PoiDetailView({
           <div className="static flex min-w-[min(280px,100%)] flex-[0_1_340px] flex-col gap-lg header:sticky header:top-[98px]">
             {contactCard}
             <div className="relative h-[180px] overflow-hidden rounded-lg border border-border">
-              <MapView pois={[poi]} initialCenter={poi.location} initialZoom={14} getPoiLabel={() => name} />
+              <MapView pois={[poi]} initialCenter={poi.location} initialZoom={14} getPoiLabel={() => name} theme={resolvedTheme === "dark" ? "dark" : "light"} />
             </div>
           </div>
         )}
