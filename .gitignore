@@ -36,3 +36,6 @@ pnpm-debug.log*
 
 # Test coverage
 coverage/
+
+# Impeccable hook cache (machine-local paths and session IDs)
+.impeccable/hook.cache.json
