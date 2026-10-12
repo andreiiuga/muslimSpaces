@@ -2,6 +2,7 @@ import { Linking, Pressable, ScrollView, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { Button, Text, colors, spacing } from "@muslimspaces/ui";
+import { Logo } from "../src/components/Logo";
 
 export default function AboutScreen() {
   const router = useRouter();
@@ -10,6 +11,7 @@ export default function AboutScreen() {
 
   return (
     <ScrollView contentContainerStyle={{ padding: spacing.xl, gap: spacing.lg }}>
+      <Logo height={36} />
       <View style={{ gap: 4 }}>
         <Text size="xs" weight="medium" color={colors.textMuted}>{t("about.kicker").toUpperCase()}</Text>
         <Text size="2xl" weight="semibold">{t("about.title")}</Text>

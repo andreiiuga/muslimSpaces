@@ -8,6 +8,7 @@ import { Menu, MapPinPlus, Sun, Moon } from "lucide-react";
 import { Avatar } from "@muslimspaces/ui";
 import type { AuthUser } from "@muslimspaces/shared";
 import { cn } from "@/lib/utils";
+import { Logo } from "../Logo/Logo";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "../ui/sheet";
 import { SUPPORTED_LOCALES, type LocaleCode } from "../../i18n/types";
 import { useLocale } from "../../i18n/LocaleContext";
@@ -78,7 +79,8 @@ export function HeaderDrawer({
         className="flex w-[min(320px,86vw)] max-w-none flex-col gap-xl overflow-y-auto border-l-0 bg-surface p-lg shadow-[0_24px_64px_rgba(28,25,23,0.3)] [scrollbar-width:none] [&::-webkit-scrollbar]:w-0 [&::-webkit-scrollbar]:h-0"
       >
         <SheetHeader>
-          <SheetTitle className="text-left text-lg font-semibold text-text">{t("common.menu")}</SheetTitle>
+          <SheetTitle className="sr-only">{t("common.menu")}</SheetTitle>
+          <Logo className="h-8" />
         </SheetHeader>
 
         <div className="flex flex-col gap-sm">

@@ -4,12 +4,13 @@ import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import { Map as MapIcon, Search, MapPinPlus, Sun, Moon } from "lucide-react";
+import { Search, MapPinPlus, Sun, Moon } from "lucide-react";
 import { Avatar, buttonVariants } from "@muslimspaces/ui";
 import type { AuthUser } from "@muslimspaces/shared";
 import { cn } from "@/lib/utils";
 import { useLocale } from "../../i18n/LocaleContext";
 import { SUPPORTED_LOCALES } from "../../i18n/types";
+import { Logo } from "../Logo/Logo";
 import { HeaderDrawer } from "./HeaderDrawer";
 
 export function HeaderBar({ user }: { user: AuthUser | null }) {
@@ -84,10 +85,9 @@ export function HeaderBar({ user }: { user: AuthUser | null }) {
       >
         <Link
           href="/"
-          className="flex flex-[0_0_100%] items-center justify-center gap-[9px] no-underline header:flex-none header:justify-start"
+          className="flex flex-[0_0_100%] items-center justify-center no-underline header:flex-none header:justify-start"
         >
-          <MapIcon size={22} className="text-primaryDark fill-primaryLight" />
-          <span className="text-[20px] font-semibold tracking-[-0.02em] text-text">MuslimSpaces</span>
+          <Logo className="h-9" />
         </Link>
 
         <form

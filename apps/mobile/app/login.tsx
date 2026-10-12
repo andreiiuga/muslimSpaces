@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { ApiError } from "@muslimspaces/shared";
 import { Button, Input, Text, colors, spacing } from "@muslimspaces/ui";
 import { useAuth } from "../src/auth/AuthContext";
+import { Logo } from "../src/components/Logo";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -30,6 +31,7 @@ export default function LoginScreen() {
 
   return (
     <ScrollView contentContainerStyle={{ padding: spacing.xl, paddingTop: spacing["2xl"], gap: spacing.md }}>
+      <Logo height={36} />
       <Text size="xs" weight="medium" color={colors.textMuted}>{t("auth.loginKicker").toUpperCase()}</Text>
       <Text size="3xl" weight="semibold">{t("auth.loginTitle")}</Text>
       <Input label={t("auth.email")} kind="email" value={email} onChangeText={setEmail} />
@@ -40,7 +42,7 @@ export default function LoginScreen() {
       </Button>
       <Pressable onPress={() => router.replace("/signup")} style={{ minHeight: 44, alignItems: "center", justifyContent: "center" }}>
         <Text size="sm" color={colors.textMuted} align="center">
-          {t("auth.needAccount")} <Text size="sm" color={colors.primary}>{t("common.signUp")}</Text>
+          {t("auth.needAccount")} <Text size="sm" color={colors.primaryDark}>{t("common.signUp")}</Text>
         </Text>
       </Pressable>
       <Text size="xs" color={colors.textMuted} align="center">{t("auth.note")}</Text>

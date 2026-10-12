@@ -8,18 +8,25 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.muslimspaces"
+      "bundleIdentifier": "com.anonymous.muslimspaces",
+      "icon": "./assets/icon.png"
     },
     "android": {
-      "package": "com.anonymous.muslimspaces"
+      "package": "com.anonymous.muslimspaces",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0A8560"
+      }
     },
     "web": {
-      "bundler": "metro"
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-router",
       "expo-secure-store",
       "@maplibre/maplibre-react-native"
-    ]
+    ],
+    "icon": "./assets/icon.png"
   }
 }

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Text } from "@muslimspaces/ui";
 import { useLocale } from "../../i18n/LocaleContext";
+import { Logo } from "../Logo/Logo";
 
 /**
  * The centered card shell shared byte-for-byte between login/page.tsx and
@@ -16,6 +17,7 @@ export function AuthCard({ kicker, title, children }: { kicker: string; title: s
   return (
     <div className="flex justify-center px-[clamp(16px,4vw,28px)] pb-[70px] pt-[52px]">
       <div className="flex w-full max-w-[460px] flex-col gap-lg rounded-lg bg-surface p-[28px] shadow-panel">
+        <Logo className="h-8 self-start" />
         <div>
           <Text size="xs" weight="medium" color="textMuted">
             {kicker.toUpperCase()}

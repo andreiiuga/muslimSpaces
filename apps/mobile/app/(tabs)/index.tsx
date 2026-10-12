@@ -19,6 +19,7 @@ import { MapView } from "@muslimspaces/ui/map";
 import type { Category, Poi } from "@muslimspaces/shared";
 import { api } from "../../src/lib/api-client";
 import { useAuth } from "../../src/auth/AuthContext";
+import { Logo } from "../../src/components/Logo";
 import { FilterBar } from "../../src/components/FilterBar";
 import { TAB_BAR_HEIGHT } from "../../src/components/CustomTabBar";
 import { pickLocalized } from "../../src/i18n/pick-localized";
@@ -132,6 +133,7 @@ export default function ExploreScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={{ paddingTop: insets.top + spacing.xs, paddingHorizontal: spacing.lg, gap: spacing.sm }}>
+        <Logo height={34} />
         <Text size="2xl" weight="semibold">{t("explore.title")}</Text>
         <Text size="xs" weight="medium" color={colors.textMuted} letterSpacing={1.3}>
           {t("explore.dateline", { count: pois.length }).toUpperCase()}
@@ -150,7 +152,7 @@ export default function ExploreScreen() {
             backgroundColor: colors.surface,
           }}
         >
-          <Search size={19} color={colors.primary} />
+          <Search size={19} color={colors.primaryDark} />
           <TextInput
             value={searchInput}
             onChangeText={setSearchInput}
