@@ -28,7 +28,7 @@ export function ReviewSection({
           onPress={() => (isLoggedIn ? router.push(`/pois/${poiId}/review`) : router.push("/login"))}
           hitSlop={8}
         >
-          <Text size="sm" color={colors.primary}>{myReview ? t("review.update") : t("poi.writeOne")}</Text>
+          <Text size="sm" color={colors.primaryDark}>{myReview ? t("review.update") : t("poi.writeOne")}</Text>
         </Pressable>
       </View>
 

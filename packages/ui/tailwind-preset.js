@@ -33,9 +33,9 @@ module.exports = {
         // Object form (not a plain string) so `text-primary-foreground`
         // resolves too — needed by shadcn-generated components' default
         // `bg-primary text-primary-foreground` className pairing.
-        primary: { DEFAULT: "#0F766E", foreground: "#FFFFFF" },
-        primaryDark: "#0B564F",
-        primaryLight: "#CCFBF1",
+        primary: { DEFAULT: "#0A8560", foreground: "#FFFFFF" },
+        primaryDark: "#07694A",
+        primaryLight: "#D3F5E6",
         surface: "#FFFFFF",
         text: "#1C1917",
         textBody: "#292524",
@@ -58,18 +58,18 @@ module.exports = {
         star: "#F59E0B",
         starEmpty: "#E7E2D8",
         divider: "#EDE7DC",
-        tealTint: "#F0FDF9",
+        tealTint: "#EEFBF5",
 
         // ---- shadcn semantic slots ----
         background: "#FFFBF5",
         foreground: "#1C1917",
         border: "#E7E2D8",
         input: "#E7E2D8",
-        ring: "#0F766E",
+        ring: "#0A8560",
         card: { DEFAULT: "#FFFFFF", foreground: "#1C1917" },
         popover: { DEFAULT: "#FFFFFF", foreground: "#1C1917" },
         // Matches Button.tsx's secondary variant (primaryLight bg / primaryDark text).
-        secondary: { DEFAULT: "#CCFBF1", foreground: "#0B564F" },
+        secondary: { DEFAULT: "#D3F5E6", foreground: "#0A7D57" },
         // shadcn's destructive is solid-filled — our Button's own "danger"
         // variant is an outline treatment instead (dangerBg/dangerDark/
         // dangerBorder); this slot intentionally uses the solid `danger` red.
@@ -78,7 +78,7 @@ module.exports = {
         // `background`, which is already a light neutral distinct from `surface`.
         muted: { DEFAULT: "#FFFBF5", foreground: "#78716C" },
         // Matches tealTint's existing use as a selected-row tint.
-        accent: { DEFAULT: "#F0FDF9", foreground: "#0B564F" },
+        accent: { DEFAULT: "#EEFBF5", foreground: "#0A7D57" },
       },
       spacing: {
         xs: "4px",

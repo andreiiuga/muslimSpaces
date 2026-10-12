@@ -46,37 +46,37 @@ export default function ProfileScreen() {
 
   const rows: Array<{ icon: ReactNode; label: string; note: string; onPress: () => void }> = [
     {
-      icon: <UserCircle size={21} color={colors.primary} />,
+      icon: <UserCircle size={21} color={colors.primaryDark} />,
       label: t("profile.editProfile"),
       note: user.displayName ?? user.email,
       onPress: () => router.push("/profile/edit"),
     },
     {
-      icon: <KeyRound size={21} color={colors.primary} />,
+      icon: <KeyRound size={21} color={colors.primaryDark} />,
       label: t("profile.changePassword"),
       note: t("profile.changePasswordNote"),
       onPress: () => router.push("/profile/password"),
     },
     {
-      icon: <Star size={21} color={colors.primary} />,
+      icon: <Star size={21} color={colors.primaryDark} />,
       label: t("profile.myReviews"),
       note: "",
       onPress: () => router.push("/profile/reviews"),
     },
     {
-      icon: <MapPinPlus size={21} color={colors.primary} />,
+      icon: <MapPinPlus size={21} color={colors.primaryDark} />,
       label: t("submit.entryLabel"),
       note: t("submit.entryNote"),
       onPress: () => router.push("/pois/submit"),
     },
     {
-      icon: <Newspaper size={21} color={colors.primary} />,
+      icon: <Newspaper size={21} color={colors.primaryDark} />,
       label: t("common.blog"),
       note: t("profile.blogNote"),
       onPress: () => router.push("/(tabs)/blog"),
     },
     {
-      icon: <Info size={21} color={colors.primary} />,
+      icon: <Info size={21} color={colors.primaryDark} />,
       label: t("common.about"),
       note: t("profile.aboutNote"),
       onPress: () => router.push("/about"),
@@ -134,10 +134,10 @@ function FooterLinks() {
   return (
     <View style={{ flexDirection: "row", justifyContent: "center", gap: spacing.xl }}>
       <Pressable onPress={() => router.push("/(tabs)/blog")}>
-        <Text size="sm" color={colors.primary}>{t("common.blog")}</Text>
+        <Text size="sm" color={colors.primaryDark}>{t("common.blog")}</Text>
       </Pressable>
       <Pressable onPress={() => router.push("/about")}>
-        <Text size="sm" color={colors.primary}>{t("common.about")}</Text>
+        <Text size="sm" color={colors.primaryDark}>{t("common.about")}</Text>
       </Pressable>
     </View>
   );

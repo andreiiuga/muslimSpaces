@@ -113,7 +113,7 @@ export function EditProfileForm({ user, onUpdated }: { user: AuthUser; onUpdated
                 }}
               >
                 {selected ? (
-                  <CheckCircle size={19} color={colors.primary} />
+                  <CheckCircle size={19} color={colors.primaryDark} />
                 ) : (
                   <Circle size={19} color={colors.border} />
                 )}

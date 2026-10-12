@@ -207,7 +207,7 @@ export function MapView({
           const category = categories?.find((c) => c.id === poi.primaryCategoryId);
           const iconKey = pinIconKeyForSlug(category?.slug);
           const selected = poi.id === selectedPoiId;
-          const color = selected ? colors.danger : colors.primary;
+          const color = selected ? colors.danger : colors.primaryDark;
 
           return (
             <Marker

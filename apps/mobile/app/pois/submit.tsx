@@ -207,8 +207,8 @@ export default function SubmitPlaceScreen() {
             <Text size="xs" color={colors.textMuted} align="center">{photo.fileName ?? "photo.jpg"}</Text>
           ) : (
             <>
-              <Camera size={22} color={colors.primary} />
-              <Text size="xs" color={colors.primary}>{t("submit.add")}</Text>
+              <Camera size={22} color={colors.primaryDark} />
+              <Text size="xs" color={colors.primaryDark}>{t("submit.add")}</Text>
             </>
           )}
         </Pressable>

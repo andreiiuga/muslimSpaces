@@ -5,11 +5,13 @@
  */
 
 export const colors = {
-  // Calm teal/emerald as the primary accent — deliberately not an
-  // Airbnb-coral copy, distinct identity for a Muslim-community app.
-  primary: "#0F766E",
-  primaryDark: "#0B564F",
-  primaryLight: "#CCFBF1",
+  // Brand green: the logo's #10BB82 deepened to #0A8560 so white text on it
+  // passes WCAG AA (4.6:1). The web dark theme keeps the logo's brighter
+  // #10BB82 (see globals.css). primaryDark is the text-on-light/pressed
+  // variant (6.6:1 on white).
+  primary: "#0A8560",
+  primaryDark: "#07694A",
+  primaryLight: "#D3F5E6",
 
   background: "#FFFBF5",
   surface: "#FFFFFF",
@@ -23,6 +25,9 @@ export const colors = {
   textMuted: "#78716C",
   // Chevrons, counts, disabled-ish icons — one step lighter than textMuted.
   textFaint: "#A8A29E",
+  // White, matching the logo's light-theme wordmark. Only 2.5:1 on the
+  // brand green (below WCAG AA) — a deliberate brand choice. The web's dark
+  // theme uses a dark ink instead (see globals.css).
   textOnPrimary: "#FFFFFF",
 
   danger: "#DC2626",
@@ -41,7 +46,7 @@ export const colors = {
   // Finer hairline than `border` — hours-list rows, blog paragraph rules.
   divider: "#EDE7DC",
   // Selected-row tint (language picker) — lighter than `primaryLight`.
-  tealTint: "#F0FDF9",
+  tealTint: "#EEFBF5",
 } as const;
 
 export const spacing = {

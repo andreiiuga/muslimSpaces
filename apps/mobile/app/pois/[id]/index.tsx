@@ -280,7 +280,7 @@ export default function PoiDetailScreen() {
                 opacity: poi.phone ? 1 : 0.4,
               }}
             >
-              <Phone size={19} color={colors.primary} />
+              <Phone size={19} color={colors.primaryDark} />
             </Pressable>
             <Pressable
               onPress={sharePoi}
@@ -294,7 +294,7 @@ export default function PoiDetailScreen() {
                 borderColor: colors.border,
               }}
             >
-              <Share2 size={19} color={colors.primary} />
+              <Share2 size={19} color={colors.primaryDark} />
             </Pressable>
           </View>
 
@@ -304,7 +304,7 @@ export default function PoiDetailScreen() {
             {poi.phone && <Text size="sm">{poi.phone}</Text>}
             {poi.website && (
               <Pressable onPress={() => Linking.openURL(poi.website!)}>
-                <Text size="sm" color={colors.primary}>{poi.website}</Text>
+                <Text size="sm" color={colors.primaryDark}>{poi.website}</Text>
               </Pressable>
             )}
           </View>
@@ -402,7 +402,7 @@ export default function PoiDetailScreen() {
                 ...nativeShadows.elevated,
               })}
             >
-              <Text weight="semibold" color={colors.primary}>{t("common.cancel")}</Text>
+              <Text weight="semibold" color={colors.primaryDark}>{t("common.cancel")}</Text>
             </Pressable>
           </View>
         </Pressable>

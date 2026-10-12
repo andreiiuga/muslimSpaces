@@ -27,10 +27,10 @@
   --color-border: #E7E2D8;
   --color-divider: #EDE7DC;
   --color-starEmpty: #E7E2D8;
-  --color-primary: #0F766E;
-  --color-primaryDark: #0B564F;
-  --color-primaryLight: #CCFBF1;
-  --color-tealTint: #F0FDF9;
+  --color-primary: #0A8560;
+  --color-primaryDark: #07694A;
+  --color-primaryLight: #D3F5E6;
+  --color-tealTint: #EEFBF5;
   --color-danger: #DC2626;
   --color-dangerDark: #B91C1C;
   --color-dangerBg: #FEF2F2;
@@ -40,13 +40,13 @@
   --color-warning: #D97706;
   --color-star: #F59E0B;
   --color-input: #E7E2D8;
-  --color-ring: #0F766E;
+  --color-ring: #0A8560;
   --color-destructive: #DC2626;
   --color-destructive-foreground: #FFFFFF;
 
   --shadow-card: 0 1px 3px rgba(28, 25, 23, 0.08), 0 1px 2px rgba(28, 25, 23, 0.06);
   --shadow-elevated: 0 8px 24px rgba(28, 25, 23, 0.16);
-  --shadow-buttonGlow: 0 4px 14px rgba(15, 118, 110, 0.28);
+  --shadow-buttonGlow: 0 4px 14px rgba(10, 133, 96, 0.28);
   --shadow-iconSolid: 0 1px 4px rgba(28, 25, 23, 0.15);
   --shadow-panel: 0 1px 3px rgba(28, 25, 23, 0.08), 0 6px 18px rgba(28, 25, 23, 0.05);
 }
@@ -59,14 +59,14 @@
   --color-textSecondary: #B6AEA5;
   --color-textMuted: #988F86;
   --color-textFaint: #746C63;
-  --color-textOnPrimary: #FFFFFF;
+  --color-textOnPrimary: #06281C;
   --color-border: #3A332C;
   --color-divider: #403930;
   --color-starEmpty: #3A332C;
-  --color-primary: #19766B;
-  --color-primaryDark: #27B9A8;
-  --color-primaryLight: #163B37;
-  --color-tealTint: #163B37;
+  --color-primary: #10BB82;
+  --color-primaryDark: #3DD9A0;
+  --color-primaryLight: #123A2D;
+  --color-tealTint: #123A2D;
   --color-danger: #E45858;
   --color-dangerDark: #EDABAB;
   --color-dangerBg: #391818;
@@ -76,7 +76,7 @@
   --color-warning: #EB9E47;
   --color-star: #F5B547;
   --color-input: #3A332C;
-  --color-ring: #19766B;
+  --color-ring: #10BB82;
   --color-destructive: #C23F3F;
   --color-destructive-foreground: #FFFFFF;
 
@@ -92,7 +92,7 @@
      preview card, Radix popovers) — often over colorful content, not just
      the dark canvas — so it keeps a real, higher-alpha shadow instead. */
   --shadow-elevated: 0 8px 28px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.4);
-  --shadow-buttonGlow: 0 4px 18px rgba(39, 185, 168, 0.35);
+  --shadow-buttonGlow: 0 4px 18px rgba(16, 187, 130, 0.35);
 }
 
 /*

@@ -4,7 +4,6 @@ import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { ArrowLeft } from "lucide-react";
-import { colors } from "../tokens";
 import { IconButton } from "../IconButton";
 import { LABEL_MIN_ZOOM, PIN_EMOJI, buildClusterIndex, getMapPoints, pinIconKeyForSlug, pinLabel } from "./pin-utils";
 import type { PinIconKey } from "./pin-utils";
@@ -81,8 +80,8 @@ function createMarkerElement(
 
   const labelEl = document.createElement("div");
   labelEl.textContent = label;
-  labelEl.className = "hidden rounded-pill px-[10px] py-[3px] text-[11.5px] font-semibold whitespace-nowrap shadow-[0_2px_6px_rgba(28,25,23,0.14)] bg-background";
-  labelEl.style.border = `1px solid ${color}`;
+  labelEl.className = "hidden rounded-pill px-[10px] py-[3px] text-[11.5px] font-semibold whitespace-nowrap shadow-elevated bg-surface";
+  labelEl.style.border = `1.5px solid ${color}`;
   labelEl.style.color = color;
 
   const iconEl = document.createElement("div");
@@ -263,7 +262,12 @@ export function MapView({
         const category = categories?.find((c) => c.id === poi.primaryCategoryId);
         const iconKey = pinIconKeyForSlug(category?.slug);
         const selected = poi.id === selectedPoiId;
-        const color = selected ? colors.danger : colors.primary;
+        // CSS variables (not the `colors` hex constants, which are the light
+        // theme's values) so the label follows the site's light/dark toggle:
+        // primaryDark is the text-safe green (5:1 on the cream label in
+        // light, 12:1 on the dark label in dark) — plain `primary` is only
+        // 2.3:1 on cream.
+        const color = selected ? "var(--color-danger)" : "var(--color-primaryDark)";
         const { el, labelEl } = createMarkerElement(iconKey, pinLabel(getPoiLabel?.(poi) ?? poi.name.en), color, selected);
         labelEl.style.display = showLabels ? "block" : "none";
 
@@ -436,9 +440,14 @@ export function MapView({
     <div className="relative h-full w-full">
       <div ref={containerRef} className="h-full w-full" />
       {selectedPoiId && (
-        <div className="absolute left-[14px] top-[14px]">
+        // ring + elevated shadow on the wrapper: the solid IconButton's own
+        // dark-mode cue is only an inset hairline, which vanishes against
+        // the dark map tiles it floats over. `text-text` (currentColor, not
+        // the light-theme `colors.text` hex) keeps the arrow visible on the
+        // dark surface.
+        <div className="absolute left-[14px] top-[14px] rounded-pill text-text shadow-elevated ring-1 ring-border">
           <IconButton
-            icon={<ArrowLeft size={20} color={colors.text} />}
+            icon={<ArrowLeft size={20} />}
             onPress={() => onDeselect?.()}
             variant="solid"
             label="Back"

@@ -2,9 +2,9 @@
 name: MuslimSpaces
 description: Find mosques, halal restaurants, Islamic learning centers, and services for Muslims in Romania.
 colors:
-  primary: "#0F766E"
-  primary-dark: "#0B564F"
-  primary-light: "#CCFBF1"
+  primary: "#0A8560"
+  primary-dark: "#07694A"
+  primary-light: "#D3F5E6"
   soft-cream: "#FFFBF5"
   surface: "#FFFFFF"
   border: "#E7E2D8"
@@ -116,7 +116,7 @@ components:
 
 MuslimSpaces reads as a warm, hand-kept community ledger, not a venture-backed consumer app. Its job is to make a moderated, community-curated directory of mosques, halal businesses, and services feel trustworthy and welcoming — the opposite of a slick, anonymous listings site. A soft cream canvas, a single restrained teal accent, and generous rounded geometry carry that warmth; nothing about the surface competes with the actual content (place names, photos, addresses) for attention.
 
-The teal accent (`#0F766E`) is a deliberate, confirmed departure from the coral-and-black gig-economy-app palette (Airbnb, Uber, and their many imitators) — this project exists specifically to *not* read as another one of those. Warmth here comes from the cream background and soft shadows, not from a loud accent color; the teal is reserved almost entirely for the primary action and the selected state, so its rarity keeps it legible as "this is the one thing to notice" rather than becoming wallpaper.
+The teal accent (`#0A8560`) is a deliberate, confirmed departure from the coral-and-black gig-economy-app palette (Airbnb, Uber, and their many imitators) — this project exists specifically to *not* read as another one of those. Warmth here comes from the cream background and soft shadows, not from a loud accent color; the teal is reserved almost entirely for the primary action and the selected state, so its rarity keeps it legible as "this is the one thing to notice" rather than becoming wallpaper.
 
 **Key Characteristics:**
 - Warm cream background (`#FFFBF5`), white surfaces, soft near-flat shadows — never stark white-on-white or harsh drop shadows.
@@ -129,9 +129,9 @@ The teal accent (`#0F766E`) is a deliberate, confirmed departure from the coral-
 A warm, low-saturation palette built around one accent color used deliberately sparingly.
 
 ### Primary
-- **Quiet Emerald** (`#0F766E`): the single accent — primary buttons, selected filter chips, active tab indicator, links, category label text. Its restraint is the point; it should never appear as a large fill or background wash.
-- **Quiet Emerald, Dark** (`#0B564F`): text-on-light-teal (e.g. the secondary button variant's label) and pressed/active states.
-- **Quiet Emerald, Light** (`#CCFBF1`): the secondary button's fill, and any "tinted teal" background chip or badge.
+- **Quiet Emerald** (`#0A8560`): the single accent — primary buttons, selected filter chips, active tab indicator, links, category label text. Its restraint is the point; it should never appear as a large fill or background wash.
+- **Quiet Emerald, Deep** (`#07694A`): text-on-light-teal (e.g. the secondary button variant's label) and pressed/active states.
+- **Quiet Emerald, Light** (`#D3F5E6`): the secondary button's fill, and any "tinted teal" background chip or badge.
 
 ### Neutral
 - **Soft Cream** (`#FFFBF5`): the page background. Never pure white — this warmth is load-bearing for the "welcoming, not clinical" character.
