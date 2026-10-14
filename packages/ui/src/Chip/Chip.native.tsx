@@ -8,6 +8,7 @@ const chip = cva("flex-row items-center gap-xs self-start rounded-pill border px
   variants: {
     selected: {
       true: "border-primary bg-primary",
+      primary: "border-primaryDark bg-primaryDark",
       false: "border-border bg-surface",
     },
   },
@@ -20,9 +21,9 @@ const TEXT_COLOR_CLASS = {
   false: "text-text",
 };
 
-export function Chip({ children, selected, onPress, icon }: ChipProps) {
+export function Chip({ children, selected, primary, onPress, icon }: ChipProps) {
   return (
-    <Pressable onPress={onPress} className={cn(chip({ selected }))}>
+    <Pressable onPress={onPress} className={cn(chip({ selected: primary && selected ? "primary" : selected }))}>
       {icon}
       <Text className={cn(TEXT_CLASS, TEXT_COLOR_CLASS[selected ? "true" : "false"])} style={{ fontFamily: fontFamily("medium") }}>
         {children}

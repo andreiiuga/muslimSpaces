@@ -69,7 +69,7 @@ export const en = {
     subheading: "A moderator checks it before publishing.",
     name: "Name",
     namePlaceholder: "e.g. Brutăria Halal Colentina",
-    categories: "Categories · tap the primary twice",
+    categories: "Categories · tap again for primary, a third time to remove",
     address: "Address",
     addressPlaceholder: "Street, number, city",
     dragPin: "Drag the map to place the pin",

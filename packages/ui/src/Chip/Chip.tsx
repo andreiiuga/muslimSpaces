@@ -10,6 +10,7 @@ const chip = cva(
     variants: {
       selected: {
         true: "border-primary bg-primary text-textOnPrimary",
+        primary: "border-primaryDark bg-primaryDark text-textOnPrimary ring-2 ring-primaryLight",
         false: "border-border bg-surface text-text",
       },
     },
@@ -17,12 +18,12 @@ const chip = cva(
   },
 );
 
-export function Chip({ children, selected, onPress, icon }: ChipProps) {
+export function Chip({ children, selected, primary, onPress, icon }: ChipProps) {
   return (
     <button
       type="button"
       onClick={onPress}
-      className={cn(chip({ selected }), onPress ? "cursor-pointer" : "cursor-default")}
+      className={cn(chip({ selected: primary && selected ? "primary" : selected }), onPress ? "cursor-pointer" : "cursor-default")}
     >
       {icon}
       {children}

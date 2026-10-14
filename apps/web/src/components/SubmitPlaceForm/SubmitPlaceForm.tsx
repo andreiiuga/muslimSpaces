@@ -56,10 +56,9 @@ export function SubmitPlaceForm({ categories }: { categories: Category[] }) {
 
   function toggleCategory(id: string) {
     setCategoryIds((prev) => {
-      // Tapping the current primary (first) again demotes it instead of
-      // removing it — tapping any non-primary a second time makes it
-      // primary. Matches the "click the primary twice" copy in the label.
-      if (prev[0] === id) return prev.slice(1).concat(id);
+      // Cycle per chip: unselected -> selected -> primary -> unselected.
+      // The first chip picked is primary by default (index 0).
+      if (prev[0] === id) return prev.slice(1);
       if (prev.includes(id)) return [id, ...prev.filter((c) => c !== id)];
       return [...prev, id];
     });
@@ -172,10 +171,9 @@ export function SubmitPlaceForm({ categories }: { categories: Category[] }) {
                 const selected = categoryIds.includes(category.id);
                 const isPrimary = categoryIds[0] === category.id;
                 return (
-                  <Chip key={category.id} selected={selected} onPress={() => toggleCategory(category.id)}>
+                  <Chip key={category.id} selected={selected} primary={isPrimary} onPress={() => toggleCategory(category.id)}>
                     {pickLocalized(category.name, locale)}
-                    {isPrimary ? " ·" : ""}
-                  </Chip>
+                      </Chip>
                 );
               })}
             </div>

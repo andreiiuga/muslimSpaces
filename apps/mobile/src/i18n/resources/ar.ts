@@ -70,7 +70,7 @@ export const ar: TranslationSchema = {
     subheading: "يتحقّق منه مشرف قبل النشر.",
     name: "الاسم",
     namePlaceholder: "مثال: مخبز كولنتينا الحلال",
-    categories: "التصنيفات · اضغط مرتين للتصنيف الرئيسي",
+    categories: "التصنيفات · اضغط مرة ثانية للتصنيف الرئيسي، وثالثة للإزالة",
     address: "العنوان",
     addressPlaceholder: "الشارع، الرقم، المدينة",
     dragPin: "حرّك الخريطة لتحديد الموقع",
