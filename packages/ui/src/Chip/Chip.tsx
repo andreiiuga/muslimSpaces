@@ -10,7 +10,9 @@ const chip = cva(
     variants: {
       selected: {
         true: "border-primary bg-primary text-textOnPrimary",
-        primary: "border-primaryDark bg-primaryDark text-textOnPrimary ring-2 ring-primaryLight",
+        // Amber, the warm complement to the brand green: unmistakably "the
+        // headline one" next to ordinary selected (green) chips.
+        primary: "border-star bg-star text-[#1C1917] ring-2 ring-star/30",
         false: "border-border bg-surface text-text",
       },
     },
