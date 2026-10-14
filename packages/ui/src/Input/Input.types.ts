@@ -17,4 +17,5 @@ export interface InputProps {
   showLabel?: string;
   hideLabel?: string;
   autoFocus?: boolean;
+  onFocus?: () => void;
 }

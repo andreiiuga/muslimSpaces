@@ -12,3 +12,4 @@ export * from "./schemas/blog";
 export * from "./schemas/geo";
 export * from "./client";
 export * from "./open-status";
+export * from "./week-hours";

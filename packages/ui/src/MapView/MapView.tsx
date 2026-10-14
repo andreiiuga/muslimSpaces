@@ -139,6 +139,8 @@ export function MapView({
   categories,
   initialCenter = DEFAULT_CENTER,
   initialZoom = DEFAULT_ZOOM,
+  cooperativeGestures,
+  cooperativeGestureHints,
   onBoundsChange,
   onViewportChange,
   onMarkerPress,
@@ -180,6 +182,15 @@ export function MapView({
       style: styleUrlForTheme(styleThemeRef.current),
       center: [initialCenter.lng, initialCenter.lat],
       zoom: initialZoom,
+      cooperativeGestures: cooperativeGestures || undefined,
+      locale:
+        cooperativeGestures && cooperativeGestureHints
+          ? {
+              "CooperativeGesturesHandler.MacHelpText": cooperativeGestureHints.mac,
+              "CooperativeGesturesHandler.WindowsHelpText": cooperativeGestureHints.windows,
+              "CooperativeGesturesHandler.MobileHelpText": cooperativeGestureHints.mobile,
+            }
+          : undefined,
     });
     map.addControl(new maplibregl.NavigationControl(), "top-right");
 

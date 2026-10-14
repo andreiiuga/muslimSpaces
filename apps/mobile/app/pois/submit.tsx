@@ -5,12 +5,14 @@ import { useRouter } from "expo-router";
 import { useTranslation } from "react-i18next";
 import { Camera, MapPin } from "lucide-react-native";
 import { ApiError } from "@muslimspaces/shared";
-import type { Category, Coordinates } from "@muslimspaces/shared";
+import { defaultWeekHours, weekHoursToPayload } from "@muslimspaces/shared";
+import type { Category, Coordinates, DayHoursDraft } from "@muslimspaces/shared";
 import { Button, Chip, Input, Text, colors, radii, spacing } from "@muslimspaces/ui";
 import { MapView } from "@muslimspaces/ui/map";
 import type { MapBounds } from "@muslimspaces/ui/map";
 import { api } from "../../src/lib/api-client";
 import { localFileToUpload } from "../../src/lib/local-file";
+import { WeeklyHoursEditor } from "../../src/components/WeeklyHoursEditor";
 import { useAuth } from "../../src/auth/AuthContext";
 import { pickLocalized } from "../../src/i18n/pick-localized";
 import type { LocaleCode } from "../../src/i18n";
@@ -19,7 +21,6 @@ import type { LocaleCode } from "../../src/i18n";
 // place starts here rather than at MapView's own whole-country default zoom,
 // which is too wide to place a pin usefully.
 const DEFAULT_LOCATION: Coordinates = { lat: 44.4268, lng: 26.1025 };
-const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 function LocationPicker({ value, onChange }: { value: Coordinates; onChange: (v: Coordinates) => void }) {
   function handleBoundsChange(bounds: MapBounds) {
@@ -51,8 +52,7 @@ export default function SubmitPlaceScreen() {
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [address, setAddress] = useState("");
   const [location, setLocation] = useState<Coordinates>(DEFAULT_LOCATION);
-  const [opensAt, setOpensAt] = useState("09:00");
-  const [closesAt, setClosesAt] = useState("20:00");
+  const [weekHours, setWeekHours] = useState<DayHoursDraft[]>(defaultWeekHours);
   const [photo, setPhoto] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [note, setNote] = useState<string | null>(null);
@@ -93,6 +93,12 @@ export default function SubmitPlaceScreen() {
       return;
     }
 
+    const hours = weekHoursToPayload(weekHours);
+    if (!hours.ok) {
+      setNote(t("submit.hoursInvalid"));
+      return;
+    }
+
     setSubmitting(true);
     setNote(null);
     try {
@@ -108,11 +114,8 @@ export default function SubmitPlaceScreen() {
         location,
       });
 
-      if (TIME_RE.test(opensAt) && TIME_RE.test(closesAt)) {
-        await api.pois.hours.set(
-          poi.id,
-          Array.from({ length: 7 }, (_, i) => ({ dayOfWeek: i + 1, opensAt, closesAt })),
-        );
+      if (hours.payload.length > 0) {
+        await api.pois.hours.set(poi.id, hours.payload);
       }
 
       if (photo) {
@@ -172,16 +175,7 @@ export default function SubmitPlaceScreen() {
 
       <View style={{ gap: spacing.xs }}>
         <Text size="sm" weight="medium">{t("submit.openingHours")}</Text>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.sm }}>
-          <View style={{ flex: 1 }}>
-            <Input value={opensAt} onChangeText={setOpensAt} placeholder="09:00" />
-          </View>
-          <Text size="sm" color={colors.textMuted}>{t("submit.to")}</Text>
-          <View style={{ flex: 1 }}>
-            <Input value={closesAt} onChangeText={setClosesAt} placeholder="20:00" />
-          </View>
-        </View>
-        <Text size="xs" color={colors.textMuted}>{t("submit.hoursNote")}</Text>
+        <WeeklyHoursEditor value={weekHours} onChange={setWeekHours} />
       </View>
 
       <View style={{ gap: spacing.xs }}>

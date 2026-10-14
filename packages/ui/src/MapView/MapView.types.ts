@@ -29,6 +29,15 @@ export interface MapViewProps {
   categories?: Category[];
   initialCenter?: { lat: number; lng: number };
   initialZoom?: number;
+  /**
+   * Web only. For maps embedded in a scrolling page: plain wheel/one-finger
+   * gestures scroll the page instead of the map; zooming needs ⌘/Ctrl +
+   * scroll (two fingers on touch). `hints` replaces the overlay text shown
+   * when the user tries without the modifier (maplibre's English default
+   * otherwise).
+   */
+  cooperativeGestures?: boolean;
+  cooperativeGestureHints?: { mac: string; windows: string; mobile: string };
   onBoundsChange?: (bounds: MapBounds) => void;
   /**
    * Fires alongside `onBoundsChange` with the exact camera center + zoom,

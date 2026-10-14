@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { BadgeCheck, Camera, MapPin as MapPinIcon } from "lucide-react";
 import { Button, Chip, Input, Skeleton, Text } from "@muslimspaces/ui";
-import type { Category, Coordinates } from "@muslimspaces/shared";
+import { defaultWeekHours, weekHoursToPayload } from "@muslimspaces/shared";
+import type { Category, Coordinates, DayHoursDraft } from "@muslimspaces/shared";
 import type { MapBounds } from "@muslimspaces/ui/map";
 import { useLocale } from "../../i18n/LocaleContext";
 import { pickLocalized } from "../../i18n/pick-localized";
 import { BackLink } from "../BackLink/BackLink";
+import { WeeklyHoursEditor } from "./WeeklyHoursEditor";
 
 const MapView = dynamic(() => import("@muslimspaces/ui/map").then((m) => m.MapView), {
   ssr: false,
@@ -21,16 +23,19 @@ const MapView = dynamic(() => import("@muslimspaces/ui/map").then((m) => m.MapVi
 // which is too wide to place a pin usefully. Mirrors apps/mobile's
 // DEFAULT_LOCATION in pois/submit.tsx.
 const DEFAULT_LOCATION: Coordinates = { lat: 44.4268, lng: 26.1025 };
-const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 function LocationPicker({ value, onChange }: { value: Coordinates; onChange: (v: Coordinates) => void }) {
+  const { t } = useLocale();
   function handleBoundsChange(bounds: MapBounds) {
     onChange({ lat: (bounds.minLat + bounds.maxLat) / 2, lng: (bounds.minLng + bounds.maxLng) / 2 });
   }
 
   return (
     <div className="relative mt-1 h-[250px] overflow-hidden rounded-lg border border-border">
-      <MapView pois={[]} initialCenter={value} initialZoom={13} onBoundsChange={handleBoundsChange} />
+      <MapView pois={[]} initialCenter={value} initialZoom={13}
+        cooperativeGestures
+        cooperativeGestureHints={{ mac: t("submit.mapHintMac"), windows: t("submit.mapHintWindows"), mobile: t("submit.mapHintMobile") }}
+        onBoundsChange={handleBoundsChange} />
       <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-full">
         <MapPinIcon size={34} className="fill-danger text-danger" />
       </div>
@@ -47,8 +52,7 @@ export function SubmitPlaceForm({ categories }: { categories: Category[] }) {
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [address, setAddress] = useState("");
   const [location, setLocation] = useState<Coordinates>(DEFAULT_LOCATION);
-  const [opensAt, setOpensAt] = useState("09:00");
-  const [closesAt, setClosesAt] = useState("20:00");
+  const [weekHours, setWeekHours] = useState<DayHoursDraft[]>(defaultWeekHours);
   const [photo, setPhoto] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [note, setNote] = useState<string | null>(null);
@@ -78,6 +82,12 @@ export function SubmitPlaceForm({ categories }: { categories: Category[] }) {
       return;
     }
 
+    const hours = weekHoursToPayload(weekHours);
+    if (!hours.ok) {
+      setNote(t("submit.hoursInvalid"));
+      return;
+    }
+
     setSubmitting(true);
     setNote(null);
     try {
@@ -101,11 +111,11 @@ export function SubmitPlaceForm({ categories }: { categories: Category[] }) {
       }
       const poi = await createRes.json();
 
-      if (TIME_RE.test(opensAt) && TIME_RE.test(closesAt)) {
+      if (hours.payload.length > 0) {
         await fetch(`/api/pois/${poi.id}/hours`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(Array.from({ length: 7 }, (_, i) => ({ dayOfWeek: i + 1, opensAt, closesAt }))),
+          body: JSON.stringify(hours.payload),
         });
       }
 
@@ -150,7 +160,7 @@ export function SubmitPlaceForm({ categories }: { categories: Category[] }) {
   }
 
   return (
-    <div className="mx-auto max-w-[1040px] px-[clamp(16px,4vw,28px)] pb-[60px] pt-[26px]">
+    <div className="mx-auto max-w-[680px] px-[clamp(16px,4vw,28px)] pb-[60px] pt-[26px]">
       <BackLink href="/">{t("common.backToMap")}</BackLink>
 
       <div className="mb-[22px] mt-1">
@@ -160,79 +170,66 @@ export function SubmitPlaceForm({ categories }: { categories: Category[] }) {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-[28px] rounded-lg bg-surface p-xl shadow-panel">
-        <div className="flex min-w-[280px] flex-[1_1_380px] flex-col gap-xl">
-          <Input label={t("submit.name")} value={name} onChangeText={setName} placeholder={t("submit.namePlaceholder")} />
+      <div className="flex flex-col gap-xl rounded-lg bg-surface p-xl shadow-panel">
+        <Input label={t("submit.name")} value={name} onChangeText={setName} placeholder={t("submit.namePlaceholder")} />
 
-          <div className="flex flex-col gap-[9px]">
-            <Text size="xs" weight="medium" color="textMuted">{t("submit.categories").toUpperCase()}</Text>
-            <div className="flex flex-wrap gap-sm">
-              {categories.map((category) => {
-                const selected = categoryIds.includes(category.id);
-                const isPrimary = categoryIds[0] === category.id;
-                return (
-                  <Chip key={category.id} selected={selected} primary={isPrimary} onPress={() => toggleCategory(category.id)}>
-                    {pickLocalized(category.name, locale)}
-                      </Chip>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-[7px]">
-            <Text size="xs" weight="medium" color="textMuted">{t("submit.openingHours").toUpperCase()}</Text>
-            <div className="flex items-center gap-[10px]">
-              <div className="min-w-0 flex-1">
-                <Input value={opensAt} onChangeText={setOpensAt} placeholder="09:00" />
-              </div>
-              <Text size="sm" color="textMuted">{t("submit.to")}</Text>
-              <div className="min-w-0 flex-1">
-                <Input value={closesAt} onChangeText={setClosesAt} placeholder="20:00" />
-              </div>
-            </div>
-            <Text size="xs" color="textMuted">{t("submit.hoursNote")}</Text>
-          </div>
-
-          <div className="flex flex-col gap-[9px]">
-            <Text size="xs" weight="medium" color="textMuted">{t("submit.photos").toUpperCase()}</Text>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={(e: ChangeEvent<HTMLInputElement>) => setPhoto(e.target.files?.[0] ?? null)}
-              className="hidden"
-            />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="flex h-[96px] w-[96px] cursor-pointer flex-col items-center justify-center gap-[5px] rounded-input border-[1.5px] border-dashed border-[#CBC5B8] bg-transparent text-primaryDark"
-            >
-              {photo ? (
-                <Text size="xs" color="textMuted" align="center">{photo.name}</Text>
-              ) : (
-                <>
-                  <Camera size={23} />
-                  <Text size="xs" color="primaryDark">{t("submit.add")}</Text>
-                </>
-              )}
-            </button>
+        <div className="flex flex-col gap-[9px]">
+          <Text size="xs" weight="medium" color="textMuted">{t("submit.categories").toUpperCase()}</Text>
+          <div className="flex flex-wrap gap-sm">
+            {categories.map((category) => {
+              const selected = categoryIds.includes(category.id);
+              const isPrimary = categoryIds[0] === category.id;
+              return (
+                <Chip key={category.id} selected={selected} primary={isPrimary} onPress={() => toggleCategory(category.id)}>
+                  {pickLocalized(category.name, locale)}
+                    </Chip>
+              );
+            })}
           </div>
         </div>
 
-        <div className="flex min-w-[280px] flex-[1_1_340px] flex-col gap-xl">
-          <div className="flex flex-col gap-[7px]">
-            <Text size="xs" weight="medium" color="textMuted">{t("submit.address").toUpperCase()}</Text>
-            <Input value={address} onChangeText={setAddress} placeholder={t("submit.addressPlaceholder")} />
-            <LocationPicker value={location} onChange={setLocation} />
-            <Text size="xs" color="textMuted">{t("submit.dragPin")}</Text>
-          </div>
-
-          {note && <Text size="sm" color="dangerDark">{note}</Text>}
-
-          <Button onPress={handleSubmit} loading={submitting}>
-            {submitting ? t("submit.sending") : t("submit.send")}
-          </Button>
+        <div className="flex flex-col gap-[7px]">
+          <Text size="xs" weight="medium" color="textMuted">{t("submit.address").toUpperCase()}</Text>
+          <Input value={address} onChangeText={setAddress} placeholder={t("submit.addressPlaceholder")} />
+          <LocationPicker value={location} onChange={setLocation} />
+          <Text size="xs" color="textMuted">{t("submit.dragPin")}</Text>
         </div>
+
+        <div className="flex flex-col gap-[7px]">
+          <Text size="xs" weight="medium" color="textMuted">{t("submit.openingHours").toUpperCase()}</Text>
+          <WeeklyHoursEditor value={weekHours} onChange={setWeekHours} />
+        </div>
+
+        <div className="flex flex-col gap-[9px]">
+          <Text size="xs" weight="medium" color="textMuted">{t("submit.photos").toUpperCase()}</Text>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setPhoto(e.target.files?.[0] ?? null)}
+            className="hidden"
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex h-[96px] w-[96px] cursor-pointer flex-col items-center justify-center gap-[5px] rounded-input border-[1.5px] border-dashed border-[#CBC5B8] bg-transparent text-primaryDark"
+          >
+            {photo ? (
+              <Text size="xs" color="textMuted" align="center">{photo.name}</Text>
+            ) : (
+              <>
+                <Camera size={23} />
+                <Text size="xs" color="primaryDark">{t("submit.add")}</Text>
+              </>
+            )}
+          </button>
+        </div>
+
+        {note && <Text size="sm" color="dangerDark">{note}</Text>}
+
+        <Button onPress={handleSubmit} loading={submitting} fullWidth>
+          {submitting ? t("submit.sending") : t("submit.send")}
+        </Button>
       </div>
     </div>
   );

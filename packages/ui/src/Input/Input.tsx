@@ -19,7 +19,7 @@ const input = cva(
   },
 );
 
-export function Input({ value, onChangeText, placeholder, label, error, disabled, kind = "text", autoComplete, name, autoFocus, hint, showLabel = "Show password", hideLabel = "Hide password" }: InputProps) {
+export function Input({ value, onChangeText, placeholder, label, error, disabled, kind = "text", autoComplete, name, autoFocus, onFocus, hint, showLabel = "Show password", hideLabel = "Hide password" }: InputProps) {
   const id = useId();
   const [revealed, setRevealed] = useState(false);
   const isPassword = kind === "password";
@@ -43,6 +43,7 @@ export function Input({ value, onChangeText, placeholder, label, error, disabled
           disabled={disabled}
           autoComplete={autoComplete}
           autoFocus={autoFocus}
+          onFocus={onFocus}
           aria-invalid={error ? true : undefined}
           aria-describedby={hint && !error ? `${id}-hint` : undefined}
           className={cn(input({ error: !!error, disabled }), isPassword && "pr-[44px]")}
