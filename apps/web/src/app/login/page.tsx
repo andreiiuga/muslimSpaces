@@ -20,17 +20,23 @@ export default function LoginPage() {
     setError(null);
     setSubmitting(true);
 
-    const res = await fetch("/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-
-    setSubmitting(false);
+    let res: Response;
+    try {
+      res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+    } catch {
+      setSubmitting(false);
+      setError(t("auth.loginFailed"));
+      return;
+    }
 
     if (!res.ok) {
+      setSubmitting(false);
       const body = await res.json().catch(() => undefined);
-      setError(body?.message ?? t("auth.loggingIn"));
+      setError(body?.message ?? t("auth.loginFailed"));
       return;
     }
 
@@ -39,16 +45,20 @@ export default function LoginPage() {
   }
 
   return (
-    <AuthCard kicker={t("auth.loginKicker")} title={t("auth.loginTitle")}>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-md">
-        <Input label={t("auth.email")} kind="email" value={email} onChangeText={setEmail} placeholder="you@example.ro" />
-        <Input label={t("auth.password")} kind="password" value={password} onChangeText={setPassword} placeholder="••••••••" />
-        {error && <Text size="sm" color="dangerDark">{error}</Text>}
+    <AuthCard subtitle={t("auth.loginKicker")} title={t("auth.loginTitle")}>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-md" aria-busy={submitting}>
+        <Input label={t("auth.email")} kind="email" name="email" autoComplete="email" autoFocus disabled={submitting} value={email} onChangeText={setEmail} placeholder="you@example.ro" />
+        <Input label={t("auth.password")} kind="password" name="password" autoComplete="current-password" showLabel={t("auth.showPassword")} hideLabel={t("auth.hidePassword")} disabled={submitting} value={password} onChangeText={setPassword} placeholder="••••••••" />
+        {error && (
+          <div role="alert" className="rounded-input border border-dangerBorder bg-dangerBg px-md py-sm">
+            <Text size="sm" color="dangerDark">{error}</Text>
+          </div>
+        )}
         <Button type="submit" loading={submitting} fullWidth>
           {submitting ? t("auth.loggingIn") : t("auth.loginTitle")}
         </Button>
       </form>
-      <Link href="/signup" className="flex min-h-[44px] items-center justify-center text-sm text-primaryDark no-underline">
+      <Link href="/signup" className="flex min-h-[44px] items-center justify-center rounded-input text-sm font-medium text-primaryDark underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
         {t("auth.needAccount")}
       </Link>
     </AuthCard>

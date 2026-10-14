@@ -14,7 +14,7 @@ const input = cva("rounded-input border px-md py-sm text-md", {
   defaultVariants: { error: false, disabled: false },
 });
 
-export function Input({ value, onChangeText, placeholder, label, error, disabled, kind = "text" }: InputProps) {
+export function Input({ value, onChangeText, placeholder, label, error, disabled, kind = "text", autoFocus }: InputProps) {
   return (
     <View className="gap-xs">
       {label && (
@@ -30,6 +30,7 @@ export function Input({ value, onChangeText, placeholder, label, error, disabled
         secureTextEntry={kind === "password"}
         keyboardType={kind === "email" ? "email-address" : "default"}
         autoCapitalize="none"
+        autoFocus={autoFocus}
         className={cn(input({ error: !!error, disabled }))}
         style={{ fontFamily: fontFamily("regular"), color: colors.text }}
       />

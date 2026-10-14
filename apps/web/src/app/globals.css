@@ -245,3 +245,15 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Login/signup card: one calm arrival, skipped for reduced motion. */
+@keyframes ms-auth-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+.ms-auth-card { animation: ms-auth-in 420ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+@media (prefers-reduced-motion: reduce) { .ms-auth-card { animation: none; } }
+
+/* Browser surfaces themed from the palette. */
+::selection { background: var(--color-primaryLight); color: var(--color-text); }
+input { caret-color: var(--color-primary); }
