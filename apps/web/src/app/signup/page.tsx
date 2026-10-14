@@ -45,7 +45,7 @@ export default function SignupPage() {
   }
 
   return (
-    <AuthCard subtitle={t("auth.signupKicker")} title={t("auth.signupTitle")}>
+    <AuthCard subtitle={t("auth.signupSubtitle")} title={t("auth.signupTitle")}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-md" aria-busy={submitting}>
         <Input label={t("auth.email")} kind="email" name="email" autoComplete="email" autoFocus disabled={submitting} value={email} onChangeText={setEmail} placeholder="you@example.ro" />
         <Input label={t("auth.password")} kind="password" name="password" autoComplete="new-password" hint={t("auth.passwordHint")} showLabel={t("auth.showPassword")} hideLabel={t("auth.hidePassword")} disabled={submitting} value={password} onChangeText={setPassword} placeholder="••••••••" />
@@ -55,7 +55,7 @@ export default function SignupPage() {
           </div>
         )}
         <Button type="submit" loading={submitting} fullWidth>
-          {submitting ? t("auth.signingUp") : t("common.signUp")}
+          {submitting ? t("auth.signingUp") : t("auth.signupButton")}
         </Button>
       </form>
       <Link href="/login" className="flex min-h-[44px] items-center justify-center rounded-input text-sm font-medium text-primaryDark underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
