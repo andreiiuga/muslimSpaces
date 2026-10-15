@@ -69,6 +69,8 @@ export const en = {
     subheading: "A moderator checks it before publishing.",
     name: "Name",
     namePlaceholder: "e.g. Brutăria Halal Colentina",
+    description: "Description (optional)",
+    descriptionPlaceholder: "What is it, what should visitors know? e.g. prayer rooms, halal certification, languages spoken.",
     categories: "Categories · tap again for primary, a third time to remove",
     address: "Address",
     addressPlaceholder: "Street, number, city",

@@ -7,7 +7,7 @@ import { Camera, MapPin } from "lucide-react-native";
 import { ApiError } from "@muslimspaces/shared";
 import { defaultWeekHours, weekHoursToPayload } from "@muslimspaces/shared";
 import type { Category, Coordinates, DayHoursDraft } from "@muslimspaces/shared";
-import { Button, Chip, Input, Text, colors, radii, spacing } from "@muslimspaces/ui";
+import { Button, Chip, Input, Text, Textarea, colors, radii, spacing } from "@muslimspaces/ui";
 import { MapView } from "@muslimspaces/ui/map";
 import type { MapBounds } from "@muslimspaces/ui/map";
 import { api } from "../../src/lib/api-client";
@@ -49,6 +49,7 @@ export default function SubmitPlaceScreen() {
   }, []);
 
   const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [address, setAddress] = useState("");
   const [location, setLocation] = useState<Coordinates>(DEFAULT_LOCATION);
@@ -108,6 +109,7 @@ export default function SubmitPlaceScreen() {
         // implies; a moderator can split it into proper ro/en text while
         // reviewing the submission.
         name: { ro: name, en: name },
+        ...(description.trim() && { description: { ro: description.trim(), en: description.trim() } }),
         categoryIds,
         primaryCategoryId: categoryIds[0],
         address,
@@ -151,6 +153,7 @@ export default function SubmitPlaceScreen() {
       </View>
 
       <Input label={t("submit.name")} value={name} onChangeText={setName} placeholder={t("submit.namePlaceholder")} />
+      <Textarea label={t("submit.description")} value={description} onChangeText={setDescription} placeholder={t("submit.descriptionPlaceholder")} rows={4} />
 
       <View style={{ gap: spacing.xs }}>
         <Text size="sm" weight="medium">{t("submit.categories")}</Text>

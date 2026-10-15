@@ -19,7 +19,7 @@ import {
   type UpdatePoiPayload,
 } from "./schemas/poi";
 import { poiHourSchema, type SetPoiHoursPayload } from "./schemas/poi-hours";
-import { poiImageSchema, type AttachPoiImagePayload, type ReorderPoiImagesPayload } from "./schemas/poi-image";
+import { poiImageSchema, type AttachPoiImagePayload, type ReorderPoiImagesPayload, type SetPoiImageRolesPayload } from "./schemas/poi-image";
 import { mediaUploadResponseSchema } from "./schemas/media";
 import {
   reviewSchema,
@@ -226,6 +226,11 @@ export function createApiClient({ baseUrl, getToken }: ApiClientOptions) {
           }),
         remove: (poiId: string, imageId: string) =>
           request(`/pois/${poiId}/images/${imageId}`, z.void(), { method: "DELETE" }),
+        setRoles: (poiId: string, imageId: string, payload: SetPoiImageRolesPayload) =>
+          request(`/pois/${poiId}/images/${imageId}/roles`, poiImageSchema, {
+            method: "PUT",
+            body: JSON.stringify(payload),
+          }),
         reorder: (poiId: string, payload: ReorderPoiImagesPayload) =>
           request(`/pois/${poiId}/images/reorder`, z.array(poiImageSchema), {
             method: "PATCH",

@@ -70,6 +70,8 @@ export const ar: TranslationSchema = {
     subheading: "يتحقّق منه مشرف قبل النشر.",
     name: "الاسم",
     namePlaceholder: "مثال: مخبز كولنتينا الحلال",
+    description: "الوصف (اختياري)",
+    descriptionPlaceholder: "ما هذا المكان وماذا يجب أن يعرف الزوار؟ مثل أماكن الصلاة، شهادة الحلال، اللغات المتحدثة.",
     categories: "التصنيفات · اضغط مرة ثانية للتصنيف الرئيسي، وثالثة للإزالة",
     address: "العنوان",
     addressPlaceholder: "الشارع، الرقم، المدينة",

@@ -1,15 +1,20 @@
 "use client";
 
 import { useRef, useState, type ChangeEvent } from "react";
-import { Button, Text } from "@muslimspaces/ui";
+import { Button, Chip, Text } from "@muslimspaces/ui";
 import type { PoiImage, PoiImageRole } from "@muslimspaces/shared";
 
-const ROLE_OPTIONS: PoiImageRole[] = ["gallery", "cover", "logo"];
+const ROLE_OPTIONS: PoiImageRole[] = ["cover", "logo", "gallery"];
+
+function toggleRole(roles: PoiImageRole[], role: PoiImageRole): PoiImageRole[] {
+  return roles.includes(role) ? roles.filter((r) => r !== role) : [...roles, role];
+}
 
 export function PoiImagesManager({ poiId, initialImages }: { poiId: string; initialImages: PoiImage[] }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [images, setImages] = useState(() => [...initialImages].sort((a, b) => a.sortOrder - b.sortOrder));
-  const [role, setRole] = useState<PoiImageRole>("gallery");
+  // An upload can take several roles at once — one file, no second upload.
+  const [roles, setRoles] = useState<PoiImageRole[]>(["gallery"]);
   const [uploading, setUploading] = useState(false);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -34,17 +39,47 @@ export function PoiImagesManager({ poiId, initialImages }: { poiId: string; init
     const attachRes = await fetch(`/api/pois/${poiId}/images`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ role, storageKey, sortOrder: images.length }),
+      body: JSON.stringify({ role: roles[0], storageKey, sortOrder: images.length }),
     });
-    setUploading(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
 
     if (!attachRes.ok) {
+      setUploading(false);
       setError("Couldn't attach that image.");
       return;
     }
-    const newImage: PoiImage = await attachRes.json();
+    let newImage: PoiImage = await attachRes.json();
+
+    if (roles.length > 1) {
+      const rolesRes = await fetch(`/api/pois/${poiId}/images/${newImage.id}/roles`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roles }),
+      });
+      if (rolesRes.ok) newImage = await rolesRes.json();
+      else setError("Image uploaded, but couldn't apply all the roles.");
+    }
+    setUploading(false);
     setImages((prev) => [...prev, newImage]);
+  }
+
+  async function handleToggleRole(image: PoiImage, role: PoiImageRole) {
+    const next = toggleRole(image.roles, role);
+    if (next.length === 0) return; // an image must keep at least one role; delete it instead
+    setPendingId(image.id);
+    setError(null);
+    const res = await fetch(`/api/pois/${poiId}/images/${image.id}/roles`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ roles: next }),
+    });
+    setPendingId(null);
+    if (!res.ok) {
+      setError("Couldn't update that image's roles.");
+      return;
+    }
+    const updated: PoiImage = await res.json();
+    setImages((prev) => prev.map((i) => (i.id === image.id ? updated : i)));
   }
 
   async function handleDelete(imageId: string) {
@@ -103,10 +138,17 @@ export function PoiImagesManager({ poiId, initialImages }: { poiId: string; init
                 alt=""
                 className="h-[54px] w-[72px] flex-shrink-0 rounded-sm object-cover"
               />
-              <div className="w-[60px]">
-                <Text size="xs" color="textMuted">{image.role}</Text>
+              <div className="flex flex-1 flex-wrap items-center gap-xs" role="group" aria-label="Image roles">
+                {ROLE_OPTIONS.map((r) => (
+                  <Chip
+                    key={r}
+                    selected={image.roles.includes(r)}
+                    onPress={pendingId !== null ? undefined : () => handleToggleRole(image, r)}
+                  >
+                    {r}
+                  </Chip>
+                ))}
               </div>
-              <div className="flex-1" />
               <Button
                 size="sm"
                 variant="ghost"
@@ -137,15 +179,17 @@ export function PoiImagesManager({ poiId, initialImages }: { poiId: string; init
       )}
 
       <div className="mt-md flex items-center gap-sm">
-        <select
-          value={role}
-          onChange={(e) => setRole(e.target.value as PoiImageRole)}
-          className="h-9 rounded-sm border border-border px-2"
-        >
+        <div className="flex items-center gap-xs" role="group" aria-label="Roles for the new image">
           {ROLE_OPTIONS.map((r) => (
-            <option key={r} value={r}>{r}</option>
+            <Chip
+              key={r}
+              selected={roles.includes(r)}
+              onPress={() => setRoles((prev) => (toggleRole(prev, r).length === 0 ? prev : toggleRole(prev, r)))}
+            >
+              {r}
+            </Chip>
           ))}
-        </select>
+        </div>
         <input ref={fileInputRef} type="file" accept="image/*" onChange={handleUpload} className="hidden" />
         <Button variant="secondary" size="sm" onPress={() => fileInputRef.current?.click()} loading={uploading}>
           Add image

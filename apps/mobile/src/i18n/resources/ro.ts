@@ -73,6 +73,8 @@ export const ro: TranslationSchema = {
     subheading: "Un moderator verifică înainte de publicare.",
     name: "Nume",
     namePlaceholder: "ex. Brutăria Halal Colentina",
+    description: "Descriere (opțional)",
+    descriptionPlaceholder: "Ce este locul și ce ar trebui să știe vizitatorii? ex. spații de rugăciune, certificare halal, limbi vorbite.",
     categories: "Categorii · atinge din nou pentru principală, a treia oară pentru a elimina",
     address: "Adresă",
     addressPlaceholder: "Stradă, număr, oraș",

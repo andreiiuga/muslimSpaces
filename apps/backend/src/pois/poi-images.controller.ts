@@ -1,6 +1,6 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from "@nestjs/common";
-import { attachPoiImageSchema, reorderPoiImagesSchema } from "@muslimspaces/shared";
-import type { AttachPoiImagePayload, ReorderPoiImagesPayload } from "@muslimspaces/shared";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, UseGuards } from "@nestjs/common";
+import { attachPoiImageSchema, reorderPoiImagesSchema, setPoiImageRolesSchema } from "@muslimspaces/shared";
+import type { AttachPoiImagePayload, ReorderPoiImagesPayload, SetPoiImageRolesPayload } from "@muslimspaces/shared";
 import { ZodValidationPipe } from "../common/pipes/zod-validation.pipe";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { CurrentUser, RequestUser } from "../auth/decorators/current-user.decorator";
@@ -23,6 +23,17 @@ export class PoiImagesController {
     @CurrentUser() user: RequestUser,
   ) {
     return this.poiImagesService.attach(poiId, body, user);
+  }
+
+  @Put(":imageId/roles")
+  @UseGuards(JwtAuthGuard)
+  setRoles(
+    @Param("poiId") poiId: string,
+    @Param("imageId") imageId: string,
+    @Body(new ZodValidationPipe(setPoiImageRolesSchema)) body: SetPoiImageRolesPayload,
+    @CurrentUser() user: RequestUser,
+  ) {
+    return this.poiImagesService.setRoles(poiId, imageId, body, user);
   }
 
   @Delete(":imageId")

@@ -4,7 +4,7 @@ import { useRef, useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { BadgeCheck, Camera, MapPin as MapPinIcon } from "lucide-react";
-import { Button, Chip, Input, Skeleton, Text } from "@muslimspaces/ui";
+import { Button, Chip, Input, Skeleton, Text, Textarea } from "@muslimspaces/ui";
 import { defaultWeekHours, weekHoursToPayload } from "@muslimspaces/shared";
 import type { Category, Coordinates, DayHoursDraft } from "@muslimspaces/shared";
 import type { MapBounds } from "@muslimspaces/ui/map";
@@ -49,6 +49,7 @@ export function SubmitPlaceForm({ categories }: { categories: Category[] }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [address, setAddress] = useState("");
   const [location, setLocation] = useState<Coordinates>(DEFAULT_LOCATION);
@@ -99,6 +100,9 @@ export function SubmitPlaceForm({ categories }: { categories: Category[] }) {
           // get it verbatim, matching mobile's submit screen; a moderator
           // can split it into proper ro/en text while reviewing.
           name: { ro: name, en: name },
+          // Same single-field-both-locales approach as the name; omitted when
+          // empty since the API treats description as optional.
+          ...(description.trim() && { description: { ro: description.trim(), en: description.trim() } }),
           categoryIds,
           primaryCategoryId: categoryIds[0],
           address,
@@ -172,6 +176,8 @@ export function SubmitPlaceForm({ categories }: { categories: Category[] }) {
 
       <div className="flex flex-col gap-xl rounded-lg bg-surface p-xl shadow-panel">
         <Input label={t("submit.name")} value={name} onChangeText={setName} placeholder={t("submit.namePlaceholder")} />
+
+        <Textarea label={t("submit.description")} value={description} onChangeText={setDescription} placeholder={t("submit.descriptionPlaceholder")} rows={4} />
 
         <div className="flex flex-col gap-[9px]">
           <Text size="xs" weight="medium" color="textMuted">{t("submit.categories").toUpperCase()}</Text>
