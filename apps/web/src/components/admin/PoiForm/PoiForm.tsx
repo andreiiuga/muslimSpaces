@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, Input, Text, Textarea } from "@muslimspaces/ui";
 import type { Category, Poi, PoiImage } from "@muslimspaces/shared";
+import { DEFAULT_LOCATION, LocationPicker } from "../../LocationPicker/LocationPicker";
 import { PoiImagesManager } from "../PoiImagesManager/PoiImagesManager";
 
 export function PoiForm({
@@ -27,12 +28,21 @@ export function PoiForm({
   const [website, setWebsite] = useState(initialPoi?.website ?? "");
   const [lat, setLat] = useState(initialPoi ? String(initialPoi.location.lat) : "");
   const [lng, setLng] = useState(initialPoi ? String(initialPoi.location.lng) : "");
+  // Bumped to remount the map at the typed lat/lng (MapView has no controlled center).
+  const [recenterKey, setRecenterKey] = useState(0);
   const [categoryIds, setCategoryIds] = useState<string[]>(initialPoi?.categoryIds ?? []);
   const [primaryCategoryId, setPrimaryCategoryId] = useState(initialPoi?.primaryCategoryId ?? "");
   const [visibility, setVisibility] = useState(initialPoi?.visibility ?? "visible");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [actionPending, setActionPending] = useState(false);
+
+  // Seeds the map's camera: the typed coordinates when valid, else the POI's
+  // own saved location, else Bucharest. Only read on mount / recenter.
+  const mapCenter =
+    lat.trim() !== "" && lng.trim() !== "" && !Number.isNaN(Number(lat)) && !Number.isNaN(Number(lng))
+      ? { lat: Number(lat), lng: Number(lng) }
+      : (initialPoi?.location ?? DEFAULT_LOCATION);
 
   function toggleCategory(id: string) {
     setCategoryIds((prev) => {
@@ -118,9 +128,25 @@ export function PoiForm({
       <Textarea label="Description (Romanian)" value={descriptionRo} onChangeText={setDescriptionRo} rows={3} />
       <Textarea label="Description (English)" value={descriptionEn} onChangeText={setDescriptionEn} rows={3} />
       <Input label="Address" value={address} onChangeText={setAddress} />
-      <div className="flex gap-sm">
-        <Input label="Latitude" value={lat} onChangeText={setLat} />
-        <Input label="Longitude" value={lng} onChangeText={setLng} />
+      <div className="flex flex-col gap-xs">
+        <Text size="sm" weight="medium">Location</Text>
+        <LocationPicker
+          value={mapCenter}
+          zoom={initialPoi ? 15 : 13}
+          recenterKey={recenterKey}
+          onChange={({ lat: la, lng: ln }) => {
+            setLat(la.toFixed(6));
+            setLng(ln.toFixed(6));
+          }}
+        />
+        <div className="flex items-end gap-sm">
+          <Input label="Latitude" value={lat} onChangeText={setLat} />
+          <Input label="Longitude" value={lng} onChangeText={setLng} />
+          <Button variant="secondary" size="sm" onPress={() => setRecenterKey((k) => k + 1)}>
+            Center map
+          </Button>
+        </div>
+        <Text size="xs" color="textMuted">Drag the map to move the pin, or type coordinates and press “Center map”.</Text>
       </div>
       <Input label="Phone (optional)" value={phone} onChangeText={setPhone} />
       <Input label="Website (optional)" value={website} onChangeText={setWebsite} />

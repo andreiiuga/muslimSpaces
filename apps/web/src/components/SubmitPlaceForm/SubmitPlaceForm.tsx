@@ -2,46 +2,15 @@
 
 import { useRef, useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
-import { BadgeCheck, Camera, MapPin as MapPinIcon } from "lucide-react";
-import { Button, Chip, Input, Skeleton, Text, Textarea } from "@muslimspaces/ui";
+import { BadgeCheck, Camera } from "lucide-react";
+import { Button, Chip, Input, Text, Textarea } from "@muslimspaces/ui";
 import { defaultWeekHours, weekHoursToPayload } from "@muslimspaces/shared";
 import type { Category, Coordinates, DayHoursDraft } from "@muslimspaces/shared";
-import type { MapBounds } from "@muslimspaces/ui/map";
 import { useLocale } from "../../i18n/LocaleContext";
 import { pickLocalized } from "../../i18n/pick-localized";
 import { BackLink } from "../BackLink/BackLink";
+import { DEFAULT_LOCATION, LocationPicker } from "../LocationPicker/LocationPicker";
 import { WeeklyHoursEditor } from "./WeeklyHoursEditor";
-
-const MapView = dynamic(() => import("@muslimspaces/ui/map").then((m) => m.MapView), {
-  ssr: false,
-  loading: () => <Skeleton height="100%" borderRadius={0} />,
-});
-
-// Bucharest — this app is Romania-only (see CLAUDE.md), and every submitted
-// place starts here rather than MapView's own whole-country default zoom,
-// which is too wide to place a pin usefully. Mirrors apps/mobile's
-// DEFAULT_LOCATION in pois/submit.tsx.
-const DEFAULT_LOCATION: Coordinates = { lat: 44.4268, lng: 26.1025 };
-
-function LocationPicker({ value, onChange }: { value: Coordinates; onChange: (v: Coordinates) => void }) {
-  const { t } = useLocale();
-  function handleBoundsChange(bounds: MapBounds) {
-    onChange({ lat: (bounds.minLat + bounds.maxLat) / 2, lng: (bounds.minLng + bounds.maxLng) / 2 });
-  }
-
-  return (
-    <div className="relative mt-1 h-[250px] overflow-hidden rounded-lg border border-border">
-      <MapView pois={[]} initialCenter={value} initialZoom={13}
-        cooperativeGestures
-        cooperativeGestureHints={{ mac: t("submit.mapHintMac"), windows: t("submit.mapHintWindows"), mobile: t("submit.mapHintMobile") }}
-        onBoundsChange={handleBoundsChange} />
-      <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-full">
-        <MapPinIcon size={34} className="fill-danger text-danger" />
-      </div>
-    </div>
-  );
-}
 
 export function SubmitPlaceForm({ categories }: { categories: Category[] }) {
   const router = useRouter();
