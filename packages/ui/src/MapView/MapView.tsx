@@ -5,7 +5,19 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { ArrowLeft } from "lucide-react";
 import { IconButton } from "../IconButton";
-import { LABEL_MIN_ZOOM, PIN_EMOJI, buildClusterIndex, getMapPoints, pinIconKeyForSlug, pinLabel } from "./pin-utils";
+import {
+  LABEL_MIN_ZOOM,
+  ORBIT_PERIOD_MS,
+  ORBIT_RADIUS_RATIO,
+  PIN_EMOJI,
+  PIN_EMOJI_SIZE,
+  SATELLITE_SCALE,
+  buildClusterIndex,
+  getMapPoints,
+  pinLabel,
+  resolvePoiPinIcons,
+  satellitePhaseDeg,
+} from "./pin-utils";
 import type { PinIconKey } from "./pin-utils";
 import type { MapPadding, MapViewProps } from "./MapView.types";
 
@@ -32,8 +44,6 @@ function styleUrlForTheme(theme: "light" | "dark"): string {
 const DEFAULT_CENTER = { lat: 45.9432, lng: 24.9668 };
 const DEFAULT_ZOOM = 6;
 
-const PIN_EMOJI_SIZE = 22;
-
 // Selecting a POI flies the camera in close and tilted; deselecting levels
 // it back out to top-down.
 const SELECT_FLY_ZOOM = 17.5;
@@ -51,6 +61,37 @@ const SELECT_PITCH = 55;
 // turn per leg.
 const ORBIT_DEGREES_PER_LEG = 170;
 const ORBIT_LEG_DURATION_MS = 17_000;
+
+// One secondary-category emoji orbiting the main icon. Two nested elements:
+// the arm rotates around the icon's center, and the emoji at its end
+// counter-rotates by the same amount to stay upright (keyframes live in the
+// shared Tailwind preset). Both share one negative animation-delay, which is
+// what spaces satellites around the orbit; `motion-reduce` drops the
+// animation and the inline rotation below leaves them parked at that angle.
+function createSatelliteElement(iconKey: PinIconKey, index: number, count: number): HTMLDivElement {
+  const phaseDeg = satellitePhaseDeg(index, count);
+  const phaseDelay = `-${(ORBIT_PERIOD_MS * phaseDeg) / 360}ms`;
+
+  const arm = document.createElement("div");
+  arm.className = "pointer-events-none absolute left-1/2 top-1/2 h-0 w-0 animate-pin-orbit motion-reduce:animate-none";
+  arm.style.transform = `rotate(${phaseDeg}deg)`;
+  arm.style.animationDuration = `${ORBIT_PERIOD_MS}ms`;
+  arm.style.animationDelay = phaseDelay;
+
+  const emoji = document.createElement("div");
+  emoji.textContent = PIN_EMOJI[iconKey];
+  emoji.className = "absolute leading-none animate-pin-orbit-counter motion-reduce:animate-none";
+  emoji.style.fontSize = `${PIN_EMOJI_SIZE * SATELLITE_SCALE}px`;
+  // Centered on the arm's far end, orbiting at ORBIT_RADIUS_RATIO icon-sizes out.
+  emoji.style.left = `${PIN_EMOJI_SIZE * ORBIT_RADIUS_RATIO}px`;
+  emoji.style.translate = "-50% -50%";
+  emoji.style.transform = `rotate(${-phaseDeg}deg)`;
+  emoji.style.animationDuration = `${ORBIT_PERIOD_MS}ms`;
+  emoji.style.animationDelay = phaseDelay;
+
+  arm.appendChild(emoji);
+  return arm;
+}
 
 // Icon with a name-label pill above it, anchored (via maplibregl.Marker's
 // `anchor: "bottom"`) at the icon's own bottom edge — matches the design's
@@ -71,6 +112,7 @@ const ORBIT_LEG_DURATION_MS = 17_000;
 // as direct style/classList calls — everything else is static.
 function createMarkerElement(
   iconKey: PinIconKey,
+  satelliteKeys: PinIconKey[],
   label: string,
   color: string,
   selected: boolean,
@@ -86,11 +128,13 @@ function createMarkerElement(
 
   const iconEl = document.createElement("div");
   iconEl.textContent = PIN_EMOJI[iconKey];
-  iconEl.className = "flex items-center justify-center leading-none";
+  iconEl.className = "relative flex items-center justify-center leading-none";
   iconEl.style.fontSize = `${PIN_EMOJI_SIZE}px`;
   if (selected) {
     iconEl.classList.add("bg-surface", "rounded-pill", "p-[6px]", "shadow-elevated");
   }
+
+  satelliteKeys.forEach((key, i) => iconEl.appendChild(createSatelliteElement(key, i, satelliteKeys.length)));
 
   el.appendChild(labelEl);
   el.appendChild(iconEl);
@@ -242,6 +286,7 @@ export function MapView({
 
     const clusterIndex = buildClusterIndex(pois);
     const poisById = new Map(pois.map((poi) => [poi.id, poi]));
+    const categoriesById = new Map((categories ?? []).map((c) => [c.id, c]));
 
     renderMarkersRef.current = () => {
       markersRef.current.forEach((marker) => marker.remove());
@@ -270,8 +315,7 @@ export function MapView({
         }
 
         const poi = point.poi;
-        const category = categories?.find((c) => c.id === poi.primaryCategoryId);
-        const iconKey = pinIconKeyForSlug(category?.slug);
+        const icons = resolvePoiPinIcons(poi, categoriesById);
         const selected = poi.id === selectedPoiId;
         // CSS variables (not the `colors` hex constants, which are the light
         // theme's values) so the label follows the site's light/dark toggle:
@@ -279,7 +323,15 @@ export function MapView({
         // light, 12:1 on the dark label in dark) — plain `primary` is only
         // 2.3:1 on cream.
         const color = selected ? "var(--color-danger)" : "var(--color-primaryDark)";
-        const { el, labelEl } = createMarkerElement(iconKey, pinLabel(getPoiLabel?.(poi) ?? poi.name.en), color, selected);
+        // Satellites appear together with the labels, once individual
+        // buildings are distinguishable — zoomed out they'd just be noise.
+        const { el, labelEl } = createMarkerElement(
+          icons.primary,
+          showLabels ? icons.satellites : [],
+          pinLabel(getPoiLabel?.(poi) ?? poi.name.en),
+          color,
+          selected,
+        );
         labelEl.style.display = showLabels ? "block" : "none";
 
         const marker = new maplibregl.Marker({ element: el, anchor: "bottom" })

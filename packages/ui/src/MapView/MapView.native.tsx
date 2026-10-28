@@ -7,7 +7,8 @@ import { ArrowLeft } from "lucide-react-native";
 import { colors, nativeShadows } from "../tokens";
 import { IconButton } from "../IconButton";
 import { Text } from "../Text";
-import { LABEL_MIN_ZOOM, PIN_EMOJI, buildClusterIndex, getMapPoints, pinIconKeyForSlug, pinLabel } from "./pin-utils";
+import { LABEL_MIN_ZOOM, PIN_EMOJI, buildClusterIndex, getMapPoints, pinLabel, resolvePoiPinIcons } from "./pin-utils";
+import { SecondaryPins, useOrbitProgress } from "./SecondaryPins.native";
 import type { MapViewProps } from "./MapView.types";
 
 // Free, whole-planet vector tiles, no API key, built for production use —
@@ -142,6 +143,8 @@ export function MapView({
   );
 
   const showLabels = zoom >= LABEL_MIN_ZOOM;
+  const orbitProgress = useOrbitProgress();
+  const categoriesById = useMemo(() => new globalThis.Map((categories ?? []).map((c) => [c.id, c])), [categories]);
 
   const clusterIndex = useMemo(() => buildClusterIndex(pois), [pois]);
   // globalThis.Map, not the `Map` component imported above — same name,
@@ -204,8 +207,7 @@ export function MapView({
           }
 
           const poi = point.poi;
-          const category = categories?.find((c) => c.id === poi.primaryCategoryId);
-          const iconKey = pinIconKeyForSlug(category?.slug);
+          const icons = resolvePoiPinIcons(poi, categoriesById);
           const selected = poi.id === selectedPoiId;
           const color = selected ? colors.danger : colors.primaryDark;
 
@@ -237,7 +239,10 @@ export function MapView({
                   className={selected ? "rounded-pill bg-surface p-[6px]" : undefined}
                   style={selected ? nativeShadows.elevated : undefined}
                 >
-                  <Text size="xl">{PIN_EMOJI[iconKey]}</Text>
+                  <Text size="xl">{PIN_EMOJI[icons.primary]}</Text>
+                  {/* Secondary categories drift around the main icon, only
+                      once labels show (same zoom gate). */}
+                  {showLabels && <SecondaryPins icons={icons.satellites} progress={orbitProgress} />}
                 </View>
               </View>
             </Marker>

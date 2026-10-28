@@ -131,6 +131,21 @@ module.exports = {
       },
       // Matches apps/web's existing hand-written breakpoints (globals.css) —
       // retired class-by-class in Phase 4/6 as components move to these.
+      // Secondary category icons orbiting a map pin's main emoji (web only —
+      // native drives the same motion with Animated, see SecondaryPins.native).
+      // Each satellite sits on a rotating arm and counter-rotates by the same
+      // amount so the emoji itself stays upright. The per-satellite starting
+      // angle is a negative animation-delay (phase) and the duration is
+      // ORBIT_PERIOD_MS, both set inline from pin-utils.ts so the period
+      // isn't duplicated here.
+      keyframes: {
+        "pin-orbit": { from: { transform: "rotate(0deg)" }, to: { transform: "rotate(360deg)" } },
+        "pin-orbit-counter": { from: { transform: "rotate(0deg)" }, to: { transform: "rotate(-360deg)" } },
+      },
+      animation: {
+        "pin-orbit": "pin-orbit linear infinite",
+        "pin-orbit-counter": "pin-orbit-counter linear infinite",
+      },
       screens: {
         admin: "768px",
         explore: "860px",

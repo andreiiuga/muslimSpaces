@@ -15,7 +15,7 @@
  */
 
 import Supercluster from "supercluster";
-import type { Poi } from "@muslimspaces/shared";
+import type { Category, Poi } from "@muslimspaces/shared";
 
 export type PinIconKey =
   | "mosque"
@@ -55,13 +55,58 @@ export const PIN_EMOJI: Record<PinIconKey, string> = {
   mosque: "🕌",
   restaurant: "🍽️",
   meat: "🥩",
-  sweets: "🍬",
+  sweets: "🥐",
   store: "🏪",
   clothing: "👕",
   doctors: "🩺",
   lawyers: "⚖️",
   generic: "📍",
 };
+
+// A POI can carry several categories (see poi_categories): the primary one
+// is the pin's headline icon, the rest orbit it as smaller "satellites" once
+// the zoom is high enough for labels. Satellites are deduped by glyph —
+// Jamiah/Musallah/Mosque all share 🕌, so a mosque that's also a Jamiah
+// shouldn't orbit a second 🕌 around the first — and capped so a POI with
+// many categories doesn't turn into a cloud.
+export const MAX_SATELLITE_ICONS = 3;
+
+export interface PoiPinIcons {
+  primary: PinIconKey;
+  satellites: PinIconKey[];
+}
+
+export function resolvePoiPinIcons(poi: Poi, categoriesById: ReadonlyMap<string, Category>): PoiPinIcons {
+  const keyFor = (categoryId: string) => pinIconKeyForSlug(categoriesById.get(categoryId)?.slug);
+  const primary = keyFor(poi.primaryCategoryId);
+  const satellites: PinIconKey[] = [];
+  for (const categoryId of poi.categoryIds) {
+    const key = keyFor(categoryId);
+    // "generic" means an unmapped category (e.g. general-business) — a bare
+    // map pin orbiting a real icon adds nothing.
+    if (key === primary || key === "generic" || satellites.includes(key)) continue;
+    satellites.push(key);
+    if (satellites.length === MAX_SATELLITE_ICONS) break;
+  }
+  return { primary, satellites };
+}
+
+// Main pin emoji size in px/dp — matches the "xl" text size the native
+// variant renders it with (tokens.ts fontSizes.xl).
+export const PIN_EMOJI_SIZE = 22;
+
+// Orbit geometry, in multiples of the primary icon's size so web (px) and
+// native (dp) scale it from their own icon size instead of duplicating
+// absolute numbers.
+export const SATELLITE_SCALE = 0.6;
+export const ORBIT_RADIUS_RATIO = 1;
+// One full revolution. Slow enough to read as drifting, not spinning.
+export const ORBIT_PERIOD_MS = 9000;
+
+// Satellites share one orbit, spaced evenly so they never bunch up.
+export function satellitePhaseDeg(index: number, count: number): number {
+  return (360 / count) * index;
+}
 
 // Below this zoom, pins show icon-only — the name label only earns its
 // screen space once individual buildings are distinguishable (roughly
