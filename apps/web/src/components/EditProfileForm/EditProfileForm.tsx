@@ -7,6 +7,7 @@ import { Avatar, Button, Input, Text } from "@muslimspaces/ui";
 import type { AuthUser } from "@muslimspaces/shared";
 import { cn } from "@/lib/utils";
 import { useLocale } from "../../i18n/LocaleContext";
+import { useSession } from "../SessionProvider/SessionProvider";
 import { SUPPORTED_LOCALES, type LocaleCode } from "../../i18n/types";
 import { BackLink } from "../BackLink/BackLink";
 
@@ -15,6 +16,7 @@ const LOCALE_CODE: Record<LocaleCode, string> = { en: "EN", ro: "RO", ar: "AR" }
 
 export function EditProfileForm({ user }: { user: AuthUser }) {
   const router = useRouter();
+  const { refresh: refreshSession } = useSession();
   const { locale, setLocale, t } = useLocale();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -52,6 +54,7 @@ export function EditProfileForm({ user }: { user: AuthUser }) {
     if (saveRes.ok) {
       setAvatarUrl(url);
       router.refresh();
+      await refreshSession();
     } else {
       setMessage(t("editProfile.saveError"));
     }
@@ -69,7 +72,10 @@ export function EditProfileForm({ user }: { user: AuthUser }) {
 
     setSaving(false);
     setMessage(res.ok ? t("editProfile.saved") : t("editProfile.saveError"));
-    if (res.ok) router.refresh();
+    if (res.ok) {
+      router.refresh();
+      await refreshSession();
+    }
   }
 
   return (

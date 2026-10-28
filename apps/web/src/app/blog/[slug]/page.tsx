@@ -4,7 +4,15 @@ import { ApiError } from "@muslimspaces/shared";
 import { getApiClient } from "../../../lib/api-client";
 import { BlogPostView } from "../../../components/BlogPostView/BlogPostView";
 
-export const dynamic = "force-dynamic";
+// ISR — see pois/[id]/page.tsx for the cache/single-instance notes.
+// Admin blog writes through this app call revalidateBlog() for instant
+// updates. Must stay free of cookies()/headers().
+export const revalidate = 3600;
+
+// Generated on first hit, then cached.
+export function generateStaticParams() {
+  return [];
+}
 
 async function getPost(slug: string) {
   try {

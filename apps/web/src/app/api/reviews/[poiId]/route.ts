@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { ApiError, submitReviewSchema } from "@muslimspaces/shared";
+import { revalidatePoi } from "../../../../lib/revalidate";
 import { getApiClient } from "../../../../lib/api-client";
 import { getCurrentToken } from "../../../../lib/current-user";
 
@@ -18,6 +19,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ poi
 
   try {
     const review = await getApiClient(token).pois.reviews.submit(poiId, parsed.data);
+    revalidatePoi(poiId);
     return NextResponse.json(review);
   } catch (error) {
     if (error instanceof ApiError) {

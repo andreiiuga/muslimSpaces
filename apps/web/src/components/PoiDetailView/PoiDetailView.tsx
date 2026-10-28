@@ -13,6 +13,7 @@ import { pickLocalized } from "../../i18n/pick-localized";
 import { FavoriteButton } from "../FavoriteButton/FavoriteButton";
 import { ReviewsList } from "../ReviewSection/ReviewsList";
 import { BackLink } from "../BackLink/BackLink";
+import { useSession } from "../SessionProvider/SessionProvider";
 import { ImageLightbox } from "./ImageLightbox";
 
 const MapView = dynamic(() => import("@muslimspaces/ui/map").then((m) => m.MapView), {
@@ -51,19 +52,16 @@ export function PoiDetailView({
   hours,
   categoryLabels,
   reviews,
-  currentUserId,
-  isFavorite,
-  isLoggedIn,
 }: {
   poi: Poi;
   images: PoiImage[];
   hours: PoiHour[];
   categoryLabels: string[];
   reviews: Review[];
-  currentUserId?: string;
-  isFavorite: boolean;
-  isLoggedIn: boolean;
 }) {
+  // Viewer-specific state comes from the client session, not props: this
+  // page is ISR-cached and shared across users.
+  const { user } = useSession();
   const { locale, t } = useLocale();
   const { resolvedTheme } = useTheme();
 
@@ -170,7 +168,7 @@ export function PoiDetailView({
           </div>
         )}
         <div className="absolute end-[16px] top-[16px]">
-          <FavoriteButton poiId={poi.id} initialIsFavorite={isFavorite} isLoggedIn={isLoggedIn} />
+          <FavoriteButton poiId={poi.id} />
         </div>
         {images.length > 1 && (
           <button
@@ -233,7 +231,7 @@ export function PoiDetailView({
             </>
           )}
 
-          <ReviewsList poiId={poi.id} poiName={name} initialReviews={reviews} currentUserId={currentUserId} isLoggedIn={isLoggedIn} />
+          <ReviewsList poiId={poi.id} poiName={name} initialReviews={reviews} currentUserId={user?.id} isLoggedIn={Boolean(user)} />
         </div>
 
         {!isSmallViewport && (

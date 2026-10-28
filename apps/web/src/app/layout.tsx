@@ -4,6 +4,7 @@ import { ThemeProvider } from "next-themes";
 import { Navbar } from "../components/Navbar/Navbar";
 import { ExploreStateProvider } from "../components/ExploreView/ExploreStateContext";
 import { LocaleProvider } from "../i18n/LocaleContext";
+import { SessionProvider } from "../components/SessionProvider/SessionProvider";
 import "./globals.css";
 
 // Same font stack as the design's own CSS (`"Plus Jakarta Sans","IBM Plex
@@ -46,6 +47,7 @@ export default function RootLayout({
       <body className="m-0 flex min-h-dvh flex-col font-[var(--font-jakarta),var(--font-ibm-arabic),system-ui,sans-serif]">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <LocaleProvider>
+            <SessionProvider>
             <Navbar />
             {/* min-w-0 is load-bearing — a flex item's default min-width is
                 "auto" (its content's intrinsic width), so without this any
@@ -56,6 +58,7 @@ export default function RootLayout({
             <div className="min-w-0 flex-1">
               <ExploreStateProvider>{children}</ExploreStateProvider>
             </div>
+            </SessionProvider>
           </LocaleProvider>
         </ThemeProvider>
       </body>

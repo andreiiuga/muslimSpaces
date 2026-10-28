@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { ApiError, createBlogPostSchema } from "@muslimspaces/shared";
+import { revalidateBlog } from "../../../../lib/revalidate";
 import { getApiClient } from "../../../../lib/api-client";
 import { getCurrentToken } from "../../../../lib/current-user";
 
@@ -14,6 +15,7 @@ export async function POST(request: Request) {
 
   try {
     const post = await getApiClient(token).blog.create(parsed.data);
+    revalidateBlog();
     return NextResponse.json(post);
   } catch (error) {
     if (error instanceof ApiError) {

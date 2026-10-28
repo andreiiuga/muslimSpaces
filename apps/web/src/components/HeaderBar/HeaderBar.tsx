@@ -6,14 +6,15 @@ import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Search, MapPinPlus, Sun, Moon } from "lucide-react";
 import { Avatar, buttonVariants } from "@muslimspaces/ui";
-import type { AuthUser } from "@muslimspaces/shared";
 import { cn } from "@/lib/utils";
 import { useLocale } from "../../i18n/LocaleContext";
+import { useSession } from "../SessionProvider/SessionProvider";
 import { SUPPORTED_LOCALES } from "../../i18n/types";
 import { Logo } from "../Logo/Logo";
 import { HeaderDrawer } from "./HeaderDrawer";
 
-export function HeaderBar({ user }: { user: AuthUser | null }) {
+export function HeaderBar() {
+  const { user } = useSession();
   const { locale, setLocale, t } = useLocale();
   const router = useRouter();
   const pathname = usePathname();

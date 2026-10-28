@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { ApiError, updateBlogPostSchema } from "@muslimspaces/shared";
+import { revalidateBlog } from "../../../../../lib/revalidate";
 import { getApiClient } from "../../../../../lib/api-client";
 import { getCurrentToken } from "../../../../../lib/current-user";
 
@@ -15,6 +16,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   try {
     const post = await getApiClient(token).blog.update(id, parsed.data);
+    revalidateBlog();
     return NextResponse.json(post);
   } catch (error) {
     if (error instanceof ApiError) {
@@ -31,6 +33,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
 
   try {
     await getApiClient(token).blog.remove(id);
+    revalidateBlog();
     return new NextResponse(null, { status: 204 });
   } catch (error) {
     if (error instanceof ApiError) {

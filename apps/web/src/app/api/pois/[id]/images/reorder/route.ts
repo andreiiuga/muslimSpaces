@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { ApiError, reorderPoiImagesSchema } from "@muslimspaces/shared";
+import { revalidatePoi } from "../../../../../../lib/revalidate";
 import { getApiClient } from "../../../../../../lib/api-client";
 import { getCurrentToken } from "../../../../../../lib/current-user";
 
@@ -16,6 +17,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   try {
     const images = await getApiClient(token).pois.images.reorder(id, parsed.data);
+    revalidatePoi(id);
     return NextResponse.json(images);
   } catch (error) {
     if (error instanceof ApiError) {

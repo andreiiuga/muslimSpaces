@@ -7,11 +7,13 @@ import { Avatar, Button, Text, buttonVariants } from "@muslimspaces/ui";
 import type { AuthUser } from "@muslimspaces/shared";
 import { cn } from "@/lib/utils";
 import { useLocale } from "../../i18n/LocaleContext";
+import { useSession } from "../SessionProvider/SessionProvider";
 
 const LOCALE_LABEL: Record<string, string> = { en: "English", ro: "Română", ar: "العربية" };
 
 export function ProfileHubView({ user }: { user: AuthUser | null }) {
   const router = useRouter();
+  const { refresh: refreshSession } = useSession();
   const { locale, t } = useLocale();
 
   if (!user) {
@@ -36,6 +38,7 @@ export function ProfileHubView({ user }: { user: AuthUser | null }) {
     await fetch("/api/logout", { method: "POST" });
     router.push("/");
     router.refresh();
+    await refreshSession();
   }
 
   const rows = [

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { ApiError } from "@muslimspaces/shared";
+import { revalidatePoi } from "../../../../../../lib/revalidate";
 import { getApiClient } from "../../../../../../lib/api-client";
 import { getCurrentToken } from "../../../../../../lib/current-user";
 
@@ -10,6 +11,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
 
   try {
     await getApiClient(token).pois.images.remove(id, imageId);
+    revalidatePoi(id);
     return new NextResponse(null, { status: 204 });
   } catch (error) {
     if (error instanceof ApiError) {

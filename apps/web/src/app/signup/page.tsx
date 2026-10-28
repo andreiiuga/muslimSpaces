@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button, Input, Text } from "@muslimspaces/ui";
 import { useLocale } from "../../i18n/LocaleContext";
+import { useSession } from "../../components/SessionProvider/SessionProvider";
 import { AuthCard } from "../../components/AuthCard/AuthCard";
 
 export default function SignupPage() {
   const router = useRouter();
+  const { refresh: refreshSession } = useSession();
   const { t } = useLocale();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -42,6 +44,7 @@ export default function SignupPage() {
 
     router.push("/account");
     router.refresh();
+    await refreshSession();
   }
 
   return (

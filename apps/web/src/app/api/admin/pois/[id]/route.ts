@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { ApiError, updatePoiSchema } from "@muslimspaces/shared";
+import { revalidatePoi } from "../../../../../lib/revalidate";
 import { getApiClient } from "../../../../../lib/api-client";
 import { getCurrentToken } from "../../../../../lib/current-user";
 
@@ -16,6 +17,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   try {
     const poi = await getApiClient(token).pois.update(id, parsed.data);
+    revalidatePoi(id);
     return NextResponse.json(poi);
   } catch (error) {
     if (error instanceof ApiError) {
@@ -32,6 +34,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
 
   try {
     await getApiClient(token).pois.remove(id);
+    revalidatePoi(id);
     return new NextResponse(null, { status: 204 });
   } catch (error) {
     if (error instanceof ApiError) {

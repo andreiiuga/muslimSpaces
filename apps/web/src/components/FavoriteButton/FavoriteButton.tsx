@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bookmark } from "lucide-react";
 import { IconButton } from "@muslimspaces/ui";
+import { useSession } from "../SessionProvider/SessionProvider";
 
 // Circular icon-only button, floated over the hero image — matches the
 // design's `poi.favIcon`/`favInk` treatment (a plain white circle with a
@@ -13,27 +14,26 @@ import { IconButton } from "@muslimspaces/ui";
 // with its own shadow value, normalized onto IconButton's existing lg
 // (48px) size and iconSolid shadow rather than preserving what was likely
 // unintentional drift between two visually-identical use cases.
-export function FavoriteButton({
-  poiId,
-  initialIsFavorite,
-  isLoggedIn,
-}: {
-  poiId: string;
-  initialIsFavorite: boolean;
-  isLoggedIn: boolean;
-}) {
+export function FavoriteButton({ poiId }: { poiId: string }) {
   const router = useRouter();
-  const [isFavorite, setIsFavorite] = useState(initialIsFavorite);
+  // The POI page is ISR-cached, so it can't know whether the viewer saved
+  // this POI — the state comes from the client-side session instead, with a
+  // local override so a toggle reflects instantly without waiting on a
+  // session refetch.
+  const { user, favoriteIds, status } = useSession();
+  const [override, setOverride] = useState<boolean | null>(null);
+  const isFavorite = override ?? favoriteIds.has(poiId);
   const [pending, setPending] = useState(false);
 
   async function toggle() {
-    if (!isLoggedIn) {
+    if (status === "loading") return;
+    if (!user) {
       router.push("/login");
       return;
     }
     setPending(true);
     await fetch(`/api/favorites/${poiId}`, { method: isFavorite ? "DELETE" : "POST" });
-    setIsFavorite((v) => !v);
+    setOverride(!isFavorite);
     setPending(false);
   }
 

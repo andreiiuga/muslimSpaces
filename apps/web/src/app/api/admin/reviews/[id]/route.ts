@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { ApiError, setReviewStatusSchema } from "@muslimspaces/shared";
+import { revalidatePoi, revalidateAllPois } from "../../../../../lib/revalidate";
 import { getApiClient } from "../../../../../lib/api-client";
 import { getCurrentToken } from "../../../../../lib/current-user";
 
@@ -15,6 +16,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   try {
     const review = await getApiClient(token).reviews.setStatus(id, parsed.data);
+    revalidatePoi(review.poiId);
     return NextResponse.json(review);
   } catch (error) {
     if (error instanceof ApiError) {
@@ -31,6 +33,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
 
   try {
     await getApiClient(token).reviews.remove(id);
+    revalidateAllPois();
     return new NextResponse(null, { status: 204 });
   } catch (error) {
     if (error instanceof ApiError) {

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { ApiError, setPoiVisibilitySchema } from "@muslimspaces/shared";
+import { revalidatePoi } from "../../../../../../lib/revalidate";
 import { getApiClient } from "../../../../../../lib/api-client";
 import { getCurrentToken } from "../../../../../../lib/current-user";
 
@@ -16,6 +17,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   try {
     const poi = await getApiClient(token).pois.setVisibility(id, parsed.data);
+    revalidatePoi(id);
     return NextResponse.json(poi);
   } catch (error) {
     if (error instanceof ApiError) {

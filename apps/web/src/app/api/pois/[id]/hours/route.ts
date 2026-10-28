@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { ApiError, setPoiHoursSchema } from "@muslimspaces/shared";
+import { revalidatePoi } from "../../../../../lib/revalidate";
 import { getApiClient } from "../../../../../lib/api-client";
 import { getCurrentToken } from "../../../../../lib/current-user";
 
@@ -18,6 +19,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
   try {
     const hours = await getApiClient(token).pois.hours.set(id, parsed.data);
+    revalidatePoi(id);
     return NextResponse.json(hours);
   } catch (error) {
     if (error instanceof ApiError) {
