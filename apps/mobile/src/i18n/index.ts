@@ -3,8 +3,9 @@ import { initReactI18next } from "react-i18next";
 import { en } from "./resources/en";
 import { ro } from "./resources/ro";
 import { ar } from "./resources/ar";
+import { tr } from "./resources/tr";
 
-export const SUPPORTED_LOCALES = ["en", "ro", "ar"] as const;
+export const SUPPORTED_LOCALES = ["en", "ro", "ar", "tr"] as const;
 export type LocaleCode = (typeof SUPPORTED_LOCALES)[number];
 
 export function isSupportedLocale(value: string): value is LocaleCode {
@@ -16,6 +17,7 @@ i18n.use(initReactI18next).init({
     en: { translation: en },
     ro: { translation: ro },
     ar: { translation: ar },
+    tr: { translation: tr },
   },
   lng: "ro",
   fallbackLng: "en",

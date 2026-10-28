@@ -568,7 +568,7 @@ for the shared `clsx`+`tailwind-merge` helper every component uses.
   to revert to the latest stable 4.x next time a native rebuild is already
   needed for another reason.
 - **i18n**: `i18next` + `react-i18next`, mobile-only (web has no EN/RO/AR
-  switch yet) — resource dictionaries live in `src/i18n/resources/{en,ro,ar}.ts`,
+  switch yet) — resource dictionaries live in `src/i18n/resources/{en,ro,ar,tr}.ts`,
   keyed by screen. `en.ts` is the source of truth for the `TranslationSchema`
   type (plain object, deliberately *not* `as const` — a literal-typed schema
   would force `ro.ts`/`ar.ts` to match English's exact string values, not

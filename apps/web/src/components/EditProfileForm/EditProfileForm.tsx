@@ -11,8 +11,8 @@ import { useSession } from "../SessionProvider/SessionProvider";
 import { SUPPORTED_LOCALES, type LocaleCode } from "../../i18n/types";
 import { BackLink } from "../BackLink/BackLink";
 
-const LOCALE_LABEL: Record<LocaleCode, string> = { en: "English", ro: "Română", ar: "العربية" };
-const LOCALE_CODE: Record<LocaleCode, string> = { en: "EN", ro: "RO", ar: "AR" };
+const LOCALE_LABEL: Record<LocaleCode, string> = { en: "English", ro: "Română", ar: "العربية", tr: "Türkçe" };
+const LOCALE_CODE: Record<LocaleCode, string> = { en: "EN", ro: "RO", ar: "AR", tr: "TR" };
 
 export function EditProfileForm({ user }: { user: AuthUser }) {
   const router = useRouter();

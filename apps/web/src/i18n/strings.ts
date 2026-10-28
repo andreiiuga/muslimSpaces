@@ -1,9 +1,10 @@
 import { en } from "./strings/en";
 import { ro } from "./strings/ro";
 import { ar } from "./strings/ar";
+import { tr } from "./strings/tr";
 import type { LocaleCode } from "./types";
 
-const DICTIONARIES = { en, ro, ar };
+const DICTIONARIES = { en, ro, ar, tr };
 
 type Dict = Record<string, unknown>;
 

@@ -10,8 +10,8 @@ import { localFileToUpload } from "../lib/local-file";
 import { useLocale } from "../i18n/useLocale";
 import { SUPPORTED_LOCALES, type LocaleCode } from "../i18n";
 
-const LOCALE_LABEL: Record<LocaleCode, string> = { en: "English", ro: "Română", ar: "العربية" };
-const LOCALE_CODE: Record<LocaleCode, string> = { en: "EN", ro: "RO", ar: "AR" };
+const LOCALE_LABEL: Record<LocaleCode, string> = { en: "English", ro: "Română", ar: "العربية", tr: "Türkçe" };
+const LOCALE_CODE: Record<LocaleCode, string> = { en: "EN", ro: "RO", ar: "AR", tr: "TR" };
 
 export function EditProfileForm({ user, onUpdated }: { user: AuthUser; onUpdated: (user: AuthUser) => void }) {
   const { t } = useTranslation();

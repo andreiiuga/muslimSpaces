@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { useLocale } from "../../i18n/LocaleContext";
 import { useSession } from "../SessionProvider/SessionProvider";
 
-const LOCALE_LABEL: Record<string, string> = { en: "English", ro: "Română", ar: "العربية" };
+const LOCALE_LABEL: Record<string, string> = { en: "English", ro: "Română", ar: "العربية", tr: "Türkçe" };
 
 export function ProfileHubView({ user }: { user: AuthUser | null }) {
   const router = useRouter();

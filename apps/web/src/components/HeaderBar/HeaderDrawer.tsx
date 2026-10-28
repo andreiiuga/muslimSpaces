@@ -17,6 +17,7 @@ const LOCALE_LABEL: Record<LocaleCode, string> = {
   en: "English",
   ro: "Română",
   ar: "العربية",
+  tr: "Türkçe",
 };
 
 // Below the header's 900px breakpoint ("header:" in the shared Tailwind

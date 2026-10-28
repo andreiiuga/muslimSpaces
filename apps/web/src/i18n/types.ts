@@ -1,4 +1,4 @@
-export const SUPPORTED_LOCALES = ["en", "ro", "ar"] as const;
+export const SUPPORTED_LOCALES = ["en", "ro", "ar", "tr"] as const;
 export type LocaleCode = (typeof SUPPORTED_LOCALES)[number];
 
 export function isSupportedLocale(value: string): value is LocaleCode {
