@@ -14,6 +14,7 @@ import {
   SATELLITE_SCALE,
   buildClusterIndex,
   getMapPoints,
+  orbitDelayMs,
   pinLabel,
   resolvePoiPinIcons,
   satellitePhaseDeg,
@@ -66,11 +67,13 @@ const ORBIT_LEG_DURATION_MS = 17_000;
 // the arm rotates around the icon's center, and the emoji at its end
 // counter-rotates by the same amount to stay upright (keyframes live in the
 // shared Tailwind preset). Both share one negative animation-delay, which is
-// what spaces satellites around the orbit; `motion-reduce` drops the
-// animation and the inline rotation below leaves them parked at that angle.
-function createSatelliteElement(iconKey: PinIconKey, index: number, count: number): HTMLDivElement {
+// what spaces satellites around the orbit (and, taken from the shared clock
+// via orbitDelayMs, keeps them continuous across marker rebuilds);
+// `motion-reduce` drops the animation and the inline rotation below leaves
+// them parked at their spaced angle.
+function createSatelliteElement(iconKey: PinIconKey, index: number, count: number, nowMs: number): HTMLDivElement {
   const phaseDeg = satellitePhaseDeg(index, count);
-  const phaseDelay = `-${(ORBIT_PERIOD_MS * phaseDeg) / 360}ms`;
+  const phaseDelay = `${orbitDelayMs(phaseDeg, nowMs)}ms`;
 
   const arm = document.createElement("div");
   arm.className = "pointer-events-none absolute left-1/2 top-1/2 h-0 w-0 animate-pin-orbit motion-reduce:animate-none";
@@ -134,7 +137,8 @@ function createMarkerElement(
     iconEl.classList.add("bg-surface", "rounded-pill", "p-[6px]", "shadow-elevated");
   }
 
-  satelliteKeys.forEach((key, i) => iconEl.appendChild(createSatelliteElement(key, i, satelliteKeys.length)));
+  const nowMs = performance.now();
+  satelliteKeys.forEach((key, i) => iconEl.appendChild(createSatelliteElement(key, i, satelliteKeys.length, nowMs)));
 
   el.appendChild(labelEl);
   el.appendChild(iconEl);

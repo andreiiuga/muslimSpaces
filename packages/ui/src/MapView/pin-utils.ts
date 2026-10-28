@@ -108,6 +108,17 @@ export function satellitePhaseDeg(index: number, count: number): number {
   return (360 / count) * index;
 }
 
+// CSS animation-delay that puts a satellite at its phase angle *as of
+// `nowMs`*, not at the start of the cycle. Web markers are torn down and
+// rebuilt on every pan/zoom, which restarts their CSS animations; deriving
+// the delay from a shared clock makes a rebuilt marker resume where it would
+// have been had it never been rebuilt. (Native shares one Animated clock
+// instead, so it doesn't need this.)
+export function orbitDelayMs(phaseDeg: number, nowMs: number): number {
+  const cycleMs = nowMs + (ORBIT_PERIOD_MS * phaseDeg) / 360;
+  return -(cycleMs % ORBIT_PERIOD_MS);
+}
+
 // Below this zoom, pins show icon-only — the name label only earns its
 // screen space once individual buildings are distinguishable (roughly
 // street level). Matches neither web nor mobile design directly (both
